@@ -1,8 +1,6 @@
 #!/bin/env python3
 # coding=utf-8
 
-version = '0.0.1'
-
 import os
 import io
 import time
@@ -12,6 +10,8 @@ import zipfile
 import magic
 from lxml import etree
 from PIL import Image
+
+version = '0.0.1'
 
 E_GIF = '.gif'
 E_JPG = '.jpg'
