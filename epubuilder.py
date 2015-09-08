@@ -49,6 +49,15 @@ MEDIA_TYPES = {
     'text/javascript': ['.js'],
 }
 
+DEFAULT_DIRECTORY = [
+    ['Text', [E_XHTML]],
+    ['Images', [E_JPG, E_JPEG, E_PNG, E_SVG, E_GIF]],
+    ['Fonts', [E_OTF, E_TTC, E_TTF]],
+    ['Video', [E_MP4, E_MPEG]],
+    ['Styles'], [E_CSS],
+    ['Scripts', [E_JS]],
+]
+
 
 class PathError(Exception):
     pass
@@ -88,14 +97,10 @@ def _create_and_get_section(sections, elements):
 
 
 class Item(object):
-    def __init__(self, binary, path):
+    def __init__(self, path, binary):
         self._id = uuid.uuid1()
         self._binary = binary
         self._path = path
-
-    @property
-    def id(self):
-        return self._id
 
     @property
     def path(self):
@@ -120,37 +125,19 @@ class Item(object):
 
 class SimpleEPUB(object):
     def __init__(self):
-        self.files = []
+        self._content_path = 'OEBPS/content.opf'
+        self._container_path = 'META-INF/container.xml'
+        # self.EPUB2fallback = False
 
-
-class StupidEPUB(object):
-    """
-    def create_cover():
-
-    def add_page():
-
-    def add_file():
-
-    def write():
-
-    """
-    def __init__(self, ):
         self.title = None
         self.language = None
 
-        self.EPUB2fallback = False
-
-        self._content_path = 'OEBPS/content.opf'
-        self._container_path = 'META-INF/container.xml'
-
         self._cover_item = None
 
+        self._files = []
         self._toc_item = None
 
-        self._items = []
-
         self._sections = []
-        # like this:
         '''
         [
             {
@@ -164,31 +151,35 @@ class StupidEPUB(object):
         ]
         '''
 
-        self._spine = {'cover': None, 'toc': None, 'pages': []}
+        self.spine = []
 
-    def _update_toc_item(self):
-        binary = StupidEPUB._tostring(self._get_toc())
-        if self._toc_item:
-            self._toc_item._binary = binary
-        else:
-            self._toc_item = Item(binary, 'toc.xhtml')
-
-    def set_section(self, branch, link=None, hidden_sub=True):
-        section = _create_and_get_section(self._sections, branch)
-        section['link'] = link
-        section['hidden_sub'] = hidden_sub
-
-    def add_item(self, item):
-        if item.path in [one.path for one in self._items]:
+    def add_file(self, path, data):
+        if path in [one.path for one in self._files]:
             raise PathError('path:"{}" already exist.')
         else:
-            self._items.append(item)
+            item = Item(path, data)
+            self._files.append(item)
+        return item
+
+    def files_iter(self):
+        return iter(self._files)
+
+    def set_section(self, branch, link=None):
+        section = _create_and_get_section(self._sections, branch)
+        section['link'] = link
+
+    def add_to_spine(self, file):
+        if file in self._files:
+            self.spine.append(file)
+        else:
+            raise Exception
 
     def write(self, filename):
         zip_file = zipfile.ZipFile(filename, 'w', zipfile.ZIP_DEFLATED)
         zip_file.writestr('mimetype', 'application/epub+zip', compress_type=zipfile.ZIP_STORED)
 
-        for doc, path in ((self._get_container(), self._container_path), (self._get_xml_content(), self._content_path)):
+        for doc, path in ((self._get_container(), self._container_path),
+                          (self._get_xml_content(), self._content_path)):
             zip_file.writestr(path, self._tostring(doc), zipfile.ZIP_STORED)
 
     @staticmethod
@@ -234,13 +225,13 @@ class StupidEPUB(object):
         item = etree.SubElement(manifest, 'item',  properties='nav', href=self._toc_item.path, id='toc')
         item.set('media-type', self._toc_item.get_media_type())
 
-        for i in self._items:
+        for i in self._files:
             item = etree.SubElement(manifest, 'item', href=i.path, id=i.id)
             item.set('media-type', i.media_type())
 
     def _create_xml_content_spine(self, node):
         spine = etree.SubElement(node, 'spine')
-        for item in [self._spine['cover'], self._spine['toc']] + self._spine['pages']:
+        for item in self.spine:
             if item:
                 etree.SubElement(spine, 'itemref', itemref=item.id)
 
@@ -255,7 +246,7 @@ class StupidEPUB(object):
         nav = etree.SubElement(body, 'nav', id='toc')
         nav.set('epub:type', 'toc')
         if self._sections:
-            StupidEPUB()._get_toc_ol_node(nav, self._sections)
+            SimpleEPUB()._get_toc_ol_node(nav, self._sections)
 
     @staticmethod
     def _get_toc_ol_node(node, sections):
@@ -266,12 +257,35 @@ class StupidEPUB(object):
             a.set('herf', section['link'])
             a.text = section['title']
             if section['sub_sections']:
-                StupidEPUB()._get_toc_ol_node(li, section['sub_sections'])
+                SimpleEPUB()._get_toc_ol_node(li, section['sub_sections'])
+
+    def _update_toc_item(self):
+        binary = SimpleEPUB._tostring(self._get_toc())
+        if self._toc_item:
+            self._toc_item._binary = binary
+        else:
+            self._toc_item = Item(binary, 'toc.xhtml')
 
 
-class EasyEPUB(StupidEPUB):
+class StupidEPUB(object):
+    """
+    def create_cover():
+
+    def add_page():
+
+    def add_file():
+
+    def write():
+
+    """
+    def __init__(self, ):
+        pass
+
+
+class EasyEPUB(object):
     def __init__(self):
-        super(EasyEPUB, self).__init__()
+        self._epub = SimpleEPUB()
+        self._cover = None
 
     def add_page(self, page, path=None):
         if not isinstance(page, bytes):
@@ -283,24 +297,71 @@ class EasyEPUB(StupidEPUB):
             i = 1
             while True:
                 path = 'Text/page_{}.xhtml'.format(str(i))
-                if path not in [item.path for item in self._items]:
+                if path not in [item.path for item in self._epub.files_iter()]:
                     break
-        item = Item(page, path)
-        self.add_item(item)
-        self._spine['pages'].append(item)
+
+        item = self._epub.add_file(page, path)
+        self._epub.add_to_spine(item)
+        return item
+
+    def add_other_file(self, src_path):
+        binary = open(src_path, 'rb').read()
+        file_name = os.path.split(src_path)[1]
+        path = self._recommend_item_path(self._recommend_directory(file_name) + '/' + file_name)
+        item = self._epub.add_file(path, binary)
         return item
 
     def create_cover(self, image_path):
-        binary = open(image_path, 'rb').read()
-        image = Item(binary, 'Images/' + os.path.split(image_path)[0])
-        self.add_item(image)
-        cover = Item(self._create_cover_page(image), 'Text/cover.xhtml')
-        self.add_item(cover)
-        self._spine['cover'] = cover
+        """create image file first, and create cover file"""
+        image = self.add_other_file(image_path)
+
+        cover_path = self._recommend_item_path(self._recommend_directory('cover.xhtml') + '/' + 'cover.xhtml')
+
+        cover_binary = self._create_cover_page(image, self._relative_position(image.path, os.path.split(cover_path)[0]))
+
+        cover = self._epub.add_file(cover_path, cover_binary)
+
+        self._cover = cover
+
         return image, cover
 
     @staticmethod
-    def _create_cover_page(item):
+    def _recommend_directory(file_name):
+        half_name, ext = os.path.splitext(file_name)
+        reconmmend_directory = 'Unkown'
+        for dire, exts in DEFAULT_DIRECTORY:
+            if ext in exts:
+                reconmmend_directory = dire
+                break
+        return reconmmend_directory
+
+    def _recommend_item_path(self, path):
+        recommend_path = None
+        directory, name = os.path.split(path)
+        half_name, ext = os.path.splitext(name)
+        i = 1
+        while True:
+            if recommend_path not in [item.path for item in self._epub.files_iter()]:
+                break
+            else:
+                recommend_path = '{}/{}_{}{}'.format(directory, half_name, i, ext)
+                i += 1
+        return recommend_path
+
+    # def _recommend_item_id(self, path):
+    #    directory, name = os.path.split(path)
+    #    recommend_id = None
+    #    i = 1
+    #    while True:
+    #        if recommend_id not in [item.path for item in self._items]:
+    #            break
+    #        else:
+    #            recommend_id = '{}-{}'.format(name, i)
+    #            i += 1
+    #    return recommend_id
+
+    @staticmethod
+    def _create_cover_page(item, image_path):
         image_es = (E_GIF, E_JPEG, E_JPG, E_SVG)
 
         if isinstance(item, Item):
@@ -322,7 +383,16 @@ class EasyEPUB(StupidEPUB):
                                width="100%")
         svg.set('xmlns:xlink', 'http://www.w3.org/1999/xlink')
         image = etree.SubElement(svg, 'image', width=str(width), height=str(height))
-        image.set('xlink:href', item.path)
+        image.set('xlink:href', image_path)
 
         return etree.tostring(doc, encoding='utf-8', doctype='<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" '
                                                              '"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">')
+
+    @staticmethod
+    def _relative_position(full_path, dirt):
+        paths = full_path.split('/')
+        dirs = dirt.split('/')
+        l = len(paths) if len(paths) >= len(dirs) else len(dirs)
+        for i in range(l):
+            if len(paths) == i or len(dirs) == i or paths[i] != dirs[i]:
+                return '/'.join(['..'] * len(dirs[i:]) + list(paths[i:]))
