@@ -1,0 +1,22 @@
+#+TITLE: epubuilder
+A Python library for create EPUB version 3 book.
+
+* Installation
+** Gentoo/Linux
+Add this overlay [[https://github.com/meng89/overlay]] 
+
+* Usage
+
+** epubuilder.EasyEpub
+#+BEGIN_EXAMPLE
+from epubuilder import EasyEpub
+ebook = EasyEpub()
+ebook.wirte('path')
+#+END_EXAMPLE
+
+** epubuilder.Epub
+#+BEGIN_EXAMPLE                                                                    
+from epubuilder import Epub
+ebook = Epub()
+ebook.write('path')                                                               
+#+END_EXAMPLE  
