@@ -1,4 +1,3 @@
-#!/bin/env python3
 # coding=utf-8
 
 import os
@@ -9,7 +8,8 @@ import zipfile
 import magic
 from lxml import etree
 
-import userlist
+from . import userlist
+
 
 version = '0.1.0'
 
