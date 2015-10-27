@@ -11,7 +11,7 @@ from lxml import etree
 from . import userlist
 
 
-version = '0.1.0'
+version = '0.1.1'
 
 E_GIF = '.gif'
 E_JPG = '.jpg'
