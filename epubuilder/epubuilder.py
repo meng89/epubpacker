@@ -11,51 +11,29 @@ from lxml import etree
 from . import userlist
 
 
-version = '0.1.1'
+version = '0.5.0'  # 2015.11.25
 
-E_GIF = '.gif'
-E_JPG = '.jpg'
-E_JPEG = '.jpeg'
-E_PNG = '.png'
-E_SVG = '.svg'
-E_XHTML = '.xhtml'
-E_NCX = '.ncx'
-E_OTF = '.otf'
-E_TTF = '.ttf'
-E_TTC = '.ttc'
-E_MPEG = '.mpeg'
-E_MP4 = '.mp4'
-E_CSS = '.css'
-E_JS = '.js'
+media_table = [
+    ['image/gif', ['.gif'], 'Images'],
+    ['image/jpeg', ['.jpg', 'jpeg'], 'Images'],
+    ['image/png', ['.png'], 'Images'],
+    ['image/svg+xml', ['.svg'], 'Images'],
 
-MEDIA_TYPES = {
-    'image/gif': ['.gif'],
-    'image/jpeg': ['.jpg', 'jpeg'],
-    'image/png': ['.png'],
-    'image/svg+xml': ['.svg'],
+    ['application/xhtml+xml', ['.xhtml'], 'Text'],
 
-    'application/xhtml+xml': ['.xhtml'],
+    ['application/x-dtbncx+xml', ['.ncx'], '?'],
 
-    'application/x-dtbncx+xml': [E_NCX],
-    'application/vnd.ms-opentype': ['.otf', '.ttf', '.ttc'],
-    'application/font-woff': ['.woff'],
-    'application/smil+xml': [],
-    'application/pls+xml': [],
+    ['application/vnd.ms-opentype', ['.otf', '.ttf', '.ttc'], 'Fonts'],
+    ['application/font-woff', ['.woff'], 'Fonts'],
+    ['application/smil+xml', [], ''],
+    ['application/pls+xml', [], ''],
 
-    'audio/mpeg': [],
-    'audio/mp4': ['.mp4'],
+    ['audio/mpeg', [], ''],
+    ['audio/mp4', ['.mp4'], ''],
 
-    'text/css': ['.css'],
-    'text/javascript': ['.js'],
-}
+    ['text/css', ['.css'], 'Styles'],
 
-DEFAULT_DIRECTORY = [
-    ['Text', [E_XHTML]],
-    ['Images', [E_JPG, E_JPEG, E_PNG, E_SVG, E_GIF]],
-    ['Fonts', [E_OTF, E_TTC, E_TTF]],
-    ['Video', [E_MP4, E_MPEG]],
-    ['Styles', [E_CSS]],
-    ['Scripts', [E_JS]],
+    ['text/javascript', ['.js'], 'Scripts'],
 ]
 
 
@@ -81,12 +59,13 @@ class File(object):
     def binary(self):
         return self._binary
 
-    def get_media_type(self):
-        media_type = None
-        for k, es in MEDIA_TYPES.items():
-            if self.extension in es:
-                media_type = k
-        return media_type
+    def get_mime(self):
+        m = None
+        for mime, exts, dir_name in media_table:
+            if self.extension in exts:
+                m = mime
+                break
+        return m
 
     @property
     def extension(self):
@@ -103,6 +82,10 @@ class Epub(object):
         self.title = None
         self.identifier = uuid.uuid1().urn
         self.language = None
+
+        self._cover = None
+
+        # self._cover_xhtml = None  # EPUB not support xhtml to be cover yet
 
         self._nav_file = None
 
@@ -144,6 +127,14 @@ class Epub(object):
     def set_language(self, language):
         self.language = language
 
+    def tag_cover(self, file):  # need more code
+        if file not in self.files:
+            raise Exception
+        if magic.from_buffer(file.binary, mime=True) not in \
+                [one[0].encode() for one in media_table if one[0].startswith('image')]:
+            raise MediaTypeError('Media type is not a image')
+        self._cover = file
+
     @property
     def files(self):
         return self._files
@@ -168,15 +159,15 @@ class Epub(object):
         section['link'] = link
 
     def write(self, filename):
-        zip_file = zipfile.ZipFile(filename, 'w', zipfile.ZIP_DEFLATED)
+        zip_file = zipfile.ZipFile(filename, 'w')
         zip_file.writestr('mimetype', 'application/epub+zip', compress_type=zipfile.ZIP_STORED)
 
         for file in self._files:
-            zip_file.writestr('{}/{}'.format(self._files_root_dir, file.path), file.binary, zipfile.ZIP_STORED)
+            zip_file.writestr('{}/{}'.format(self._files_root_dir, file.path), file.binary, zipfile.ZIP_DEFLATED)
 
         for doc, path in ((self._get_container(), self._container_path),
                           (self._get_xml_content(), self._content_path)):
-            zip_file.writestr(path, self._tostring(doc), zipfile.ZIP_STORED)
+            zip_file.writestr(path, self._tostring(doc), zipfile.ZIP_DEFLATED)
 
         zip_file.writestr('{}/{}'.format(self._files_root_dir, self._nav_file.path), self._nav_file.binary)
 
@@ -262,18 +253,27 @@ class Epub(object):
         self._update_nav_file()
         manifest = etree.SubElement(node, 'manifest')
         item = etree.SubElement(manifest, 'item',  properties='nav', href=self._nav_file.path, id='nav')
-        item.set('media-type', self._nav_file.get_media_type())
+        item.set('media-type', self._nav_file.get_mime())
 
         for file in self._files:
             item = etree.SubElement(manifest, 'item', href=file.path, id=self._get_file_id(file))
-            item.set('media-type', file.get_media_type())
+            item.set('media-type', file.get_mime())
+
+            if file is self._cover:
+                item.set('properties', 'cover-image')
+
+            # Why should set properties="scripted"
+            if file.get_mime() == 'application/xhtml+xml':
+                page = etree.HTML(file.binary)
+                for script in page.xpath('//script'):
+                    if 'src' in script.attrib.keys():
+                        item.set('properties', 'scripted')
+                        break
 
     def _create_xml_content_spine(self, node):
         spine = etree.SubElement(node, 'spine')
         for joint in self.spine:
-            itemref = etree.SubElement(spine, 'itemref', idref=self._get_file_id(joint['file']))
-            if 'linear' in joint.keys():
-                itemref.set('linear', 'yes' if joint['linear'] else 'no')
+            etree.SubElement(spine, 'itemref', idref=self._get_file_id(joint['file']))
 
     def _create_xml_content_guide(self, node):
         pass
@@ -298,10 +298,12 @@ class Epub(object):
     @staticmethod
     def _get_toc_ol_node(node, sections):
         ol = etree.SubElement(node, 'ol')
+        # ol.set('hidden', 'hidden')  # for test
         for section in sections:
             li = etree.SubElement(ol, 'li')
             a = etree.SubElement(li, 'a')
-            a.set('href', section['link'])
+            if 'link' in section.keys():
+                a.set('href', section['link'])
             a.text = section['title']
             if section['sub_sections']:
                 Epub._get_toc_ol_node(li, section['sub_sections'])
@@ -332,151 +334,137 @@ class EasyEpub(object):
     def __init__(self):
         self._epub = Epub()
 
-        self._cover_image_file = None
+        self._cover_image = None
+
         self._cover_page_file = None
         self._cover_joint = None
         self._cover_landmark = None
 
-        self._landmark_bodymatter = None
+        # self._landmark_bodymatter = None ???
 
         self.set_language = self._epub.set_language
         self.set_title = self._epub.set_title
         self.set_identifier = self._epub.set_identifier
 
         self.set_toc = self._epub.set_toc
+        self.write = self._epub.write
 
-    def add_page(self, page, path=None, linear=None):
-        if not isinstance(page, bytes):
-            raise Exception
-        if magic.from_buffer(page, mime=True) != b'application/xml':
-            raise Exception
+    def make_cover(self, image, expected_fullpath=None):  # not finish
+        self._bytes_check(image)
 
-        if not path:
-            path = self._recommend_file_path(self._recommend_directory('page.xhtml') + '/' + 'page.xhtml')
+        if expected_fullpath:
+            path = self._recommend_fullpath(expected_fullpath)
+        else:
+            extension = self._recommend_ext(image)
+            path = self._recommend_fullpath('{}/cover{}'.format(self._recommend_directory(extension), extension))
+
+        file = File(path, image)
+
+        self._cover_image and self._epub.files.remove(self._cover_image)
+
+        self._epub.files.append(file)
+        self._epub.tag_cover(file)
+
+        self._cover_image = file
+
+        return file.path
+
+    # def set_cover_page(self, page, expected_fullpath=None):  # need delete
+    #    self._bytes_check(page)
+    #    self._page_check(page)
+
+    #    if expected_fullpath:
+    #        cover_path = self._recommend_fullpath(expected_fullpath)
+    #    else:
+    #        cover_path = self._recommend_fullpath(self._recommend_directory('cover.xhtml') + '/' + 'cover.xhtml')
+
+    #    cover_page_file = File(cover_path, page)
+        # cover_joint = {'file': cover_page_file, 'info': 'easy_epub_cover'}
+        # cover_landmark = {'file': cover_page_file, 'type': 'cover', 'text': 'cover', 'info': 'easy_epub_cover'}
+
+    #    self._cover_page_file and self._epub.files.remove(self._cover_page_file)
+        # self._cover_joint and self._epub.spine.remove(self._cover_joint)
+        # self._cover_landmark and self._epub.landmarks.remove(self._cover_landmark)
+
+    #    self._epub.files.append(cover_page_file)
+        # self._epub.spine.insert(0, cover_joint)
+        # self._epub.landmarks.insert(0, cover_landmark)
+    #    self._epub.cover_page_file = cover_page_file
+
+    #    self._cover_page_file = cover_page_file
+        # self._cover_joint = cover_joint
+        # self._cover_landmark = cover_landmark
+
+    #    return cover_page_file.path
+
+    def add_page(self, page, expected_fullpath=None):
+        self._bytes_check(page)
+        self._page_check(page)
+
+        if expected_fullpath:
+            path = self._recommend_fullpath(expected_fullpath)
+        else:
+            path = self._recommend_fullpath(self._recommend_directory('.xhtml') + '/' + 'page.xhtml')
         file = File(path, page)
 
         self._epub.files.append(file)
         joint = {'file': file}
-        if linear is not None:
-            joint.update({'linear': linear})
+        # if linear is not None:
+        #    joint.update({'linear': linear})
         self._epub.spine.append(joint)
-        return file
+        return file.path
 
-    def add_other_file(self, src_path):
-        binary = open(src_path, 'rb').read()
-        file_name = os.path.split(src_path)[1]
-        path = self._recommend_file_path(self._recommend_directory(file_name) + '/' + file_name)
-        file = File(path, binary)
+    def add_other_file(self, bytes_data, expected_fullpath):
+        self._bytes_check(bytes_data)
+        path = self._recommend_fullpath(expected_fullpath)
+        file = File(path, bytes_data)
         self._epub.files.append(file)
-        return file
-
-    def create_cover_from_xhtml_binary(self, cover_binary):
-        if not isinstance(cover_binary, bytes):
-            raise Exception
-        if magic.from_buffer(cover_binary, mime=True) != b'application/xml':
-            raise Exception
-
-        cover_path = self._recommend_file_path(self._recommend_directory('cover.xhtml') + '/' + 'cover.xhtml')
-
-        cover_page_file = File(cover_path, cover_binary)
-        cover_joint = {'file': cover_page_file, 'linear': 'yes', 'info': 'easy_epub_cover'}
-        cover_landmark = {'file': cover_page_file, 'type': 'cover', 'text': 'cover', 'info': 'easy_epub_cover'}
-
-        self._cover_joint and self._epub.spine.remove(self._cover_joint)
-        self._cover_page_file and self._epub.files.remove(self._cover_page_file)
-        self._cover_landmark and self._epub.landmarks.remove(self._cover_landmark)
-
-        self._epub.files.append(cover_page_file)
-        self._epub.spine.insert(0, cover_joint)
-        self._epub.landmarks.insert(0, cover_landmark)
-
-        self._cover_page_file = cover_page_file
-        self._cover_joint = cover_joint
-        self._cover_landmark = cover_landmark
-
-        return cover_page_file
-
-    def create_cover_from_image(self, image_path):
-        """create image file first, and create cover file"""
-        image_file = self.add_other_file(image_path)
-
-        cover_path = self._recommend_file_path(self._recommend_directory('cover.xhtml') + '/' + 'cover.xhtml')
-        cover_binary = self._create_cover_page(image_file, self._relative_position(image_file.path,
-                                                                                   os.path.split(cover_path)[0]))
-        cover_page_file = File(cover_path, cover_binary)
-        cover_joint = {'file': cover_page_file, 'linear': False, 'info': 'easy_epub_cover'}
-
-        self._cover_joint and self._epub.spine.remove(self._cover_joint)
-        self._cover_page_file and self._epub.files.remove(self._cover_page_file)
-        self._cover_image_file and self._epub.files.remove(self._cover_image_file)
-
-        self._epub.files.append(cover_page_file)
-        self._epub.spine.insert(0, cover_joint)
-
-        self._cover_image_file = image_file
-        self._cover_page_file = cover_page_file
-        self._cover_joint = cover_joint
-
-        return image_file, cover_page_file
-
-    def write(self, path):
-        self._epub.write(path)
+        return path
 
     @staticmethod
-    def _recommend_directory(file_name):
-        half_name, ext = os.path.splitext(file_name)
-        reconmmend_directory = 'Unkown'
-        for dire, exts in DEFAULT_DIRECTORY:
-            if ext in exts:
-                reconmmend_directory = dire
-                break
-        return reconmmend_directory
+    def _bytes_check(data):
+        if not isinstance(data, bytes):
+            raise Exception
 
-    def _recommend_file_path(self, path):
-        recommend_path = path
+    @staticmethod
+    def _page_check(data):
+        if magic.from_buffer(data, mime=True) not in (b'application/xhtml+xml', b'application/xml'):
+            raise Exception
+
+    @staticmethod
+    def _recommend_ext(binary):
+        ext = None
+        for mime, exts, dir_name in media_table:
+            if magic.from_buffer(binary, mime=True) == mime.encode():
+                ext = exts[0]
+                break
+        return ext
+
+    @staticmethod
+    def _recommend_directory(extension):
+        directory = 'Unkown'
+        for mime, extensions, dir_name in media_table:
+            if extension in extensions:
+                directory = dir_name
+                break
+        return directory
+
+    def _recommend_fullpath(self, fullpath):
+        path = fullpath
         directory, name = os.path.split(path)
         half_name, ext = os.path.splitext(name)
 
         i = 0
         while True:
-            if recommend_path not in [file.path for file in self._epub.files]:
+            if path not in [file.path for file in self._epub.files]:
                 break
-            recommend_path = '{}/{}_{}{}'.format(directory, half_name, i, ext)
+            path = '{}/{}_{}{}'.format(directory, half_name, i, ext)
             i += 1
 
-        return recommend_path
+        return path
 
     @staticmethod
-    def _create_cover_page(file, image_path):
-        image_es = (E_GIF, E_JPEG, E_JPG, E_SVG)
-
-        if not isinstance(file, File):
-            raise TypeError('must be an instance of File, not {}'.format(type(file)))
-
-        elif os.path.splitext(file.path)[1] not in image_es:
-            raise MediaTypeError('item.media_type must be one of: {}, not {}'.format(image_es,
-                                                                                     os.path.splitext(file.path)[1]))
-
-        # width, height = Image.open(io.BytesIO(file.binary)).size
-
-        xml = 'http://www.w3.org/XML/1998/namespace'
-        epub = 'http://www.idpf.org/2007/ops'
-
-        doc = etree.Element('html', xmlns='http://www.w3.org/1999/xhtml', lang='en', nsmap={'epub': epub})
-        doc.set('{'+xml+'}'+'lang', 'en')
-        head = etree.SubElement(doc, 'head')
-        title = etree.SubElement(head, 'title')
-        title.text = 'Cover'
-        body = etree.SubElement(doc, 'body')
-        img = etree.SubElement(body, 'img')
-        img.set('src', image_path)
-        img.set('alt', 'Cover Image')
-        img.set('title', 'Cover Image')
-        img.set('width', '100%')
-        return etree.tostring(doc, encoding='utf-8', doctype='<!DOCTYPE html>', standalone=True)
-
-    @staticmethod
-    def _relative_position(full_path, dirt):
+    def relative_path(full_path, dirt):
         paths = full_path.split('/')
         dirs = dirt.split('/')
         l = len(paths) if len(paths) >= len(dirs) else len(dirs)
