@@ -11,7 +11,7 @@ from lxml import etree
 from . import userlist
 
 
-version = '0.5.1'  # 2015.12.09
+version = '0.5.1'  # 2015.12.10
 
 media_table = [
     ['image/gif', ['.gif'], 'Images'],

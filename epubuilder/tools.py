@@ -1,5 +1,4 @@
 
-
 def relative_path(full_path, dirt):
     paths = full_path.split('/')
     dirs = dirt.split('/')
