@@ -3,11 +3,10 @@ A Python library for create EPUB version 3.
 
 * Installation
 ** Gentoo/Linux
-Add this overlay [[https://github.com/meng89/overlay]] 
-and:
-emerge dev-python/epubuilder
+dev-python/epubuilder in this overlay: [[https://github.com/meng89/overlay]]
 
 ** Other OS
+
 * Usage
 
 ** epubuilder.EasyEpub
@@ -39,5 +38,5 @@ usage not finish yet.
 #+BEGIN_EXAMPLE                                                                    
 import epubuilder
 book = epubuilder.Epub()
-#  need more demo code.                                                               
+#  need more demo code.
 #+END_EXAMPLE  
