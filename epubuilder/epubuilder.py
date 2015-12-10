@@ -11,7 +11,7 @@ from lxml import etree
 from . import userlist
 
 
-version = '0.5.0'  # 2015.11.25
+version = '0.5.1'  # 2015.12.09
 
 media_table = [
     ['image/gif', ['.gif'], 'Images'],
@@ -97,7 +97,7 @@ class Epub(object):
                 'link': '',
                 'sub_sections':
                     [
-                        'title': '1.2 XXX', 'link': '', 'sub_sections': []
+                        'title': '1.2 XXX', 'link': '', 'sub_sections': [...]
                     ]
             }
         ]
@@ -349,7 +349,7 @@ class EasyEpub(object):
         self.set_toc = self._epub.set_toc
         self.write = self._epub.write
 
-    def make_cover(self, image, expected_fullpath=None):  # not finish
+    def make_cover(self, image, expected_fullpath=None):
         self._bytes_check(image)
 
         if expected_fullpath:
@@ -368,34 +368,6 @@ class EasyEpub(object):
         self._cover_image = file
 
         return file.path
-
-    # def set_cover_page(self, page, expected_fullpath=None):  # need delete
-    #    self._bytes_check(page)
-    #    self._page_check(page)
-
-    #    if expected_fullpath:
-    #        cover_path = self._recommend_fullpath(expected_fullpath)
-    #    else:
-    #        cover_path = self._recommend_fullpath(self._recommend_directory('cover.xhtml') + '/' + 'cover.xhtml')
-
-    #    cover_page_file = File(cover_path, page)
-        # cover_joint = {'file': cover_page_file, 'info': 'easy_epub_cover'}
-        # cover_landmark = {'file': cover_page_file, 'type': 'cover', 'text': 'cover', 'info': 'easy_epub_cover'}
-
-    #    self._cover_page_file and self._epub.files.remove(self._cover_page_file)
-        # self._cover_joint and self._epub.spine.remove(self._cover_joint)
-        # self._cover_landmark and self._epub.landmarks.remove(self._cover_landmark)
-
-    #    self._epub.files.append(cover_page_file)
-        # self._epub.spine.insert(0, cover_joint)
-        # self._epub.landmarks.insert(0, cover_landmark)
-    #    self._epub.cover_page_file = cover_page_file
-
-    #    self._cover_page_file = cover_page_file
-        # self._cover_joint = cover_joint
-        # self._cover_landmark = cover_landmark
-
-    #    return cover_page_file.path
 
     def add_page(self, page, expected_fullpath=None):
         self._bytes_check(page)
@@ -462,12 +434,3 @@ class EasyEpub(object):
             i += 1
 
         return path
-
-    @staticmethod
-    def relative_path(full_path, dirt):
-        paths = full_path.split('/')
-        dirs = dirt.split('/')
-        l = len(paths) if len(paths) >= len(dirs) else len(dirs)
-        for i in range(l):
-            if len(paths) == i or len(dirs) == i or paths[i] != dirs[i]:
-                return '/'.join(['..'] * len(dirs[i:]) + list(paths[i:]))
