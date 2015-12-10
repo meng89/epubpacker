@@ -1,5 +1,5 @@
 #+TITLE: epubuilder
-A Python library for create EPUB version 3.
+A Python library to write EPUB v3.
 
 * Installation
 ** Gentoo/Linux

@@ -5,7 +5,7 @@ from epubuilder import version
 
 setup(name='epubuilder',
       version=version,
-      description='Library to write EPUB v3.',
+      description='A Library to write EPUB v3.',
       # long_description='',
       author='Chen Meng',
       author_email='observerchan@gmail.com',
