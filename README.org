@@ -32,6 +32,7 @@ book.set_toc(('Chapter 1', '1'), chapter1_1_path)
 
 book.wirte('demo.epub')
 #+END_EXAMPLE
+
 ** epubuilder.Epub
 Control more, need to know Epub details more.
 usage not finish yet.
