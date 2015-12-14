@@ -5,7 +5,7 @@ NAME = "epubuilder"
 
 VERSION = '0.5.4'
 
-DESCRIPTION = 'A Library to write EPUB v3.'
+DESCRIPTION = 'A library to write EPUB v3.'
 
 LONG_DESCRIPTION = ''
 if os.path.exists('long_description.rst'):
