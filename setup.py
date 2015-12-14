@@ -14,7 +14,7 @@ if os.path.exists('long_description.rst'):
 
 URL = 'https://github.com/meng89/{}'.format(NAME)
 
-DOWNLOAD_URL = '{}/archive/v{}.tar.gz'.format(URL, __version__)
+DOWNLOAD_URL = '{}/archive/v{}.tar.gz'.format(URL, VERSION)
 
 CLASSIFIERS=['Development Status :: 4 - Beta',
              'Intended Audience :: Developers',
