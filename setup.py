@@ -1,25 +1,37 @@
-# from distutils.core import setup
 from setuptools import setup
+import os 
 
-from epubuilder import version
+NAME = "epubuilder"
 
-setup(name='epubuilder',
-      version=version,
-      description='A Library to write EPUB v3.',
-      # long_description='',
+VERSION = '0.5.4'
+
+DESCRIPTION = 'A library to write EPUB v3.'
+
+LONG_DESCRIPTION = ''
+if os.path.exists('long_description.rst'):
+    LONG_DESCRIPTION = open('long_description.rst').read()
+
+
+URL = 'https://github.com/meng89/{}'.format(NAME)
+
+DOWNLOAD_URL = '{}/archive/v{}.tar.gz'.format(URL, VERSION)
+
+CLASSIFIERS=['Development Status :: 4 - Beta',
+             'Intended Audience :: Developers',
+             'License :: OSI Approved :: MIT License',
+             'Programming Language :: Python :: 3',
+             'Topic :: Software Development :: Libraries :: Python Modules']
+
+setup(name=NAME,
+      version=VERSION,
+      description=DESCRIPTION,
+      long_description=LONG_DESCRIPTION,
       author='Chen Meng',
-      author_email='observerchan@gmail.com',
+      author_email='ObserverChan@gmail.com',
       license='MIT',
-      url='https://github.com/meng89/epubuilder',
-      # py_modules=['epubuilder'],
+      url=URL,
+      download_url=DOWNLOAD_URL,
       packages=['epubuilder'],
-      classifiers=['Development Status :: 4 - Beta',
-                   'Intended Audience :: Developers',
-                   'License :: OSI Approved :: MIT',
-                   'Programming Language :: Python :: 3',
-                   'Topic :: Software Development :: Libraries :: Python Modules'],
-      install_requires=[
-          'lxml',
-          'magic',
-      ]
-      )
+      install_requires=[line.strip() for line in open('requirements.txt')],
+      classifiers=CLASSIFIERS
+)
