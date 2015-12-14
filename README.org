@@ -5,8 +5,10 @@ A Python library to write EPUB v3.
 ** Gentoo/Linux
    dev-python/epubuilder in this overlay: [[https://github.com/meng89/observer]]
 
-** Other OS
-
+** PyPi way
+#+BEGIN_EXAMPLE
+pip install epubuilder
+#+END_EXAMPLE
 * Usage
 
 ** epubuilder.EasyEpub
