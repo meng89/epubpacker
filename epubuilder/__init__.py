@@ -1,1 +1,1 @@
-from .epubuilder import *
+from .epubuilder import Epub, EasyEpub
