@@ -3,7 +3,7 @@ from collections import UserList
 
 class List(UserList):
     def __init__(self, initlist=None, before_add=None, after_add=None, before_del=None, after_del=None):
-        super().__init__()
+        super().__init__(initlist)
         # self.data = super(List, self).data
 
         self._before_add = before_add
@@ -62,3 +62,5 @@ class List(UserList):
     def extend(self, other):
         for item in other:
             self.append(item)
+
+
