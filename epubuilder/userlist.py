@@ -1,3 +1,4 @@
+from collections import MutableSequence
 from _collections_abc import MutableSequence
 
 

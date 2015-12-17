@@ -16,6 +16,7 @@ class File(object):
 
 class Opf(object):
     def __init__(self, file=None):
+        self.metadata =
         if file:
             pass
 
