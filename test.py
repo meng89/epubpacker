@@ -1,11 +1,15 @@
 #!/bin/env python3
 
-from epubuilder.utils import List
+import xml.etree.ElementTree as Et
 
-a = List(['a', 'b'])
 
-a.append(1)
-a.extend([2, 3, 4, 5, 6])
-
-for one in a:
-    print(one)
+s = '''
+<a xmlns:as="lsajf">
+    1
+    <b:as>2</b:as>
+    3
+</a>
+'''
+x = Et.fromstring(s)
+x.set('xmlns:lang', 'lsfj')
+print(Et.tostring(x).decode())
