@@ -61,10 +61,8 @@ class Nav(object):
         pass
 
 
-
 book = Epub()
 
-book.files.add_from_bytes()
-book.toc.add()
-
-boook.opf
+# book.opf.package.metadata.
+#                 .manifest.
+#                 .spine.
