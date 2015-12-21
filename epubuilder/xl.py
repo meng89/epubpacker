@@ -5,63 +5,103 @@ import xml.etree.ElementTree as Et
 from epubuilder.baseclasses import List, Dict
 
 
-class Node(object):
-    def __init__(self):
-        pass
-
-
-class Text(object):
+class ObjectAttributeError(Exception):
     pass
 
 
-# class SubElements(List):
-#    def __init__(self):
-#        super().__init__()
-#        pass
+def _name_check(name):
+    pass
 
 
-class Element:
-    def __init__(self,
-                 name, is_name_available_write=True,
-                 attributes_limit=None,
-                 # namespaces_limit=None,
-                 sub_elements_limit=None,
-                 ):
-        # self._e = Et.Element(name)
+def _nsmap_check(nsmap):
+    pass
 
-        self._name = name
-        self._is_name_available_write = is_name_available_write
 
-        self._attributes = Dict(limit=attributes_limit)
-        self._sub_elements = List(limit=sub_elements_limit)
+def _nsuri_check(nsuri, namespaces):
+    if nsuri not in namespaces.keys():
+        pass
+        raise Exception
+    pass
 
-        # self._namespaces = Dict(limit=namespaces_limit)
+
+class Element(object):
+    def __init__(self, name, nsuri=None, namespaces=None):
+
+        self.__dict__['attributes'] = List()
+
+        self.__dict__['namespaces'] = Dict(namespaces or {None: None})
+
+        self.__dict__['sub_elements'] = List()
+
+        self.name = name
+
+        self.nsuri = nsuri
 
     def __setattr__(self, key, value):
-        if key == 'name':
-            if self._is_name_available_write:
-                self._e.tag = value
-            else:
-                raise AttributeError("Can't write attribute: {}".format(key))
+        print('__setattr__: key: {}, value: {}'.format(key, value))
 
-    def __getattr__(self, key):
         if key == 'name':
-            return self._e.tag
+            _name_check(value)
+
+        elif key == 'nsuri':
+            _nsuri_check(value, self.namespaces)
+
+        else:
+            raise ObjectAttributeError
+
+        self.__dict__[key] = value
+
+    # def __getattribute__(self, key):
+    #    print('__getattribute__: key: {}'.format(key))
+    #    return super().__getattribute__(key)
 
     @property
     def attributes(self):
-        return self._attributes
+        return self.__dict__['attributes']
 
-    # 喵生苦短，不玩别喵的毛线。
-    # @property
-    # def namespaces(self):
-    #    return self._namespaces
+    @property
+    def namespaces(self):
+        return self.__dict__['namespaces']
 
     @property
     def sub_elements(self):
-        return self._sub_elements
+        return self.__dict__['sub_elements']
 
     @property
     def string(self):
-        return None
+        s = ''
+        s += '<'
+        s += self.namespaces[self.nsuri] + ':' if self.namespaces[self.nsuri] else ''
+        s += self.name
+        for uri, prefix in self.namespaces.items():
+            if uri:
+                if prefix is None:
+                    s += ' xmlns="{}"'.format(uri)
+                else:
+                    s += ' xmlns:{}="{}"'.format(prefix, uri)
+
+        for attr in self.attributes:
+            pass
+
+        if self.sub_elements:
+            s += '>'
+
+            for sub in self.sub_elements:
+                pass
+
+            s += '</'
+            s += self.namespaces[self.nsuri] + ':' if self.namespaces[self.nsuri] else ''
+            s += self.name
+            s += '>'
+        else:
+            s += ' />'
+
+        return s
+
+
+class Attribute:
+    def __init__(self, name, nsuri=None, value=None):
+        pass
+
+
 
