@@ -2,6 +2,6 @@
 
 from epubuilder.xl import Element
 
-e = Element('root', nsuri='jbm', namespaces={'jbm': 'gp'})
+e = Element('root', nsuri='jbm', ns_d={'jbm': 'gp'})
 
 print(e.string)

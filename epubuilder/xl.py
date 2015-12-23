@@ -18,24 +18,20 @@ def _nsmap_check(nsmap):
 
 
 def _nsuri_check(nsuri, namespaces):
-    if nsuri not in namespaces.keys():
-        pass
+    if nsuri not in [ns.uri for ns in namespaces]:
         raise Exception
+
     pass
 
 
-class Element(object):
-    def __init__(self, name, nsuri=None, namespaces=None):
-
-        self.__dict__['attributes'] = List()
-
-        self.__dict__['namespaces'] = Dict(namespaces or {None: None})
-
-        self.__dict__['sub_elements'] = List()
-
+class Element:
+    def __init__(self, name, nsuri=None, namespaces=None, ns_d=None):
         self.name = name
-
         self.nsuri = nsuri
+        self.attributes = List()
+        # self.namespaces = Dict(namespaces or {})
+        self.namespaces = namespaces or ns_d or List()
+        self.sub_elements = List()
 
     def __setattr__(self, key, value):
         print('__setattr__: key: {}, value: {}'.format(key, value))
@@ -51,24 +47,13 @@ class Element(object):
 
         self.__dict__[key] = value
 
-    # def __getattribute__(self, key):
-    #    print('__getattribute__: key: {}'.format(key))
-    #    return super().__getattribute__(key)
-
-    @property
-    def attributes(self):
-        return self.__dict__['attributes']
-
-    @property
-    def namespaces(self):
-        return self.__dict__['namespaces']
-
-    @property
-    def sub_elements(self):
-        return self.__dict__['sub_elements']
-
     def set_attribute(self, name, value, nsuri=None):
         self.attributes[(nsuri, name)] = value
+
+    def get_attribute(self, name, nsuri=None):
+        for attribute in self.attributes:
+            if attribute.name == name and attribute.nsuri == nsuri:
+                return attribute
 
     @property
     def string(self, as_root=True,
@@ -89,7 +74,7 @@ class Element(object):
         s += self.name
 
         for uri, prefix in self.namespaces.items():
-            if uri in inherited_ns.keys() and inherited_ns[uri] == prefix:
+            if inherited_ns and uri in inherited_ns.keys() and inherited_ns[uri] == prefix:
                 pass
 
             elif uri:
@@ -114,6 +99,20 @@ class Element(object):
             s += ' />\n'
 
         return s
+
+
+class Namespace:
+    def __init__(self, uri, prefix):
+        self.uri = uri
+        self.prefix = prefix
+
+    def __setattr__(self, key, value):
+        if key == 'uri':
+            pass
+        elif key == 'prefix':
+            pass
+
+        self.__dict__[key] = value
 
 
 class Attribute:
