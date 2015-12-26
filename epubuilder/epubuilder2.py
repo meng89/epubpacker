@@ -40,11 +40,6 @@ class Manifest(object):
         pass
 
 
-class Item(object):
-    def __init__(self):
-        pass
-
-
 class Spine(object):
     def __init__(self):
         pass
@@ -63,6 +58,12 @@ class Nav(object):
 
 book = Epub()
 
-# book.opf.package.metadata.
-#                 .manifest.
-#                 .spine.
+# book.metadata
+#     .manifest
+#     .spine
+#     .Guide
+#     .bindings
+
+# book.lot
+# book.types
+# book.toc
