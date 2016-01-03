@@ -1,7 +1,13 @@
 #!/bin/env python3
 
-from epubuilder.xl import Element
 
-e = Element('root', nsuri='jbm', ns_d={'jbm': 'gp'})
+def fun1():
+    a = 0
 
-print(e.string)
+    def fun2():
+        a += 1
+
+
+    return fun2()
+
+print(fun1())
