@@ -1,7 +1,7 @@
 #!/bin/env python3
 
 
-from .baseclasses import List, Dict, Str, Limit
+from baseclasses import List, Dict, Str, Limit
 
 
 import xml.parsers.expat
@@ -17,7 +17,9 @@ def create_element(file):
     string = ''
 
     def start_element(name, attrs):
-        print('start_element',name)
+        _do_string()
+
+        print('start_element', name)
 
         attributes = Attributes()
 
@@ -54,6 +56,7 @@ def create_element(file):
             element = e
 
     def end_element(name):
+        _do_string()
         print('end_element', name)
         elements.pop()
 
@@ -138,8 +141,16 @@ class String(Str):
                 s += '&quot;'
             elif char == "'":
                 s += '&apos;'
+
+            # elif char == ' ':
+            #    s += '&#160;'
+            # elif char == '\n':
+            #    s += '\\n'
+            # elif char == '\t':
+            #    s += '\\t'
+
             else:
-                s += char
+                s += str(char)
         return s
 
 
@@ -178,20 +189,20 @@ class Element:
 
         self.__dict__[key] = value
 
-    def string(self, inherited_namespaces=None, spaces=0, step_by_step=4):
+    def string(self, inherited_namespaces=None, indent=4):
 
         inherited_ns = inherited_namespaces or Namespaces()
 
-        indentation = ' ' * spaces
-
         s = ''
-        s += indentation
+        s += ''
         s += '<'
 
-        name_prefix = self.namespaces[self.uri] + ':' if (self.uri and self.namespaces[self.uri]) else ''
-        name_prefix += self.name
+        full_name = ''
+        if self.uri and self.namespaces[self.uri]:
+            full_name += self.namespaces[self.uri] + ':'
+        full_name += self.name
 
-        s += name_prefix
+        s += full_name
 
         for uri, prefix in self.namespaces.items():
             if uri in inherited_ns.keys() and inherited_ns[uri] == prefix:
@@ -211,23 +222,43 @@ class Element:
             s += attr.name
             s += '="{}"'.format(attr.value)
 
-        if self.children:
-            s += '>\n'
+        def get_child_string(kid):
 
-            for sub in self.children:
+            if isinstance(kid, Element):
                 inherited_ns_for_subs = inherited_ns.copy()
                 inherited_ns_for_subs.update(self.namespaces)
-                s += sub.string(inherited_namespaces=inherited_ns_for_subs,
-                                spaces=spaces+step_by_step, step_by_step=step_by_step)
-            s += indentation
-            s += '</'
-            s += name_prefix
-            s += '>\n'
+                return kid.string(inherited_namespaces=inherited_ns_for_subs, indent=indent)
+
+            elif isinstance(kid, String):
+                return kid.string()
+
+        if self.children:
+            s += '>'
+
+            children_string_list = []
+            for child in self.children:
+                children_string_list.append(get_child_string(child))
+
+            children_string_lines = []
+            for child_string in children_string_list:
+                children_string_lines.extend(child_string.split('\n'))
+
+            if len(children_string_lines) == 1:
+                s += children_string_lines[0]
+            else:
+                s += '\n'
+                s += '\n'.join([' '*indent + line for line in children_string_lines])
+                s += '\n'
+
+            s += '</{}>'.format(full_name)
 
         else:
-            s += ' />\n'
+            s += '/>'
 
         return s
+
+    def string2(self):
+        pass
 
 
 class Children(List):
@@ -276,10 +307,16 @@ class Attribute:
 
 
 def main():
-    e = create_element('/media/data/temp/1/META-INF/container.xml')
+    file = '/media/data/temp/1/META-INF/container.xml'
+    e = create_element(file)
     print(e.string())
+    print('et:')
+    import xml.etree.ElementTree as et
+    e = et.ElementTree(file=file)
+    import sys
+    e.write('1.xml')
+    print(open('1.xml').read())
 
 
 if __name__ == '__main__':
     main()
-
