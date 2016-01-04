@@ -1,4 +1,4 @@
-from collections import UserList, UserDict
+from collections import UserList, UserDict, UserString
 
 
 class Limit:
@@ -16,9 +16,13 @@ class Limit:
 
 
 class List(UserList):
+    limit = Limit()
+
     def __init__(self, initlist=None, limit=None, is_limit_when_init=True):
-        self._limit = limit or Limit()
-        initlist = initlist or []
+        if limit:
+            self.limit = limit
+
+        # initlist = initlist or []
 
         super().__init__()
 
@@ -34,18 +38,18 @@ class List(UserList):
 
     # all del item should be here
     def __delitem__(self, i):  # del x[i], del
-        self._limit.del_before(index=i, obj=self)
+        self.limit.del_before(index=i, obj=self)
         del self.data[i]
-        self._limit.del_after(index=i, obj=self)
+        self.limit.del_after(index=i, obj=self)
 
     def append(self, item):  # add
         self.insert(len(self), item)
 
     # all add item should be here
     def insert(self, i, item):
-        self._limit.add_before(index=i, item=item, obj=self)
+        self.limit.add_before(index=i, item=item, obj=self)
         self.data.insert(i, item)
-        self._limit.add_after(index=i, item=item, obj=self)
+        self.limit.add_after(index=i, item=item, obj=self)
 
     def pop(self, i=-1):  # del
         x = self[i]
@@ -99,3 +103,10 @@ class Dict(UserDict):
         self._limit.del_before(key=key, obj=self)
         del self.data[key]
         self._limit.del_after(key=key, obj=self)
+
+
+class Str(UserString):
+    pass
+
+
+
