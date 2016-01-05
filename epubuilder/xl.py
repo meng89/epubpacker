@@ -14,7 +14,7 @@ def create_element(file):
 
     ns_list = []
 
-    string = ''
+    s = ''
 
     def start_element(name, attrs):
         _do_string()
@@ -70,16 +70,15 @@ def create_element(file):
 
     def character_data_handler(data):
         print('Character data: "{}"'.format(data))
-        nonlocal string
-        string += data
+        nonlocal s
+        s += data
 
     def _do_string():
-        nonlocal string
-        stripped_string = string.strip()
-        if stripped_string:
-            s = String(stripped_string)
-            elements[-1].children.append(s)
-        string = ''
+        nonlocal s
+        if s and elements:
+            string = String(s)
+            elements[-1].children.append(string)
+            s = ''
 
     p = xml.parsers.expat.ParserCreate(namespace_separator=' ')
 
@@ -123,7 +122,7 @@ def xml_header(version='1.0', encoding='utf-8', standalone='yes'):
     s += " version='{}'".format(version) if version else ''
     s += " encoding='{}'".format(encoding) if encoding else ''
     s += " standalone='{}'".format(standalone) if standalone else ''
-    s += '?>\n'
+    s += '?>'
     return s
 
 
@@ -213,26 +212,22 @@ class Element:
             s += attr.name
             s += '="{}"'.format(attr.value)
 
-        def get_child_string(kid):
-
-            if isinstance(kid, Element):
-                inherited_ns_for_subs = inherited_ns.copy()
-                inherited_ns_for_subs.update(self.namespaces)
-                return kid.string(inherited_namespaces=inherited_ns_for_subs)
-
-            elif isinstance(kid, String):
-                return kid.string()
-
         if self.children:
             s += '>'
 
             for child in self.children:
-                s += get_child_string(child)
+                if isinstance(child, Element):
+                    inherited_ns_for_subs = inherited_ns.copy()
+                    inherited_ns_for_subs.update(self.namespaces)
+                    s += child.string(inherited_namespaces=inherited_ns_for_subs)
+
+                elif isinstance(child, String):
+                    s += child.string()
 
             s += '</{}>'.format(full_name)
 
         else:
-            s += '/>'
+            s += ' />'
 
         return s
 
