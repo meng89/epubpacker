@@ -127,31 +127,22 @@ def xml_header(version='1.0', encoding='utf-8', standalone='yes'):
     return s
 
 
-class String(Str):
-    def string(self):
-        s = ''
-        for char in self:
-            if char == '&':
-                s += '&amp;'
-            elif char == '<':
-                s += '&lt;'
-            elif char == '>':
-                s += '&gt;'
-            elif char == '"':
-                s += '&quot;'
-            elif char == "'":
-                s += '&apos;'
+def pretty_print(element):
+    s = ''
+    children_string_list = []
+    for child in element.children:
+        children_string_list.append(get_child_string(child))
 
-            # elif char == ' ':
-            #    s += '&#160;'
-            # elif char == '\n':
-            #    s += '\\n'
-            # elif char == '\t':
-            #    s += '\\t'
+    children_string_lines = []
+    for child_string in children_string_list:
+        children_string_lines.extend(child_string.split('\n'))
 
-            else:
-                s += str(char)
-        return s
+    if len(children_string_lines) == 1:
+        s += children_string_lines[0]
+    else:
+        s += '\n'
+        s += '\n'.join([' '*indent + line for line in children_string_lines])
+        s += '\n'
 
 
 class Element:
@@ -189,12 +180,12 @@ class Element:
 
         self.__dict__[key] = value
 
-    def string(self, inherited_namespaces=None, indent=4):
+    def string(self, inherited_namespaces=None):
 
         inherited_ns = inherited_namespaces or Namespaces()
 
         s = ''
-        s += ''
+
         s += '<'
 
         full_name = ''
@@ -227,7 +218,7 @@ class Element:
             if isinstance(kid, Element):
                 inherited_ns_for_subs = inherited_ns.copy()
                 inherited_ns_for_subs.update(self.namespaces)
-                return kid.string(inherited_namespaces=inherited_ns_for_subs, indent=indent)
+                return kid.string(inherited_namespaces=inherited_ns_for_subs)
 
             elif isinstance(kid, String):
                 return kid.string()
@@ -235,20 +226,8 @@ class Element:
         if self.children:
             s += '>'
 
-            children_string_list = []
             for child in self.children:
-                children_string_list.append(get_child_string(child))
-
-            children_string_lines = []
-            for child_string in children_string_list:
-                children_string_lines.extend(child_string.split('\n'))
-
-            if len(children_string_lines) == 1:
-                s += children_string_lines[0]
-            else:
-                s += '\n'
-                s += '\n'.join([' '*indent + line for line in children_string_lines])
-                s += '\n'
+                s += get_child_string(child)
 
             s += '</{}>'.format(full_name)
 
@@ -256,9 +235,6 @@ class Element:
             s += '/>'
 
         return s
-
-    def string2(self):
-        pass
 
 
 class Children(List):
@@ -304,6 +280,25 @@ class Attribute:
             raise Exception
 
         self.__dict__[key] = value
+
+
+class String(Str):
+    def string(self):
+        s = ''
+        for char in self:
+            if char == '&':
+                s += '&amp;'
+            elif char == '<':
+                s += '&lt;'
+            elif char == '>':
+                s += '&gt;'
+            elif char == '"':
+                s += '&quot;'
+            elif char == "'":
+                s += '&apos;'
+            else:
+                s += str(char)
+        return s
 
 
 def main():
