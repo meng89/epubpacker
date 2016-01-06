@@ -1,13 +1,14 @@
 #!/bin/env python3
 
+import copy
 
-from baseclasses import List, Dict, Str, Limit
+from .baseclasses import List, Dict, Str
 
 
 import xml.parsers.expat
 
 
-def create_element(file):
+def parse(file, debug=False):
     element = None
 
     elements = []
@@ -19,7 +20,7 @@ def create_element(file):
     def start_element(name, attrs):
         _do_string()
 
-        print('start_element', name)
+        print('start_element', name) if debug else None
 
         attributes = Attributes()
 
@@ -57,19 +58,19 @@ def create_element(file):
 
     def end_element(name):
         _do_string()
-        print('end_element', name)
+        print('end_element', name) if debug else None
         elements.pop()
 
     def start_namespace(prefix, uri):
-        print('start_namespace')
+        print('start_namespace') if debug else None
         ns_list.append((uri, prefix))
 
     def end_namespace(prefix):
-        print('end_namespace')
+        print('end_namespace') if debug else None
         ns_list.pop()
 
     def character_data_handler(data):
-        print('Character data: "{}"'.format(data))
+        print('Character data: "{}"'.format(data)) if debug else None
         nonlocal s
         s += data
 
@@ -126,22 +127,47 @@ def xml_header(version='1.0', encoding='utf-8', standalone='yes'):
     return s
 
 
-def pretty_print(element):
-    s = ''
-    children_string_list = []
-    for child in element.children:
-        children_string_list.append(get_child_string(child))
+def clean(element):
+    new_element = copy.copy(element)
 
-    children_string_lines = []
-    for child_string in children_string_list:
-        children_string_lines.extend(child_string.split('\n'))
+    children = Children()
 
-    if len(children_string_lines) == 1:
-        s += children_string_lines[0]
-    else:
-        s += '\n'
-        s += '\n'.join([' '*indent + line for line in children_string_lines])
-        s += '\n'
+    for child in new_element.children:
+        if isinstance(child, String):
+            new_string = String(child.strip())
+            if new_string:
+                children.append(new_string)
+        elif isinstance(child, Element):
+            children.append(clean(child))
+    new_element.children = children
+
+    return new_element
+
+
+def insert_for_pretty(e, indent=4, indent_after_children=0, one_child_dont_do=True):
+
+    new_e = copy.copy(e)
+
+    if one_child_dont_do and len(new_e.children) == 1:
+        pass
+
+    elif new_e.children:
+        new_children = Children()
+
+        for child in new_e.children:
+            new_children.append(String('\n' + ' ' * indent))
+
+            if isinstance(child, String):
+                new_children.append(child)
+
+            elif isinstance(child, Element):
+                new_children.append(insert_for_pretty(child, indent=indent + indent, indent_after_children=indent))
+
+        new_children.append(String('\n' + ' ' * indent_after_children))
+
+        new_e.children = new_children
+
+    return new_e
 
 
 class Element:
@@ -294,19 +320,3 @@ class String(Str):
             else:
                 s += str(char)
         return s
-
-
-def main():
-    file = '/media/data/temp/1/META-INF/container.xml'
-    e = create_element(file)
-    print(e.string())
-    print('et:')
-    import xml.etree.ElementTree as et
-    e = et.ElementTree(file=file)
-    import sys
-    e.write('1.xml')
-    print(open('1.xml').read())
-
-
-if __name__ == '__main__':
-    main()
