@@ -1,0 +1,12 @@
+
+.pyc
+.idea/
+
+build
+dist
+__pycache__
+temp
+test.py
+
+CCC/
+CCC*

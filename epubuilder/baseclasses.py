@@ -16,13 +16,11 @@ class Limit:
 
 
 class List(UserList):
-    limit = Limit()
 
     def __init__(self, initlist=None, limit=None, is_limit_when_init=True):
+        self.limits = []
         if limit:
-            self.limit = limit
-
-        # initlist = initlist or []
+            self.limits.append(limit)
 
         super().__init__()
 
@@ -38,18 +36,22 @@ class List(UserList):
 
     # all del item should be here
     def __delitem__(self, i):  # del x[i], del
-        self.limit.del_before(index=i, obj=self)
+        [limit.del_before(index=i, obj=self) for limit in self.limits]
+
         del self.data[i]
-        self.limit.del_after(index=i, obj=self)
+
+        [limit.add_after(index=i, obj=self) for limit in self.limits]
 
     def append(self, item):  # add
         self.insert(len(self), item)
 
     # all add item should be here
     def insert(self, i, item):
-        self.limit.add_before(index=i, item=item, obj=self)
+        [limit.add_before(index=i, item=item, obj=self) for limit in self.limits]
+
         self.data.insert(i, item)
-        self.limit.add_after(index=i, item=item, obj=self)
+
+        [limit.add_after(index=i, item=item, obj=self) for limit in self.limits]
 
     def pop(self, i=-1):  # del
         x = self[i]
@@ -80,8 +82,12 @@ class List(UserList):
 
 
 class Dict(UserDict):
+
     def __init__(self, initdict=None, limit=None, is_limit_when_init=True):
-        self._limit = limit or Limit()
+        self.limits = []
+        if limit:
+            self.limits.append(limit)
+
         initdict = initdict or {}
 
         super().__init__()
@@ -94,15 +100,20 @@ class Dict(UserDict):
 
     # all set should be here
     def __setitem__(self, key, item):
-        self._limit.add_before(key=key, item=item, obj=self)
+
+        [limit.add_before(key=key, item=item, obj=self) for limit in self.limits]
+
         self.data[key] = item
-        self._limit.add_after(key=key, item=item, obj=self)
+
+        [limit.add_after(key=key, item=item, obj=self) for limit in self.limits]
 
     # all del should be here
     def __delitem__(self, key):
-        self._limit.del_before(key=key, obj=self)
+        [limit.del_before(key=key, obj=self) for limit in self.limits]
+
         del self.data[key]
-        self._limit.del_after(key=key, obj=self)
+
+        [limit.del_after(key=key, obj=self) for limit in self.limits]
 
 
 class Str(UserString):

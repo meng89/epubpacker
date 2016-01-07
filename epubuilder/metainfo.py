@@ -3,7 +3,7 @@ from .baseclasses import List
 from . import xl
 
 
-class Ocf:
+class MetaInfo:
     _container_path = 'META-INF/container.xml'
     _encryption_path = 'META-INF/encryption.xml'
     _manifest_path = 'META-INF/manifest.xml'
@@ -52,19 +52,47 @@ class Ocf:
         else:
             raise AttributeError
 
+        self.__dict__[key] = value
+
 
 class Container:
     def __init__(self, xmlstr=None):
         self._element = xl.parse(xmlstr)
+        self.rootfiles = Rootfiles(self._element.children[0])
 
-    def get_xml(self):
+    def get_xmlstr(self):
         pass
 
 
+class Rootfiles(List):
+    def __init__(self, element=None):
+        super().__init__()
+        self.subs = Subs()
+        if element.children:
+            for one in element.children:
+                if one.name == 'rootfile':
+                    self.subs.append(Rootfile(element=one))
+
+    def element(self):
+        e = xl.Element(name='rootfiles')
+        for sub in self.subs:
+            e.attributes.append(sub.element)
+
+
 class Rootfile:
-    def __init__(self, full_path, media_type):
-        self.full_path = full_path
-        self.media_type = media_type
+    def __init__(self, element=None, full_path=None, media_type=None):
+        if element:
+            self.full_path = element.attributes['full-path']
+            self.media_type = element.attributes['media_type']
+        else:
+            self.full_path = full_path
+            self.media_type = media_type
+
+    def element(self):
+        e = xl.Element(name='rootfile')
+        e.attributes['full-path'] = self.full_path
+        e.attributes['media-type'] = self.media_type
+        return e
 
 
 class Encryption:
@@ -90,3 +118,8 @@ class Rights:
 class Signatures:
     def __init__(self, xmlstr=None):
         pass
+
+
+class Subs(List):
+    def __init__(self):
+        super().__init__()

@@ -1,14 +1,12 @@
 import zipfile
 
-from .baseclasses import Dict, List
-from .ocf import Ocf
+from .baseclasses import Dict, List, Limit
+from .metainfo import MetaInfo
 
 
 class Epub(object):
     def __init__(self, file=None):
         self._mimetype = b'application/epub+zip'
-
-        # OCF
 
         self.metadata = None
         self.manifest = None
@@ -26,11 +24,24 @@ class Epub(object):
             if epub_zip.read('mimetype') != self._mimetype:
                 raise Exception
 
-            self.ocf = Ocf(epub_zip=epub_zip)
-
+            self.metainfo = MetaInfo(epub_zip=epub_zip)
+            self.opf = self.metadata.container.rootfiles[0].
             for info in epub_zip.infolist():
                 if info.name.split('/')[1] == 'EPUB':
                     self.files[info.name] = File(epub_zip.read(info.name), date=info.date_time, comment=info.comment)
+
+
+
+class Files(Dict):
+    def __init__(self):
+        super().__init__()
+
+        class MyLimit(Limit):
+            def add_before(self, index=None, key=None, item=None, obj=None):
+                if not isinstance(item, File):
+                    raise Exception
+
+        self.limits.append(MyLimit)
 
 
 class File(object):
@@ -45,6 +56,8 @@ class File(object):
     def __getattr__(self, item):
         pass
 
+class Ocf(object):
+    def __init__(self, xmlstr):
 
 class Opf(object):
     def __init__(self, file=None):
