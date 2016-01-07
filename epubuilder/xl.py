@@ -8,7 +8,7 @@ from .baseclasses import List, Dict, Str
 import xml.parsers.expat
 
 
-def parse(file, debug=False):
+def parse(xmlstr, debug=False):
     element = None
 
     elements = []
@@ -93,7 +93,7 @@ def parse(file, debug=False):
 
     p.CharacterDataHandler = character_data_handler
 
-    p.Parse(open(file).read(), 1)
+    p.Parse(xmlstr, 1)
 
     return element
 

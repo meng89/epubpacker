@@ -1,5 +1,7 @@
 from .baseclasses import List
 
+from . import xl
+
 
 class Ocf:
     _container_path = 'META-INF/container.xml'
@@ -53,8 +55,10 @@ class Ocf:
 
 class Container:
     def __init__(self, xmlstr=None):
+        self._element = xl.parse(xmlstr)
 
-        self.rootfiles = List()
+    def get_xml(self):
+        pass
 
 
 class Rootfile:
