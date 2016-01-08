@@ -37,18 +37,26 @@ class MetaInfo:
                                      if (epub_zip and self._signatures_path in epub_zip.namelist()) else None)
 
     def __setattr__(self, key, value):
-        if key == 'container' and not isinstance(value, Container):
-            raise Exception
-        elif key == 'encryption' and not isinstance(value, Encryption):
-            raise Exception
-        elif key == 'manifest' and not isinstance(value, Manifest):
-            raise Exception
-        elif key == 'metadata' and not isinstance(value, Metadata):
-            raise Exception
-        elif key == 'rights' and not isinstance(value, Rights):
-            raise Exception
-        elif key == 'signatures' and not isinstance(value, Signatures):
-            raise Exception
+        types = {'container': Container, 'encryption': Encryption, ''}
+
+        if key == 'container':
+            if not isinstance(value, Container):
+                raise Exception
+        elif key == 'encryption':
+            if not isinstance(value, Encryption):
+                raise Exception
+        elif key == 'manifest':
+            if not isinstance(value, Manifest):
+                raise Exception
+        elif key == 'metadata':
+            if not isinstance(value, Metadata):
+                raise Exception
+        elif key == 'rights':
+            if not isinstance(value, Rights):
+                raise Exception
+        elif key == 'signatures':
+            if not isinstance(value, Signatures):
+                raise Exception
         else:
             raise AttributeError
 

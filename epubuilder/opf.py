@@ -19,7 +19,7 @@ class Package(Element):
     def check(self):
         # order = [Metadata, Manifest, Spine,  Guide, Bindings]
 
-        items = self.sub_elements.copy()
+        items = self.children.copy()
 
         for item, c in ((items[0], Metadata), (items[1], Manifest), (items[2], Spine)):
             if isinstance(item, c):
@@ -51,7 +51,7 @@ class Metadata(Element):
         if len(self.attributes) != 0:
             raise AttributeQuantityError
 
-        items = self.sub_elements.copy()
+        items = self.children.copy()
         dc_identifiers = [item for item in items if item.name == 'dc:identifier']
         for dc_identifier in dc_identifiers:
             dc_identifier.check()
@@ -65,7 +65,7 @@ class DcIdentifier(Element):
 
 class Manifest(Element):
     def check(self):
-        for item in self.sub_elements:
+        for item in self.children:
             if isinstance(item, Item):
                 item.check()
             else:
