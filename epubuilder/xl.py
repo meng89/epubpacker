@@ -2,8 +2,9 @@
 
 import copy
 
-from .baseclasses import List, Dict, Str
+from hooky import List, Dict
 
+from collections import UserString as Str
 
 import xml.parsers.expat
 

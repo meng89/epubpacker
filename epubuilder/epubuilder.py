@@ -6,9 +6,10 @@ import uuid
 import zipfile
 
 import magic
+
 from lxml import etree
 
-from . import userlist
+from hooky import List
 
 
 media_table = [
