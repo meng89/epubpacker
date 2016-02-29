@@ -15,15 +15,15 @@ def main():
     pretty_e = insert_for_pretty(cleaned_e)
 
     print('#### element:')
-    print(e.string())
+    print(e.to_string())
     print()
 
     print('#### clean element:')
-    print(cleaned_e.string())
+    print(cleaned_e.to_string())
     print()
 
     print('#### pretty element:')
-    print(pretty_e.string())
+    print(pretty_e.to_string())
     print()
 
 

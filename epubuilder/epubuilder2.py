@@ -59,41 +59,7 @@ class File(object):
 class Ocf(object):
     def __init__(self, xmlstr):
 
-class Opf(object):
-    def __init__(self, file=None):
-        self.metadata = Metadata()
-        if file:
-            pass
 
-
-class Metadata(object):
-    """ store title, identifier and language
-    and contributor | coverage | creator | date | description | format | publisher | relation | rights | source
-    | subject | type
-
-    meta element for compatibility
-
-    see http://www.idpf.org/epub/30/spec/epub30-publications.html#sec-metadata-elem
-    """
-
-    def __init__(self):
-        pass
-
-
-class Manifest(object):
-    def __init__(self):
-        pass
-
-
-class Spine(object):
-    def __init__(self):
-        pass
-
-
-class Guide(object):
-    """ is deprecated """
-    def __init__(self):
-        pass
 
 
 class Nav(object):

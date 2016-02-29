@@ -78,7 +78,7 @@ def parse(xmlstr, debug=False):
     def _do_string():
         nonlocal s
         if s and elements:
-            string = String(s)
+            string = Text(s)
             elements[-1].children.append(string)
             s = ''
 
@@ -134,8 +134,8 @@ def clean(element):
     children = Children()
 
     for child in new_element.children:
-        if isinstance(child, String):
-            new_string = String(child.strip())
+        if isinstance(child, Text):
+            new_string = Text(child.strip())
             if new_string:
                 children.append(new_string)
         elif isinstance(child, Element):
@@ -156,15 +156,15 @@ def insert_for_pretty(e, indent=4, indent_after_children=0, one_child_dont_do=Tr
         new_children = Children()
 
         for child in new_e.children:
-            new_children.append(String('\n' + ' ' * indent))
+            new_children.append(Text('\n' + ' ' * indent))
 
-            if isinstance(child, String):
+            if isinstance(child, Text):
                 new_children.append(child)
 
             elif isinstance(child, Element):
                 new_children.append(insert_for_pretty(child, indent=indent + indent, indent_after_children=indent))
 
-        new_children.append(String('\n' + ' ' * indent_after_children))
+        new_children.append(Text('\n' + ' ' * indent_after_children))
 
         new_e.children = new_children
 
@@ -206,7 +206,7 @@ class Element:
 
         self.__dict__[key] = value
 
-    def string(self, inherited_namespaces=None):
+    def to_string(self, inherited_namespaces=None):
 
         inherited_ns = inherited_namespaces or Namespaces()
 
@@ -231,13 +231,21 @@ class Element:
                 else:
                     s += ' xmlns="{}"'.format(uri)
 
-        for attr in self.attributes:
-            s += ' '
-            if attr.uri:
-                s += self.namespaces[attr.uri] + ':'
+        # for attr in self.attributes:
+        #   s += ' '
+        #   if attr.uri:
+        #       s += self.namespaces[attr.uri] + ':'
+        #
+        #   s += attr.name
+        #   s += '="{}"'.format(attr.value)
 
-            s += attr.name
-            s += '="{}"'.format(attr.value)
+        for name, value in self.attributes.items():
+            s += ' '
+            if value.uri:
+                s += self.namespaces[value.uri] + ':'
+
+            s += name
+            s += '="{}"'.format(value.value)
 
         if self.children:
             s += '>'
@@ -246,10 +254,10 @@ class Element:
                 if isinstance(child, Element):
                     inherited_ns_for_subs = inherited_ns.copy()
                     inherited_ns_for_subs.update(self.namespaces)
-                    s += child.string(inherited_namespaces=inherited_ns_for_subs)
+                    s += child.to_string(inherited_namespaces=inherited_ns_for_subs)
 
-                elif isinstance(child, String):
-                    s += child.string()
+                elif isinstance(child, Text):
+                    s += child.to_string()
 
             s += '</{}>'.format(full_name)
 
@@ -304,8 +312,31 @@ class Attribute:
         self.__dict__[key] = value
 
 
-class String(Str):
-    def string(self):
+class Attributes2(Dict):
+    def __setattr__(self, key, value):
+        if isinstance(value, Attribute2):
+
+            self.__dict__[key] = value
+
+
+class Attribute2:
+    def __init__(self, value, nsuri=None):
+        self.value = value
+        self.uri = nsuri
+
+    def __setattr__(self, key, value):
+        if key == 'value':
+            pass
+        elif key == 'uri':
+            pass
+        else:
+            raise Exception
+
+        self.__dict__[key] = value
+
+
+class Text(Str):
+    def to_string(self):
         s = ''
         for char in self:
             if char == '&':
