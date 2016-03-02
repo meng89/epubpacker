@@ -181,30 +181,37 @@ class Element:
 
         self.children = Children()
 
-    def __setattr__(self, key, value):
+    @property
+    def name(self):
+        return self.__dict__['name']
 
-        if key == 'name':
-            _name_check(value)
+    @name.setter
+    def name(self, value):
+        self.__dict__['name'] = value
 
-        elif key == 'uri':
-            _nsuri_check(value, self.namespaces)
+    @property
+    def uri(self):
+        return self.__dict__['uri']
 
-        elif key == 'namespaces':
-            if not isinstance(value, Namespaces):
-                raise ObjectAttributeError
+    @uri.setter
+    def uri(self, value):
+        self.__dict__['uri'] = value
 
-        elif key == 'attributes':
-            if not isinstance(value, Attributes):
-                raise ObjectAttributeError
+    @property
+    def attributes(self):
+        return self.__dict__['attributes']
 
-        elif key == 'children':
-            if not isinstance(value, Children):
-                raise ObjectAttributeError
+    @attributes.setter
+    def attributes(self, value):
+        self.__dict__['attributes'] = value
 
-        else:
-            raise ObjectAttributeError
+    @property
+    def children(self):
+        return self.__dict__['children']
 
-        self.__dict__[key] = value
+    @children.setter
+    def children(self, value):
+        self.__dict__['children'] = value
 
     def to_string(self, inherited_namespaces=None):
 
