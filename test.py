@@ -2,7 +2,7 @@
 import copy
 
 
-class C(object):
+class C:
     def __init__(self, name):
         self.__dict__['name'] = name
 
@@ -15,17 +15,15 @@ class C(object):
         self.__dict__['name'] = value
 
 
-def r():
-    raise Exception
+class C2(C):
+    @C
 
-C2 = copy.deepcopy(C)
-
-c1 = C2('jbm')
-c1.name = '23333'
-print(c1.name)
+    @C.name.setter
+    def name(self, value):
+        raise Exception
 
 
-C.name.setter = r()
+c2 = C2('jbm')
 
-c1.name = '24444'
-print(c1.name)
+c2.name = 'haha'
+print(c2.name)

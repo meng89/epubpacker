@@ -39,7 +39,7 @@ def parse(xmlstr, debug=False):
             if len(l) > 1:
                 attr_uri = l[0]
 
-            attributes.append(Attribute(attr_name, value, attr_uri))
+            attributes[attr_name] = Attribute(value, attr_uri)
 
         namespaces = Namespaces()
 
@@ -238,14 +238,6 @@ class Element:
                 else:
                     s += ' xmlns="{}"'.format(uri)
 
-        # for attr in self.attributes:
-        #   s += ' '
-        #   if attr.uri:
-        #       s += self.namespaces[attr.uri] + ':'
-        #
-        #   s += attr.name
-        #   s += '="{}"'.format(attr.value)
-
         for name, value in self.attributes.items():
             s += ' '
             if value.uri:
@@ -296,40 +288,16 @@ class Namespace:
         self.__dict__[key] = value
 
 
-class Attributes(List):
-    pass
-
-
-class Attribute:
-    def __init__(self, name, value, nsuri=None):
-        self.name = name
-        self.value = value
-        self.uri = nsuri
-
+class Attributes(Dict):
     def __setattr__(self, key, value):
-        if key == 'name':
-            pass
-        elif key == 'value':
-            pass
-        elif key == 'uri':
-            pass
-        else:
-            raise Exception
-
-        self.__dict__[key] = value
-
-
-class Attributes2(Dict):
-    def __setattr__(self, key, value):
-        if isinstance(value, Attribute2):
-
+        if isinstance(value, Attribute):
             self.__dict__[key] = value
 
 
-class Attribute2:
-    def __init__(self, value, nsuri=None):
+class Attribute:
+    def __init__(self, value, uri=None):
         self.value = value
-        self.uri = nsuri
+        self.uri = uri
 
     def __setattr__(self, key, value):
         if key == 'value':
