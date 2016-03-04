@@ -1,29 +1,32 @@
-#!/bin/env python3
-import copy
+#!/usr/bin/env python3
 
 
-class C:
-    def __init__(self, name):
-        self.__dict__['name'] = name
+class D(object):
+    def __init__(self, value):
+        self.value = value
 
-    @property
-    def name(self):
-        return self.__dict__['name']
+    def __get__(self, instance, owner):
+        print('get invoke')
+        return self.value
 
-    @name.setter
-    def name(self, value):
-        self.__dict__['name'] = value
+    def __set__(self, instance, value):
+        print('set invoke')
+        self.value = value
 
-
-class C2(C):
-    @C
-
-    @C.name.setter
-    def name(self, value):
-        raise Exception
+d = D('default')
 
 
-c2 = C2('jbm')
+class X(object):
+    v = d
 
-c2.name = 'haha'
-print(c2.name)
+
+x = X()
+
+x.v = 3
+
+x.x = 4
+
+
+print(x.__dict__)
+
+
