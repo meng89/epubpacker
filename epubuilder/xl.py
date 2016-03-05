@@ -183,6 +183,15 @@ class Element:
         self.children = Children()
 
     @property
+    def descriptor(self):
+        return self.__dict__['descriptor']
+
+    @descriptor.setter
+    def descriptor(self, value):
+        self.__dict__['descriptor'] = value
+        self.attributes.descriptor = value['']
+
+    @property
     def name(self):
         return self.__dict__['name']
 
@@ -272,44 +281,71 @@ class Children(List):
 
 
 class Namespaces(Dict):
-    pass
-
-
-class Namespace:
-    def __init__(self, uri, prefix):
-        self.uri = uri
-        self.prefix = prefix
-
-    def __setattr__(self, key, value):
-        if key == 'uri':
-            pass
-        elif key == 'prefix':
-            pass
-
-        self.__dict__[key] = value
+    def __setitem__(self, key, value):
+        super().__setitem__(key, value)
 
 
 class Attributes(Dict):
-    pass
-    # def __setattr__(self, key, value):
-    #    if isinstance(value, Attribute):
-    #        self.__dict__[key] = value
+    def __init__(self):
+        super().__init__()
+
+        self.descriptor = None
+
+    @property
+    def descriptor(self):
+        return self.__dict__['descriptor']
+
+    @descriptor.setter
+    def descriptor(self, value):
+        self.__dict__['descriptor'] = value
+
+        for attr_name, value in self.items():
+            self[attr_name] = value
+
+    def __setitem__(self, key, value):
+        if self.descriptor:
+            self.descriptor['name_checkfunc'](key)
+            self[key].checkfunc = self.descriptor['value_checkfuncs'][key]
+
+        if isinstance(value, Attribute):
+            super().__setitem__(key, value)
+        else:
+            raise Exception
 
 
 class Attribute:
     def __init__(self, value, uri=None):
         self.value = value
         self.uri = uri
+        self.checkfunc = None
 
-    def __setattr__(self, key, value):
-        if key == 'value':
-            pass
-        elif key == 'uri':
-            pass
-        else:
-            raise Exception
+    @property
+    def checkfunc(self):
+        return self.__dict__['checkfunc']
 
-        self.__dict__[key] = value
+    @checkfunc.setter
+    def checkfunc(self, func):
+        self.__dict__['checkfunc'] = func
+        self.value = self.value
+
+    @property
+    def value(self):
+        return self.__dict__['value']
+
+    @value.setter
+    def value(self, value):
+        if callable(self.checkfunc):
+            self.checkfunc(value)
+
+        self.__dict__['value'] = value
+
+    @property
+    def uri(self):
+        return self.__dict__['uri']
+
+    @uri.setter
+    def uri(self, value):
+        self.__dict__['uri'] = value
 
 
 class Text(Str):

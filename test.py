@@ -10,3 +10,35 @@
 """
 
 
+def attr_name_checkfunc(name):
+    pass
+
+
+def attr_value_checkfunc(value):
+    pass
+
+
+def child_name_checkfunc(name):
+    pass
+
+
+def final_checkfunc(e):
+    pass
+
+
+descriptor = {
+    'freeze_name': True,
+
+    'attrs': {
+        'name_checkfunc': attr_name_checkfunc,
+        'value_checkfuncs': {
+            'id': attr_value_checkfunc,
+            'dir': attr_value_checkfunc
+        },
+    },
+
+    'children': {
+        'name_checkfunc': child_name_checkfunc,
+        'descriptors': {''},
+    },
+}
