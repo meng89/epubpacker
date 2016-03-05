@@ -1,5 +1,4 @@
-#!/bin/env python3
-import copy
+#!/usr/bin/env python3
 
 
 class C:
@@ -8,6 +7,7 @@ class C:
 
     @property
     def name(self):
+        raise
         return self.__dict__['name']
 
     @name.setter
@@ -15,15 +15,19 @@ class C:
         self.__dict__['name'] = value
 
 
-class C2(C):
-    @C
-
-    @C.name.setter
-    def name(self, value):
-        raise Exception
+class B:
+    pass
 
 
-c2 = C2('jbm')
+"""
+名字定死，命名空间定死。
 
-c2.name = 'haha'
-print(c2.name)
+属性: 必用属性, 选用属性，属性值限定， 外部函数检测值
+
+子元素: 必用子元素， 子元素数量， 顺序。
+
+"""
+
+b = B()
+
+b2 = b.__class__()

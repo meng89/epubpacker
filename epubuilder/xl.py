@@ -45,7 +45,8 @@ def parse(xmlstr, debug=False):
 
         for _uri, _prefix in ns_list:
             namespaces[_uri] = _prefix
-
+        print(tag, uri, namespaces, attributes)
+        print()
         e = Element(tag, uri, namespaces, attributes)
 
         if elements:
@@ -147,7 +148,7 @@ def clean(element):
 
 def insert_for_pretty(e, indent=4, indent_after_children=0, one_child_dont_do=True):
 
-    new_e = copy.copy(e)
+    new_e = copy.deepcopy(e)
 
     if one_child_dont_do and len(new_e.children) == 1:
         pass
@@ -289,9 +290,10 @@ class Namespace:
 
 
 class Attributes(Dict):
-    def __setattr__(self, key, value):
-        if isinstance(value, Attribute):
-            self.__dict__[key] = value
+    pass
+    # def __setattr__(self, key, value):
+    #    if isinstance(value, Attribute):
+    #        self.__dict__[key] = value
 
 
 class Attribute:
