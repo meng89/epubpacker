@@ -3,7 +3,7 @@ import os
 
 NAME = "epubuilder"
 
-VERSION = '0.5.4'
+VERSION = '0.5.5'
 
 DESCRIPTION = 'A library to write EPUB v3.'
 
@@ -13,8 +13,6 @@ if os.path.exists('long_description.rst'):
 
 
 URL = 'https://github.com/meng89/{}'.format(NAME)
-
-DOWNLOAD_URL = '{}/archive/v{}.tar.gz'.format(URL, VERSION)
 
 CLASSIFIERS=['Development Status :: 4 - Beta',
              'Intended Audience :: Developers',
@@ -30,8 +28,10 @@ setup(name=NAME,
       author_email='ObserverChan@gmail.com',
       license='MIT',
       url=URL,
-      download_url=DOWNLOAD_URL,
       packages=['epubuilder'],
-      install_requires=[line.strip() for line in open('requirements.txt')],
+      install_requires=[
+          'lxml>=3.4.4',
+          'python-magic>=0.4.3'
+      ],
       classifiers=CLASSIFIERS
 )
