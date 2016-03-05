@@ -1,5 +1,5 @@
-<taga>
-    <tagb>bbb</tagb>
+<taga xmlns:ns0="http://www.w3.org/1999/afafasfsfasfsaf">
+    <ns0:tagb>bbb</ns0:tagb>
     <a />
     <b />
     <e>
@@ -7,7 +7,7 @@
         <g />
         <h />
         <i>
-            <j />
+            <ns0:j ns0:s="slajfalsk" />
         </i>
     </e>
 </taga>
