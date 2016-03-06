@@ -39,15 +39,15 @@ def parse(xmlstr, debug=False):
             if len(l) > 1:
                 attr_uri = l[0]
 
-            attributes[attr_name] = Attribute(value, attr_uri)
+            attributes[(attr_uri, attr_name)] = value
 
-        namespaces = Namespaces()
+        namespaces = Prefixes()
 
         for _uri, _prefix in ns_list:
             namespaces[_uri] = _prefix
         print(tag, uri, namespaces, attributes)
         print()
-        e = Element(tag, uri, namespaces, attributes)
+        e = Element((uri, tag), namespaces, attributes)
 
         if elements:
             elements[-1].children.append(e)
@@ -173,12 +173,13 @@ def insert_for_pretty(e, indent=4, indent_after_children=0, one_child_dont_do=Tr
 
 
 class Element:
-    def __init__(self, name, uri=None, namespaces=None, attributes=None):
-        self.namespaces = namespaces or Namespaces()
+    def __init__(self, name, prefixes=None, attributes=None):
+        self.descriptor = None
+
+        self.prefixes = prefixes or Prefixes()
         self.attributes = attributes or Attributes()
 
         self.name = name
-        self.uri = uri
 
         self.children = Children()
 
@@ -189,7 +190,8 @@ class Element:
     @descriptor.setter
     def descriptor(self, value):
         self.__dict__['descriptor'] = value
-        self.attributes.descriptor = value['']
+        if self.descriptor:
+            self.attributes.descriptor = self.descriptor['attributes']
 
     @property
     def name(self):
@@ -197,15 +199,13 @@ class Element:
 
     @name.setter
     def name(self, value):
+        if self.descriptor:
+            self.descriptor['name_checkfunc'](value)
+
+        if not isinstance(value, tuple) or len(value) != 2:
+            raise Exception
+
         self.__dict__['name'] = value
-
-    @property
-    def uri(self):
-        return self.__dict__['uri']
-
-    @uri.setter
-    def uri(self, value):
-        self.__dict__['uri'] = value
 
     @property
     def attributes(self):
@@ -225,21 +225,24 @@ class Element:
 
     def to_string(self, inherited_namespaces=None):
 
-        inherited_ns = inherited_namespaces or Namespaces()
+        inherited_prefixes = inherited_namespaces or Prefixes()
 
         s = ''
 
         s += '<'
 
         full_name = ''
-        if self.uri and self.namespaces[self.uri]:
-            full_name += self.namespaces[self.uri] + ':'
-        full_name += self.name
+        if self.name[0] and self.prefixes[self.name[0]]:
+            full_name += self.prefixes[self.name[0]] + ':'
+        full_name += self.name[1]
 
         s += full_name
 
-        for uri, prefix in self.namespaces.items():
-            if uri in inherited_ns.keys() and inherited_ns[uri] == prefix:
+        for uri, prefix in self.prefixes.items():
+            if uri in inherited_prefixes.keys() and inherited_prefixes[uri] == prefix:
+                pass
+
+            elif uri == 'http://www.w3.org/XML/1998/namespace':
                 pass
 
             elif uri:
@@ -250,20 +253,24 @@ class Element:
 
         for name, value in self.attributes.items():
             s += ' '
-            if value.uri:
-                s += self.namespaces[value.uri] + ':'
 
-            s += name
-            s += '="{}"'.format(value.value)
+            if name[0] == 'http://www.w3.org/XML/1998/namespace':
+                s += 'xml:'
+
+            elif name[0]:
+                s += self.prefixes[name[0]] + ':'
+
+            s += name[1]
+            s += '="{}"'.format(value)
 
         if self.children:
             s += '>'
 
             for child in self.children:
                 if isinstance(child, Element):
-                    inherited_ns_for_subs = inherited_ns.copy()
-                    inherited_ns_for_subs.update(self.namespaces)
-                    s += child.to_string(inherited_namespaces=inherited_ns_for_subs)
+                    inherited_prefixes_for_subs = inherited_prefixes.copy()
+                    inherited_prefixes_for_subs.update(self.prefixes)
+                    s += child.to_string(inherited_namespaces=inherited_prefixes_for_subs)
 
                 elif isinstance(child, Text):
                     s += child.to_string()
@@ -276,11 +283,7 @@ class Element:
         return s
 
 
-class Children(List):
-    pass
-
-
-class Namespaces(Dict):
+class Prefixes(Dict):
     def __setitem__(self, key, value):
         super().__setitem__(key, value)
 
@@ -305,47 +308,27 @@ class Attributes(Dict):
     def __setitem__(self, key, value):
         if self.descriptor:
             self.descriptor['name_checkfunc'](key)
-            self[key].checkfunc = self.descriptor['value_checkfuncs'][key]
+            self.descriptor['value_checkfuncs'][key](value)
 
-        if isinstance(value, Attribute):
-            super().__setitem__(key, value)
-        else:
-            raise Exception
+        super().__setitem__(key, value)
 
 
-class Attribute:
-    def __init__(self, value, uri=None):
-        self.value = value
-        self.uri = uri
-        self.checkfunc = None
+class Children(List):
+    def __init__(self):
+        super().__init__()
+        self.descriptors = None
 
     @property
-    def checkfunc(self):
-        return self.__dict__['checkfunc']
+    def descriptors(self):
+        return self.__dict__['descriptors']
 
-    @checkfunc.setter
-    def checkfunc(self, func):
-        self.__dict__['checkfunc'] = func
-        self.value = self.value
+    @descriptors.setter
+    def descriptors(self, value):
+        self.__dict__['descriptors'] = value
 
-    @property
-    def value(self):
-        return self.__dict__['value']
-
-    @value.setter
-    def value(self, value):
-        if callable(self.checkfunc):
-            self.checkfunc(value)
-
-        self.__dict__['value'] = value
-
-    @property
-    def uri(self):
-        return self.__dict__['uri']
-
-    @uri.setter
-    def uri(self, value):
-        self.__dict__['uri'] = value
+        for item in self:
+            if not isinstance(item, Text):
+                item.descriptor = self.descriptors[item.name]
 
 
 class Text(Str):
