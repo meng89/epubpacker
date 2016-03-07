@@ -171,6 +171,15 @@ def insert_for_pretty(e, indent=4, indent_after_children=0, one_child_dont_do=Tr
 
     return new_e
 
+
+IS_NAME_FIXED = 'is_name_fixed'
+ATTRIBUTES = 'attributes'
+NAME_CHECKFUNC = 'name_checkfunc'
+VALUE_CHECKFUNCS = 'value_checkfuncs'
+CHILDREN = 'children'
+DESCRIPTORS = 'descriptors'
+
+
 XML_URI = 'http://www.w3.org/XML/1998/namespace'
 
 
@@ -193,7 +202,8 @@ class Element:
     def descriptor(self, value):
         self.__dict__['descriptor'] = value
         if self.descriptor:
-            self.attributes.descriptor = self.descriptor['attributes']
+            self.attributes.descriptor = self.descriptor[ATTRIBUTES]
+            self.children.descriptor = self.descriptor[CHILDREN]
 
     @property
     def name(self):
@@ -202,7 +212,7 @@ class Element:
     @name.setter
     def name(self, value):
         if self.descriptor:
-            self.descriptor['name_checkfunc'](value)
+            self.descriptor[NAME_CHECKFUNC](value)
 
         if not isinstance(value, tuple) or len(value) != 2:
             raise Exception
@@ -313,8 +323,8 @@ class Attributes(Dict):
 
     def __setitem__(self, key, value):
         if self.descriptor:
-            self.descriptor['name_checkfunc'](key)
-            self.descriptor['value_checkfuncs'][key](value)
+            self.descriptor[NAME_CHECKFUNC](key)
+            self.descriptor[VALUE_CHECKFUNCS][key](value)
 
         super().__setitem__(key, value)
 
@@ -322,19 +332,30 @@ class Attributes(Dict):
 class Children(List):
     def __init__(self):
         super().__init__()
-        self.descriptors = None
+        self.descriptor = None
 
     @property
-    def descriptors(self):
+    def descriptor(self):
         return self.__dict__['descriptors']
 
-    @descriptors.setter
-    def descriptors(self, value):
+    @descriptor.setter
+    def descriptor(self, value):
         self.__dict__['descriptors'] = value
 
         for item in self:
             if not isinstance(item, Text):
-                item.descriptor = self.descriptors[item.name]
+                self.descriptor[NAME_CHECKFUNC](item.name)
+                item.descriptor = self.descriptor[DESCRIPTORS][item.name]
+
+    def insert(self, i, item):
+        if not isinstance(item, (Element, Text)):
+            raise Exception
+
+        if isinstance(item, Element):
+            self.descriptor[NAME_CHECKFUNC](item.name)
+            item.descriptor = self.descriptor[DESCRIPTORS][item.name]
+
+        super().insert(i, item)
 
 
 class Text(Str):

@@ -1,4 +1,0 @@
-class Collection(_XmlLang, _Dir, _Id):
-    """ what is this ?????????
-    """
-    pass
