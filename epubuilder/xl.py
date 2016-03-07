@@ -171,6 +171,8 @@ def insert_for_pretty(e, indent=4, indent_after_children=0, one_child_dont_do=Tr
 
     return new_e
 
+XML_URI = 'http://www.w3.org/XML/1998/namespace'
+
 
 class Element:
     def __init__(self, name, prefixes=None, attributes=None):
@@ -242,7 +244,7 @@ class Element:
             if uri in inherited_prefixes.keys() and inherited_prefixes[uri] == prefix:
                 pass
 
-            elif uri == 'http://www.w3.org/XML/1998/namespace':
+            elif uri == XML_URI:
                 pass
 
             elif uri:
@@ -254,10 +256,7 @@ class Element:
         for name, value in self.attributes.items():
             s += ' '
 
-            if name[0] == 'http://www.w3.org/XML/1998/namespace':
-                s += 'xml:'
-
-            elif name[0]:
+            if name[0]:
                 s += self.prefixes[name[0]] + ':'
 
             s += name[1]
@@ -284,7 +283,14 @@ class Element:
 
 
 class Prefixes(Dict):
+    def __init__(self):
+        super().__init__()
+        self[XML_URI] = 'xml'
+
     def __setitem__(self, key, value):
+        if key == XML_URI and value != 'xml':
+            raise Exception
+
         super().__setitem__(key, value)
 
 
