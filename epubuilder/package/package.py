@@ -1,7 +1,6 @@
 from epubuilder.xl import XML_URI
 
-from epubuilder.xl import IS_NAME_FIXED, ATTRIBUTES, NAME_CHECKFUNC,\
-    VALUE_CHECKFUNCS, CHILDREN, DESCRIPTORS
+from epubuilder.xl import IS_NAME_FIXED, ATTRIBUTES, NAME_CHECKFUNC, VALUE_CHECKFUNCS, CHILDREN, DESCRIPTORS
 
 
 def value_checkfunc(legal_values):
