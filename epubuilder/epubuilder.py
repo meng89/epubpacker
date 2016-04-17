@@ -369,7 +369,7 @@ class EasyEpub(object):
 
     def add_page(self, page, expected_fullpath=None):
         self._bytes_check(page)
-        self._page_check(page)
+        # self._page_check(page)
 
         if expected_fullpath:
             path = self._recommend_fullpath(expected_fullpath)
