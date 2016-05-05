@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-from epubuilder.xl import Element
-from epubuilder.package import package_descriptor
+from epubuilder2.package import package_descriptor
+from xl import Element
 
 p = Element((None, 'package'))
 

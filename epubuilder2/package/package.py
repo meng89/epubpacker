@@ -1,6 +1,5 @@
-from epubuilder.xl import XML_URI
-
-from epubuilder.xl import IS_NAME_FIXED, ATTRIBUTES, NAME_CHECKFUNC, VALUE_CHECKFUNCS, CHILDREN, DESCRIPTORS
+from xl import IS_NAME_FIXED, ATTRIBUTES, NAME_CHECKFUNC, VALUE_CHECKFUNCS, CHILDREN, DESCRIPTORS
+from xl import XML_URI
 
 
 def value_checkfunc(legal_values):
@@ -22,7 +21,11 @@ itemref_descriptors = {
     # required
     (None, 'idref'): pass_func,
     # optional
+    # yes 线性阅读，应该是不实用目录是翻页可以翻到。
+    # no 是翻页翻不到，但是可以通过目录打开
     (None, 'linear'): value_checkfunc(('yes', 'no')),
+
+
     (None, 'id'): id_func,
     (None, 'properties'): pass_func,
 }

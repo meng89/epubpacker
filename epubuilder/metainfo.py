@@ -1,6 +1,6 @@
 from .baseclasses import List
 
-from . import xl
+import xl
 
 
 class MetaInfo:

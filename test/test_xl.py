@@ -5,7 +5,7 @@ sys.path.append('..')
 
 import xml.etree.ElementTree as Et
 
-import epubuilder.xl as xl
+import xl as xl
 
 
 def main():

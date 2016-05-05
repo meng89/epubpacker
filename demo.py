@@ -1,5 +1,5 @@
-import epubuilder
-from epubuilder.epub import Epub
+
+from epubuilder2.epub import Epub
 
 book = Epub()
 
