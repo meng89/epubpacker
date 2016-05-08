@@ -18,7 +18,7 @@ media_table = [
     ['image/png', ['.png'], 'Images'],
     ['image/svg+xml', ['.svg'], 'Images'],
 
-    ['application/xhtml+xml', ['.xhtml'], 'Text'],
+    ['application/xhtml+xml', ['.html', '.xhtml'], 'Text'],
 
     ['application/x-dtbncx+xml', ['.ncx'], '?'],
 
