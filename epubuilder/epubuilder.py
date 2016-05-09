@@ -104,6 +104,7 @@ class Epub(object):
         def spine_add_check(item):
             if item['file'] not in self.files:
                 raise ValueError('file not in files')
+
         self._spine = userlist.UserList(add_check_fun=spine_add_check)
 
         def files_add_check(item):

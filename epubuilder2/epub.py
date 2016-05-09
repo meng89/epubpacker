@@ -77,12 +77,18 @@ class Epub:
         if filename:
             pass
 
-        self.nav_element = None
+        self.nav_element = Element(name=)
 
 
         self.package_element = Element(name='package')
-        self.item
+        self._spine=None
+
+
+
+
     def add_file(self, data, filename=None):
         pass
 
-    def
+    @property
+    def spine(self):
+        return self._spine
