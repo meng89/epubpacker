@@ -45,15 +45,43 @@ toc = [
     }
 ]
 
+class Section:
+    def __init__(self, title, link=None):
+        self._title = title
+        self._link = link
+        self._subsections = []
+
+    @property
+    def title(self):
+        return self._title
+
+    @title.setter
+    def title(self, value):
+        self._title = value
+
+    @property
+    def link(self):
+        return self._link
+
+    @link.setter
+    def link(self, value):
+        self._link = value
+
+    @property
+    def subsections(self):
+        return self._subsections
+
 
 class Epub:
     def __init__(self, filename=None):
         if filename:
             pass
 
-        self.nav = None
-        self.package = Element(name='package')
+        self.nav_element = None
 
+
+        self.package_element = Element(name='package')
+        self.item
     def add_file(self, data, filename=None):
         pass
 
