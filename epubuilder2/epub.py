@@ -5,6 +5,8 @@ import time
 import uuid
 import zipfile
 
+import hooky
+
 from xl import Element
 
 media_table = [
@@ -45,6 +47,26 @@ toc = [
     }
 ]
 
+
+class Meta:
+
+
+def make_meta(key):
+    if key ==
+
+
+
+
+class Metadata(hooky.Dict):
+    def __init__(self):
+        super().__init__()
+
+    def __getitem__(self, key):
+        if key not in self.data.keys():
+            self.data[key] = make_meta(key)
+        return self.data[key]
+
+
 class Section:
     def __init__(self, title, link=None):
         self._title = title
@@ -82,12 +104,17 @@ class Epub:
 
         self.package_element = Element(name='package')
         self._spine=None
+        self._metadata = Metadata()
 
 
 
 
     def add_file(self, data, filename=None):
         pass
+
+    @property
+    def metadata(self):
+        return self._metadata
 
     @property
     def spine(self):
