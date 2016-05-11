@@ -11,4 +11,3 @@ p.children.append(Element(name=(None, 'metadata')))
 
 print(package_descriptor)
 
-book

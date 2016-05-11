@@ -57,7 +57,7 @@ class Meta:
     def text(self):
         return self._text
 
-
+class 
 
 
 def make_meta(key):

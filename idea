@@ -1,0 +1,3 @@
+low level/控制多 -> high level/控制少
+
+zip package/xml 类 -> 提供必要API -> 精简api，满足大部分要求
