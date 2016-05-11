@@ -45,6 +45,7 @@ toc = [
     }
 ]
 
+
 class Section:
     def __init__(self, title, link=None):
         self._title = title
@@ -77,14 +78,10 @@ class Epub:
         if filename:
             pass
 
-        self.nav_element = Element(name=)
-
+        self.toc = None
 
         self.package_element = Element(name='package')
-        self._spine=None
-
-
-
+        self._spine = None
 
     def add_file(self, data, filename=None):
         pass
