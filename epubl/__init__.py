@@ -1,26 +1,23 @@
+"""用户不用关心文件名字"""
+
 import zipfile
 
-from hooky import List
+from hooky import List, Dict
 
 from xl import Element
 
 
-class Source:
-
-
-class File:
-    def __init__(self):
-        self._path = None
-        self._source_type = None # one in ('path', 'epub', 'bytes')
-        self._
-
-    @property
-    def path(self):
-        return self._path
+class Files(Dict):
+    pass
 
 
 class Epubl:
-    def __init__(self):
-        self._package_element = Element('package')
 
-        self._files = List()
+    def __init__(self, filename=None):
+        if filename:
+            pass
+
+        else:
+            self._package_dom = Element('package')
+            self._files = Files()
+

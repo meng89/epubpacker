@@ -122,9 +122,11 @@ def _nsuri_check(uri, namespaces):
 def xml_header(version='1.0', encoding='utf-8', standalone='yes'):
     s = ''
     s += '<?xml'
+
     s += " version='{}'".format(version) if version else ''
     s += " encoding='{}'".format(encoding) if encoding else ''
     s += " standalone='{}'".format(standalone) if standalone else ''
+
     s += '?>'
     return s
 
