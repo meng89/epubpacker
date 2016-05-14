@@ -121,13 +121,13 @@ def _nsuri_check(uri, namespaces):
         raise Exception
 
 
-def xml_header(version='1.0', encoding='utf-8', standalone='yes'):
+def xml_header(version=None, encoding=None, standalone=None):
     s = ''
     s += '<?xml'
 
-    s += " version='{}'".format(version) if version else ''
-    s += " encoding='{}'".format(encoding) if encoding else ''
-    s += " standalone='{}'".format(standalone) if standalone else ''
+    s += " version='{}'".format(version) if version else '1.0'
+    s += " encoding='{}'".format(encoding) if encoding else 'utf-8'
+    s += " standalone='{}'".format(standalone) if standalone else 'yes'
 
     s += '?>'
     return s
