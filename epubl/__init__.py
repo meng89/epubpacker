@@ -13,11 +13,16 @@ class Files(Dict):
 
 class Epubl:
 
-    def __init__(self, filename=None):
-        if filename:
-            pass
+    def __init__(self, file=None):
+        if file:
+            z = zipfile.ZipFile(file)
+
+            if z.read('mimetype') != b'application/epub+zip':
+                raise TypeError('Seems its not a epub file.')
+
+            for filename in z.namelist():
 
         else:
-            self._package_dom = Element('package')
+            self._package_element = Element('package')
             self._files = Files()
 
