@@ -85,6 +85,8 @@ def parse(xmlstr, debug=False):
 
     p = xml.parsers.expat.ParserCreate(namespace_separator=' ')
 
+    # p.XmlDeclHandler =
+
     p.StartElementHandler = start_element
 
     p.EndElementHandler = end_element
