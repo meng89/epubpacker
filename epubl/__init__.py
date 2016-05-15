@@ -59,6 +59,7 @@ class Epubl:
                     self._files[_filename] = z.read(filename)
 
         else:
+            self._top_of_opf = 'EPUB'
             self._package_element = xl.Element('package')
             self._files = Files()
 
@@ -71,9 +72,9 @@ class Epubl:
         z.writestr('mimetype', b'application/epub+zip', compress_type=zipfile.ZIP_STORED)
 
         for file, data in self._files:
-            z.writestr(file, data, zipfile.ZIP_DEFLATED)
+            z.writestr(self._top_of_opf + os.sep + file, data, zipfile.ZIP_DEFLATED)
 
-        z.writestr(self._content_path, self._package_xmlstr(), zipfile.ZIP_DEFLATED)
+        z.writestr(self._opf_path, self._package_xmlstr(), zipfile.ZIP_DEFLATED)
 
         z.writestr(CONTAINER_PATH, self._container_xmlstr().decode(), zipfile.ZIP_DEFLATED)
 
@@ -81,9 +82,9 @@ class Epubl:
 
     def _package_xmlstr(self):
 
-        self._content_path = 'EPUB' + os.sep + 'package.opf'
-        while self._content_path in ['EPUB' + path for path in self.files.keys()]:
-            self._content_path = 'EPUB' + os.sep + 'package_{}.opf'.format(
+        self._opf_path = self._top_of_opf + os.sep + 'package.opf'
+        while self._opf_path in [self._top_of_opf + os.sep + path for path in self.files.keys()]:
+            self._opf_path = self._top_of_opf + os.sep + 'package_{}.opf'.format(
                 random.random(''.join(random.sample(string.ascii_letters + string.digits, 8)))
             )
 
@@ -100,7 +101,7 @@ class Epubl:
         rootfile = xl.Element('rootfile')
         rootfiles.children.append(rootfile)
 
-        rootfile.attributes['full-path'] = self._content_path
+        rootfile.attributes['full-path'] = self._opf_path
 
         rootfile.attributes['media-type'] = 'application/oebps-package+xml'
 
