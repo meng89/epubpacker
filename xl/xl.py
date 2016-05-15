@@ -129,7 +129,7 @@ def xml_header(version=None, encoding=None, standalone=None):
     s += " encoding='{}'".format(encoding) if encoding else 'utf-8'
     s += " standalone='{}'".format(standalone) if standalone else 'yes'
 
-    s += '?>'
+    s += '?>\n'
     return s
 
 
