@@ -80,6 +80,8 @@ class Section:
         self._link = link
         self._subsections = []
 
+        self._hidden_sub = None
+
     @property
     def title(self):
         return self._title
@@ -100,6 +102,18 @@ class Section:
     def subsections(self):
         return self._subsections
 
+    #
+    @property
+    def hidden_sub(self):
+        return self._hidden_sub
+
+    @hidden_sub.setter
+    def hidden_sub(self, value):
+        if value not in (True, False):
+            raise ValueError
+        else:
+            self._hidden_sub = value
+
 
 class Epubm:
     def __init__(self, filename=None):
@@ -116,9 +130,10 @@ class Epubm:
 
         # nav
         self._toc = None
-        self._landmark=None
+        self._landmark = None
+        self._pagelist = None
 
-    def add_file(self, data, path, mime):
+    def add_file(self, data, path, media_type):
         pass
 
     @property
@@ -130,8 +145,16 @@ class Epubm:
         return self._spine
 
     @property
+    def toc(self):
+        return self._toc
+
+    @property
     def landmark(self):
         return self._landmark
+
+    @property
+    def pagelist(self):
+        return self._pagelist
 
     def write(self, filename):
         self._epubm.write(filename)
