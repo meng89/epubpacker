@@ -61,6 +61,7 @@ class Epubl:
         else:
             self._top_of_opf = 'EPUB'
             self._package_element = xl.Element('package')
+            self._nav_element = xl.Element('')
             self._files = Files()
 
     @property

@@ -35,21 +35,6 @@ media_table = [
 ]
 
 
-# TOC
-
-
-toc = [
-    {
-        'title': '1 XXX',
-        'link': '',  # or None
-        'sub_sections':
-            [
-                {'title': '1.2 XXX', 'link': '', 'sub_sections': [...]}
-            ]
-    }
-]
-
-
 class Meta:
     def __init__(self):
         self._text = None
