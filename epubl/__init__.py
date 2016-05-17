@@ -1,13 +1,17 @@
-"""用户不用关心文件名字"""
+"""用户不用关心 OPF 的文件名"""
 
 import zipfile
 import random
 import os
 import string
 
+
 from hooky import List, Dict
 
 import xl
+
+
+from .package_descriptor import package_descriptor
 
 
 class Files(Dict):
@@ -50,6 +54,7 @@ class Epubl:
             self._top_of_opf = opf_path.split(os.sep, 1)[0]
 
             self._package_element = xl.parse(z.read(opf_path).decode())
+            self._package_element.descriptor = package_descriptor
 
             self._files = Files
             for filename in z.namelist():
@@ -66,6 +71,10 @@ class Epubl:
     @property
     def files(self):
         return self._files
+
+    @property
+    def package_element(self):
+        return self._package_element
 
     def write(self, filename):
         z = zipfile.ZipFile(filename, 'w')
