@@ -54,9 +54,9 @@ class Epubl:
             self._top_of_opf = opf_path.split(os.sep, 1)[0]
 
             self._package_element = xl.parse(z.read(opf_path).decode())
-            self._package_element.descriptor = package_descriptor
 
-            self._files = Files
+            self._files = Files()
+
             for filename in z.namelist():
                 top, _filename = filename.split(os.sep, 1)
 
@@ -68,6 +68,8 @@ class Epubl:
             self._package_element = xl.Element('package')
             self._nav_element = xl.Element('')
             self._files = Files()
+
+        self._package_element.descriptor = package_descriptor
 
     @property
     def files(self):
