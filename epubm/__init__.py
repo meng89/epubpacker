@@ -142,4 +142,6 @@ class Epubm:
         return self._pagelist
 
     def write(self, filename):
+        self._epubm.package_element
+
         self._epubm.write(filename)
