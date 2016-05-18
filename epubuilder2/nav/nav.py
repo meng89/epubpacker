@@ -1,4 +1,4 @@
-from epubl.package_descriptor import value_checkfunc, pass_func, XML_URI
+from epub.package_descriptor import value_checkfunc, pass_func, XML_URI
 from xl import IS_NAME_FIXED, ATTRIBUTES, NAME_CHECKFUNC, VALUE_CHECKFUNCS, CHILDREN, DESCRIPTORS
 
 package_children_descriptors = {
