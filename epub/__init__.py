@@ -115,55 +115,15 @@ class Section:
 
 
 class Epub:
-    def __init__(self, file=None):
+    def __init__(self):
 
-        self._top_of_opf = "EPUB"
+        self._top_of_opf = 'EPUB'
 
-        if file:
-            z = zipfile.ZipFile(file)
+        self._opf_element = xl.Element('package')
 
-            if z.read('mimetype') != b'application/epub+zip':
-                raise TypeError('Seems its not a epub file.')
+        self._nav_element = xl.Element('')
 
-            container_e = xl.parse(z.read(CONTAINER_PATH).decode())
-            if container_e.name != 'container':
-                raise TypeError
-
-            opf_path = None
-
-            _rootfiles_e = None
-            for child in container_e.children:
-                if child.name == 'rootfiles':
-                    _rootfiles_e = child
-
-            _rootfile_e = None
-            for child in _rootfiles_e.children:
-                if child.name == 'rootfile':
-                    _rootfile_e = child
-
-            if _rootfile_e:
-                opf_path = _rootfile_e.attributes['full-path']
-
-            self._top_of_opf = opf_path.split(os.sep, 1)[0]
-
-            self._opf_element = xl.parse(z.read(opf_path).decode())
-
-            self._files = Files()
-
-            for filename in z.namelist():
-                top, _filename = filename.split(os.sep, 1)
-
-                if top == self._top_of_opf:
-                    self._files[_filename] = z.read(filename)
-
-        else:
-            self._top_of_opf = 'EPUB'
-
-            self._opf_element = xl.Element('package')
-
-            self._nav_element = xl.Element('')
-
-            self._files = Files()
+        self._files = Files()
 
         self._metadata = Metadata()
 
@@ -176,8 +136,9 @@ class Epub:
 
         # self._package_element.descriptor = package_descriptor
 
-    def add_file(self, data, path, media_type):
-        pass
+    @property
+    def files(self):
+        return self._files
 
     @property
     def metadata(self):
@@ -186,11 +147,6 @@ class Epub:
     @property
     def spine(self):
         return self._spine
-
-    # nav
-    @property
-    def nav_style_element(self):
-        return self._nav_style_element
 
     @property
     def toc(self):
@@ -204,32 +160,10 @@ class Epub:
     def pagelist(self):
         return self._pagelist
 
-    @property
-    def files(self):
-        return self._files
-
-    @property
-    def package_element(self):
-        return self._opf_element
-
-    def write(self, filename):
-        z = zipfile.ZipFile(filename, 'w')
-        z.writestr('mimetype', b'application/epub+zip', compress_type=zipfile.ZIP_STORED)
-
-        for file, data in self._files:
-            z.writestr(self._top_of_opf + os.sep + file, data, zipfile.ZIP_DEFLATED)
-
-        z.writestr(self._opf_path, self._xmlstr_opf(), zipfile.ZIP_DEFLATED)
-
-        z.writestr(CONTAINER_PATH, self._xmlstr_container().decode(), zipfile.ZIP_DEFLATED)
-
-        z.close()
-
-    def xmlstr_nav(self):
+    def _xmlstr_navs(self):
         return self._nav_element.to_string()
 
     def _xmlstr_opf(self):
-
         self._opf_path = self._top_of_opf + os.sep + 'package.opf'
 
         while self._opf_path in [self._top_of_opf + os.sep + path for path in self.files.keys()]:
@@ -255,3 +189,16 @@ class Epub:
         rootfile.attributes['media-type'] = 'application/oebps-package+xml'
 
         return xl.xml_header() + e.to_string()
+
+    def write(self, filename):
+        z = zipfile.ZipFile(filename, 'w')
+        z.writestr('mimetype', b'application/epub+zip', compress_type=zipfile.ZIP_STORED)
+
+        for file, data in self._files:
+            z.writestr(self._top_of_opf + os.sep + file, data, zipfile.ZIP_DEFLATED)
+
+        z.writestr(self._opf_path, self._xmlstr_opf(), zipfile.ZIP_DEFLATED)
+
+        z.writestr(CONTAINER_PATH, self._xmlstr_container().decode(), zipfile.ZIP_DEFLATED)
+
+        z.close()
