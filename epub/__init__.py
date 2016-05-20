@@ -20,6 +20,7 @@ class Files(Dict):
 
 CONTAINER_PATH = 'META-INF' + os.sep + 'container.xml'
 
+ROOT_OF_OPF = 'EPUB'
 
 
 media_table = [
@@ -115,12 +116,6 @@ class Section:
 class Epub:
     def __init__(self):
 
-        self._top_of_opf = 'EPUB'
-
-        self._opf_element = xl.Element('package')
-
-        self._nav_element = xl.Element('')
-
         self._files = Files()
 
         self._metadata = Metadata()
@@ -159,13 +154,15 @@ class Epub:
         return self._pagelist
 
     def _xmlstr_nav(self):
-        return self._nav_element.to_string()
+        nav_e = xl.Element('')
+
+        return nav_e.to_string()
 
     def _xmlstr_opf(self):
-        self._opf_path = self._top_of_opf + os.sep + 'package.opf'
+        self._opf_path = ROOT_OF_OPF + os.sep + 'package.opf'
 
-        while self._opf_path in [self._top_of_opf + os.sep + path for path in self.files.keys()]:
-            self._opf_path = self._top_of_opf + os.sep + 'package_{}.opf'.format(
+        while self._opf_path in [ROOT_OF_OPF + os.sep + path for path in self.files.keys()]:
+            self._opf_path = ROOT_OF_OPF + os.sep + 'package_{}.opf'.format(
                 random.random(''.join(random.sample(string.ascii_letters + string.digits, 8)))
             )
 
@@ -193,7 +190,7 @@ class Epub:
         z.writestr('mimetype', b'application/epub+zip', compress_type=zipfile.ZIP_STORED)
 
         for file, data in self._files:
-            z.writestr(self._top_of_opf + os.sep + file, data, zipfile.ZIP_DEFLATED)
+            z.writestr(ROOT_OF_OPF + os.sep + file, data, zipfile.ZIP_DEFLATED)
 
         z.writestr(self._opf_path, self._xmlstr_opf(), zipfile.ZIP_DEFLATED)
 
