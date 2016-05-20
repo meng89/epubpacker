@@ -10,8 +10,6 @@ from hooky import List, Dict
 
 import xl
 
-from xl import Element
-
 
 from .package_descriptor import package_descriptor
 
@@ -160,7 +158,7 @@ class Epub:
     def pagelist(self):
         return self._pagelist
 
-    def _xmlstr_navs(self):
+    def _xmlstr_nav(self):
         return self._nav_element.to_string()
 
     def _xmlstr_opf(self):
