@@ -73,9 +73,9 @@ class Metadata(Dict):
 
 
 class Section:
-    def __init__(self, title, link=None):
+    def __init__(self, title, href=None):
         self._title = title
-        self._link = link
+        self._href = href
         self._subsections = []
 
         self._hidden_sub = None
@@ -89,12 +89,12 @@ class Section:
         self._title = value
 
     @property
-    def link(self):
-        return self._link
+    def href(self):
+        return self._href
 
-    @link.setter
-    def link(self, value):
-        self._link = value
+    @href.setter
+    def href(self, value):
+        self._href = value
 
     @property
     def subsections(self):
@@ -112,6 +112,49 @@ class Section:
         else:
             self._hidden_sub = value
 
+    def as_element(self):
+        li = xl.Element('li')
+
+        if self.href:
+            a_or_span = xl.Element('a')
+            a_or_span.attributes['href'] = self.href
+        else:
+            a_or_span = xl.Element('span')
+
+        if self.subsections:
+            ol = xl.Element('ol')
+            for one in self.subsections:
+                ol.children.append(one.as_element())
+
+            a_or_span.children.append(ol)
+
+        li.children.append(a_or_span)
+
+        return li
+
+
+#####################################
+# Manifest
+
+class Item:
+    def __init__(self, i_d, href, media_type):
+        self._id = i_d
+        self._href = href
+        self._media_type = media_type
+
+#####################################
+
+
+#####################################
+# Spine
+
+class Itemref:
+    def __init__(self, idref, linear=None):
+        self._idref = idref
+        self._linear = linear
+
+#####################################
+
 
 class Epub:
     def __init__(self):
@@ -119,6 +162,8 @@ class Epub:
         self._files = Files()
 
         self._metadata = Metadata()
+
+        self._manifest = List()
 
         self._spine = List()
 
@@ -136,6 +181,10 @@ class Epub:
     @property
     def metadata(self):
         return self._metadata
+
+    @property
+    def manifest(self):
+        return self._manifest
 
     @property
     def spine(self):
