@@ -154,9 +154,14 @@ class Epub:
         return self._pagelist
 
     def _xmlstr_nav(self):
-        nav_e = xl.Element('')
+        html = xl.Element((None, 'html'), namespaces={'http://www.w3.org/1999/xhtml': None,
+                                                      'http://www.idpf.org/2007/ops': 'epub'})
 
-        return nav_e.to_string()
+        for section in self.toc:
+
+
+
+        return html.to_string()
 
     def _xmlstr_opf(self):
         self._opf_path = ROOT_OF_OPF + os.sep + 'package.opf'

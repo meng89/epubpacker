@@ -41,7 +41,7 @@ def parse(xmlstr, debug=False):
 
             attributes[(attr_uri, attr_name)] = value
 
-        namespaces = Prefixes()
+        namespaces = Namespaces()
 
         for _uri, _prefix in ns_list:
             namespaces[_uri] = _prefix
@@ -150,6 +150,10 @@ def clean(element):
     return new_element
 
 
+def clear_space(element):
+    pass
+
+
 def insert_for_pretty(e, indent=4, indent_after_children=0, one_child_dont_do=True):
 
     new_e = copy.deepcopy(e)
@@ -188,10 +192,10 @@ XML_URI = 'http://www.w3.org/XML/1998/namespace'
 
 
 class Element:
-    def __init__(self, name, prefixes=None, attributes=None):
+    def __init__(self, name, namespaces=None, attributes=None):
         self.descriptor = None
 
-        self.prefixes = prefixes or Prefixes()
+        self.namespaces = namespaces or Namespaces()
         self.attributes = attributes or Attributes()
 
         self.name = name
@@ -224,6 +228,14 @@ class Element:
         self.__dict__['name'] = value
 
     @property
+    def namespaces(self):
+        return self.__dict__['namespaces']
+
+    @namespaces.setter
+    def namespaces(self, value):
+        self.__dict__['namespaces'] = value
+
+    @property
     def attributes(self):
         return self.__dict__['attributes']
 
@@ -241,20 +253,20 @@ class Element:
 
     def to_string(self, inherited_namespaces=None):
 
-        inherited_prefixes = inherited_namespaces or Prefixes()
+        inherited_prefixes = inherited_namespaces or Namespaces()
 
         s = ''
 
         s += '<'
 
         full_name = ''
-        if self.name[0] and self.prefixes[self.name[0]]:
-            full_name += self.prefixes[self.name[0]] + ':'
+        if self.name[0] and self.namespaces[self.name[0]]:
+            full_name += self.namespaces[self.name[0]] + ':'
         full_name += self.name[1]
 
         s += full_name
 
-        for uri, prefix in self.prefixes.items():
+        for uri, prefix in self.namespaces.items():
             if uri in inherited_prefixes.keys() and inherited_prefixes[uri] == prefix:
                 pass
 
@@ -271,7 +283,7 @@ class Element:
             s += ' '
 
             if name[0]:
-                s += self.prefixes[name[0]] + ':'
+                s += self.namespaces[name[0]] + ':'
 
             s += name[1]
             s += '="{}"'.format(value)
@@ -282,7 +294,7 @@ class Element:
             for child in self.children:
                 if isinstance(child, Element):
                     inherited_prefixes_for_subs = inherited_prefixes.copy()
-                    inherited_prefixes_for_subs.update(self.prefixes)
+                    inherited_prefixes_for_subs.update(self.namespaces)
                     s += child.to_string(inherited_namespaces=inherited_prefixes_for_subs)
 
                 elif isinstance(child, Text):
@@ -296,7 +308,7 @@ class Element:
         return s
 
 
-class Prefixes(Dict):
+class Namespaces(Dict):
     def __init__(self):
         super().__init__()
         self[XML_URI] = 'xml'
