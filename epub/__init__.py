@@ -203,9 +203,9 @@ class Epub:
         return self._pagelist
 
     def _xmlstr_nav(self):
-        nav_e = xl.Element('')
+        html = xl.Element('html')
 
-        return nav_e.to_string()
+        return html.to_string()
 
     def _xmlstr_opf(self):
         self._opf_path = ROOT_OF_OPF + os.sep + 'package.opf'
