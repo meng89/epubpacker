@@ -137,13 +137,15 @@ class Section:
 # Manifest
 
 class Item:
-    def __init__(self, i_d, href, media_type):
-        self._id = i_d
-        self._href = href
-        self._media_type = media_type
+    def __init__(self, **kwargs):
+        self._id = kwargs['id']
+        self._href = kwargs['href']
+        self._media_type = kwargs['media_type']
 
     def to_element(self):
-
+        return xl.Element((None, 'item'), attributes={(None, 'id'): self._id,
+                                                      (None, 'href'): self._href,
+                                                      (None, 'media-type'): self._media_type})
 
 #####################################
 
@@ -157,7 +159,12 @@ class Itemref:
         self._linear = linear
 
     def to_element(self):
-        return xl.Element((None, 'itemref'), attributes={(None, 'idref'): self._idref})
+        element = xl.Element((None, 'itemref'), attributes={(None, 'idref'): self._idref})
+
+        if self._linear is True:
+            element.attributes[(None, 'linear')] = 'yes'
+        elif self._linear is False:
+            element.attributes[(None, 'linear')] = 'no'
 
 #####################################
 
@@ -229,8 +236,7 @@ class Epub:
 
         return html.to_string()
 
-    @staticmethod
-    def _xmlstr_opf():
+    def _xmlstr_opf(self):
         def_ns = 'http://www.idpf.org/2007/opf'
         dc_ns = 'http://purl.org/dc/elements/1.1/'
         dcterms_ns = 'http://purl.org/dc/terms/'
@@ -240,8 +246,18 @@ class Epub:
         # metadata
 
         # manifest
+        manifest = xl.Element((None, 'manifest'))
+        for item in self.manifest:
+            manifest.children.append(item.to_element())
+
+        package.children.append(manifest)
 
         # spine
+        spine = xl.Element((None, 'spine'))
+        for itemref in self.spine:
+            spine.children.append(itemref.to_element())
+
+        package.children.append(spine)
 
         return package.to_string()
 
