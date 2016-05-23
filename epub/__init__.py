@@ -156,6 +156,9 @@ class Itemref:
         self._idref = idref
         self._linear = linear
 
+    def to_element(self):
+        return xl.Element((None, 'itemref'), attributes={(None, 'idref'): self._idref})
+
 #####################################
 
 
