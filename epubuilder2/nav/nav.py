@@ -1,4 +1,4 @@
-from epub.package_descriptor import value_checkfunc, pass_func, XML_URI
+from epub.package_descriptor import value_checkfunc, pass_func, XML_NS
 from xl import IS_NAME_FIXED, ATTRIBUTES, NAME_CHECKFUNC, VALUE_CHECKFUNCS, CHILDREN, DESCRIPTORS
 
 package_children_descriptors = {
@@ -15,7 +15,7 @@ package_attributes_descriptors = {
 
     # optional
     (None, 'prefix'): pass_func,
-    (XML_URI, 'lang'): pass_func,
+    (XML_NS, 'lang'): pass_func,
     (None, 'dir'): value_checkfunc(('ltr', 'rtl')),
     (None, 'id'): pass_func
 }

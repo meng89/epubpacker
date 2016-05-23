@@ -1,5 +1,5 @@
 from xl import IS_NAME_FIXED, ATTRIBUTES, NAME_CHECKFUNC, VALUE_CHECKFUNCS, CHILDREN, DESCRIPTORS
-from xl import XML_URI
+from xl import XML_NS
 
 
 def value_checkfunc(legal_values):
@@ -148,7 +148,7 @@ meta_attributes_descriptors = {
     # optional
     (None, 'id'): id_func,
     (None, 'scheme'): pass_func,
-    (XML_URI, 'lang'): pass_func,
+    (XML_NS, 'lang'): pass_func,
     (None, 'dir'): value_checkfunc(('ltr', 'rtl'))
 }
 
@@ -188,7 +188,7 @@ dc_type_des = {
 
 dc_publisher_attributes_descriptors = {
     (None, 'id'): id_func,
-    (XML_URI, 'lang'): pass_func,
+    (XML_NS, 'lang'): pass_func,
     (None, 'dir'): value_checkfunc(('ltr', 'rtl')),
     (None, 'file-as'): pass_func
 }
@@ -210,7 +210,7 @@ dc_publisher_des = {
 
 dc_creator_attributes_descriptors = {
     (None, 'id'): id_func,
-    (XML_URI, 'lang'): pass_func,
+    (XML_NS, 'lang'): pass_func,
     (None, 'dir'): value_checkfunc(('ltr', 'rtl')),
     (None, 'file-as'): pass_func
 }
@@ -268,7 +268,7 @@ dc_title_attributes_descriptors = {
 
     # optional
     (None, 'id'): id_func,
-    (XML_URI, 'lang'): pass_func,
+    (XML_NS, 'lang'): pass_func,
     (None, 'dir'): value_checkfunc(('ltr', 'rtl')),
     (None, 'file-as'): pass_func
 }
@@ -328,7 +328,7 @@ package_attributes_descriptors = {
 
     # optional
     (None, 'prefix'): pass_func,
-    (XML_URI, 'lang'): pass_func,
+    (XML_NS, 'lang'): pass_func,
     (None, 'dir'): value_checkfunc(('ltr', 'rtl')),
     (None, 'id'): pass_func
 }

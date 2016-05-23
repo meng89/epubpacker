@@ -73,9 +73,9 @@ class Metadata(Dict):
 
 
 class Section:
-    def __init__(self, title, link=None):
+    def __init__(self, title, href=None):
         self._title = title
-        self._link = link
+        self._href = href
         self._subsections = []
 
         self._hidden_sub = None
@@ -89,12 +89,12 @@ class Section:
         self._title = value
 
     @property
-    def link(self):
-        return self._link
+    def href(self):
+        return self._href
 
-    @link.setter
-    def link(self, value):
-        self._link = value
+    @href.setter
+    def href(self, value):
+        self._href = value
 
     @property
     def subsections(self):
@@ -112,6 +112,52 @@ class Section:
         else:
             self._hidden_sub = value
 
+    def to_element(self):
+        li = xl.Element('li')
+
+        if self.href:
+            a_or_span = xl.Element((None, 'a'))
+            a_or_span.attributes[(None, 'href')] = self.href
+        else:
+            a_or_span = xl.Element((None, 'span'))
+
+        if self.subsections:
+            ol = xl.Element('ol')
+            for one in self.subsections:
+                ol.children.append(one.to_element())
+
+            a_or_span.children.append(ol)
+
+        li.children.append(a_or_span)
+
+        return li
+
+
+#####################################
+# Manifest
+
+class Item:
+    def __init__(self, i_d, href, media_type):
+        self._id = i_d
+        self._href = href
+        self._media_type = media_type
+
+    def to_element(self):
+
+
+#####################################
+
+
+#####################################
+# Spine
+
+class Itemref:
+    def __init__(self, idref, linear=None):
+        self._idref = idref
+        self._linear = linear
+
+#####################################
+
 
 class Epub:
     def __init__(self):
@@ -119,6 +165,8 @@ class Epub:
         self._files = Files()
 
         self._metadata = Metadata()
+
+        self._manifest = List()
 
         self._spine = List()
 
@@ -138,6 +186,10 @@ class Epub:
         return self._metadata
 
     @property
+    def manifest(self):
+        return self._manifest
+
+    @property
     def spine(self):
         return self._spine
 
@@ -154,26 +206,44 @@ class Epub:
         return self._pagelist
 
     def _xmlstr_nav(self):
-        html = xl.Element((None, 'html'), namespaces={'http://www.w3.org/1999/xhtml': None,
-                                                      'http://www.idpf.org/2007/ops': 'epub'})
+        default_ns = 'http://www.w3.org/1999/xhtml'
+        epub_ns = 'http://www.idpf.org/2007/ops'
 
-        for section in self.toc:
+        html = xl.Element((None, 'html'), namespaces={default_ns: None, epub_ns: 'epub'})
+        body = xl.Element((None, 'body'))
 
+        if self.toc:
+            nav = xl.Element((None, 'nav'), namespaces={epub_ns: 'epub'}, attributes={(epub_ns, 'type'): 'toc'})
+            ol = xl.Element((None, 'ol'))
 
+            for section in self.toc:
+                ol.children.append(section.to_element())
+
+            nav.children.append(ol)
+            body.children.append(nav)
+
+        html.children.append(body)
 
         return html.to_string()
 
-    def _xmlstr_opf(self):
-        self._opf_path = ROOT_OF_OPF + os.sep + 'package.opf'
+    @staticmethod
+    def _xmlstr_opf():
+        def_ns = 'http://www.idpf.org/2007/opf'
+        dc_ns = 'http://purl.org/dc/elements/1.1/'
+        dcterms_ns = 'http://purl.org/dc/terms/'
+        package = xl.Element((None, 'package'),
+                             namespaces={def_ns: None, dc_ns: 'dc', dcterms_ns: 'dcterms'},
+                             attributes={(None, 'version'): '3.0', (xl.XML_NS, 'lang'): 'en'})
+        # metadata
 
-        while self._opf_path in [ROOT_OF_OPF + os.sep + path for path in self.files.keys()]:
-            self._opf_path = ROOT_OF_OPF + os.sep + 'package_{}.opf'.format(
-                random.random(''.join(random.sample(string.ascii_letters + string.digits, 8)))
-            )
+        # manifest
 
-        return self._opf_element.to_string()
+        # spine
 
-    def _xmlstr_container(self):
+        return package.to_string()
+
+    @staticmethod
+    def _xmlstr_container(opf_path):
         e = xl.Element('container')
         e.attributes['version'] = '1.0'
         e.attributes['xmlns'] = 'urn:oasis:names:tc:opendocument:xmlns:container'
@@ -184,7 +254,7 @@ class Epub:
         rootfile = xl.Element('rootfile')
         rootfiles.children.append(rootfile)
 
-        rootfile.attributes['full-path'] = self._opf_path
+        rootfile.attributes['full-path'] = opf_path
 
         rootfile.attributes['media-type'] = 'application/oebps-package+xml'
 
@@ -197,8 +267,15 @@ class Epub:
         for file, data in self._files:
             z.writestr(ROOT_OF_OPF + os.sep + file, data, zipfile.ZIP_DEFLATED)
 
-        z.writestr(self._opf_path, self._xmlstr_opf(), zipfile.ZIP_DEFLATED)
+        opf_path = ROOT_OF_OPF + os.sep + 'package.opf'
 
-        z.writestr(CONTAINER_PATH, self._xmlstr_container().decode(), zipfile.ZIP_DEFLATED)
+        while opf_path in [ROOT_OF_OPF + os.sep + path for path in self.files.keys()]:
+            opf_path = ROOT_OF_OPF + os.sep + 'package_{}.opf'.format(
+                random.random(''.join(random.sample(string.ascii_letters + string.digits, 8)))
+            )
+
+        z.writestr(opf_path, self._xmlstr_opf(), zipfile.ZIP_DEFLATED)
+
+        z.writestr(CONTAINER_PATH, self._xmlstr_container(opf_path).decode(), zipfile.ZIP_DEFLATED)
 
         z.close()

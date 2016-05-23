@@ -188,7 +188,7 @@ CHILDREN = 'children'
 DESCRIPTORS = 'descriptors'
 
 
-XML_URI = 'http://www.w3.org/XML/1998/namespace'
+XML_NS = 'http://www.w3.org/XML/1998/namespace'
 
 
 class Element:
@@ -270,7 +270,7 @@ class Element:
             if uri in inherited_prefixes.keys() and inherited_prefixes[uri] == prefix:
                 pass
 
-            elif uri == XML_URI:
+            elif uri == XML_NS:
                 pass
 
             elif uri:
@@ -311,10 +311,10 @@ class Element:
 class Namespaces(Dict):
     def __init__(self):
         super().__init__()
-        self[XML_URI] = 'xml'
+        self[XML_NS] = 'xml'
 
     def __setitem__(self, key, value):
-        if key == XML_URI and value != 'xml':
+        if key == XML_NS and value != 'xml':
             raise Exception
 
         super().__setitem__(key, value)
