@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 
-from epubuilder2.package import package_descriptor
-from xl import Element
+from epub.metadata import meta
 
-p = Element((None, 'package'))
 
-p.descriptor = package_descriptor
+M = meta('Creator')
+m = M()
 
-p.children.append(Element(name=(None, 'metadata')))
+t = meta('dc:title')
 
-print(package_descriptor)
-
+print(isinstance(m, M))

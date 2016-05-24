@@ -61,17 +61,6 @@ def make_meta(key):
     pass
 
 
-class Metadata(Dict):
-    def __init__(self):
-        super().__init__()
-
-    def __getitem__(self, key):
-        if key not in self.data.keys():
-            self.data[key] = make_meta(key)
-
-        return self.data[key]
-
-
 class Section:
     def __init__(self, title, href=None):
         self._title = title
@@ -174,7 +163,7 @@ class Epub:
 
         self._files = Files()
 
-        self._metadata = Metadata()
+        self._metadata = List()
 
         self._manifest = List()
 
