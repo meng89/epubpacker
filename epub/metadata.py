@@ -1,7 +1,6 @@
+from hooky import Dict, List
 
-from hooky import Dict
-
-from abc import abstractproperty, abstractmethod, abstractstaticmethod
+from abc import abstractmethod
 
 
 def always_true(*args, **kwargs):
@@ -26,6 +25,10 @@ check_funcs = {
     'property': always_true,
     'scheme': always_true
 }
+
+
+class Metadata(List):
+    pass
 
 
 class _Meta(Dict):

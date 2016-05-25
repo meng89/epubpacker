@@ -14,6 +14,9 @@ import xl
 from .package_descriptor import package_descriptor
 
 
+from .metadata import Metadata
+
+
 class Files(Dict):
     pass
 
@@ -24,41 +27,32 @@ ROOT_OF_OPF = 'EPUB'
 
 
 media_table = [
+
+    # Image Types
     ['image/gif', ['.gif'], 'Images'],
     ['image/jpeg', ['.jpg', 'jpeg'], 'Images'],
     ['image/png', ['.png'], 'Images'],
     ['image/svg+xml', ['.svg'], 'Images'],
 
+    # Application Types
     ['application/xhtml+xml', ['.html', '.xhtml'], 'Text'],
-
-    ['application/x-dtbncx+xml', ['.ncx'], '?'],
-
-    ['application/vnd.ms-opentype', ['.otf', '.ttf', '.ttc'], 'Fonts'],
+    ['application/font-sfnt', ['.otf', '.ttf', '.ttc'], 'Fonts'],  # old 'application/vnd.ms-opentype'
     ['application/font-woff', ['.woff'], 'Fonts'],
-    ['application/smil+xml', [], ''],
-    ['application/pls+xml', [], ''],
+    ['application/smil+xml', [], 'Text'],  # EPUB Media Overlay documents
+    ['application/pls+xml', [], ''],  # Text-to-Speech (TTS) Pronunciation lexicons
 
+    # Audio Types
     ['audio/mpeg', [], ''],
     ['audio/mp4', ['.mp4'], ''],
 
+    # Text Types
+    ['text/html', [], 'Text'],
     ['text/css', ['.css'], 'Styles'],
-
     ['text/javascript', ['.js'], 'Scripts'],
+
+    # Font Types
+    ['font/woff2', ['.woff2'], 'Fonts'],
 ]
-
-
-class Meta:
-    def __init__(self):
-        self._text = None
-        self._attr = {}
-
-    @property
-    def text(self):
-        return self._text
-
-
-def make_meta(key):
-    pass
 
 
 class Section:
@@ -163,7 +157,7 @@ class Epub:
 
         self._files = Files()
 
-        self._metadata = List()
+        self._metadata = Metadata()
 
         self._manifest = List()
 
