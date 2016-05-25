@@ -103,7 +103,7 @@ class _Meta(Dict):
             else:
                 attr = attr_name
 
-            e.attributes[(uri,attr)] = value
+            e.attributes[(uri, attr)] = value
 
         return e
 
@@ -232,11 +232,19 @@ class Rights(_Meta):
 
 class Source(_Meta):
     @property
+    def element_name(self):
+        return 'dc:source'
+
+    @property
     def available_attrs(self):
         return 'id',
 
 
 class Subject(_Meta):
+    @property
+    def element_name(self):
+        return 'dc:subject'
+
     @property
     def available_attrs(self):
         return 'dir', 'id', 'xml:lang', 'opf:authority'
@@ -244,11 +252,21 @@ class Subject(_Meta):
 
 class Type(_Meta):
     @property
+    def element_name(self):
+        return 'dc:type'
+
+    @property
     def available_attrs(self):
         return 'id',
 
 
+#
+
 class Meta(_Meta):
+    @property
+    def element_name(self):
+        return 'meta'
+
     @property
     def available_attrs(self):
         return 'opf:alt-script', 'dir', 'opf:file-as', 'id', 'property', 'scheme', 'xml:lang'
@@ -256,8 +274,9 @@ class Meta(_Meta):
 
 class Link(_Meta):
     @property
+    def element_name(self):
+        return 'link'
+
+    @property
     def available_attrs(self):
         return 'href', 'id', 'media-type', 'properties', 'rel'
-
-
-import metadata
