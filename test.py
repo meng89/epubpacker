@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 
-from epub.metadata import meta
 
+import test
 
-M = meta('Creator')
-m = M()
+setattr(test, 'aaa', 'hello world!j')
 
-t = meta('dc:title')
+from test import aaa
 
-print(isinstance(m, M))
+print(aaa)

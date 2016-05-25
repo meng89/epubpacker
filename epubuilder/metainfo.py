@@ -78,7 +78,7 @@ class Rootfiles(List):
         self.subs = Subs()
         if element.children:
             for one in element.children:
-                if one.name == 'rootfile':
+                if one.element_name == 'rootfile':
                     self.subs.append(Rootfile(element=one))
 
     def element(self):

@@ -2,28 +2,39 @@ from hooky import Dict, List
 
 from abc import abstractmethod
 
+import xl
 
-def always_true(*args, **kwargs):
-    return True
+
+def always_pass(*args, **kwargs):
+    pass
 
 
 check_funcs = {
     # identifier only
-    'opf:scheme': always_true,
+    'opf:scheme': always_pass,
 
-    'opf:alt-script': always_true,
-    'dir': always_true,
-    'opf:file-as': always_true,
-    'id': always_true,
-    'opf:role': always_true,
-    'xml:lang': always_true,
+    'opf:alt-script': always_pass,
+    'dir': always_pass,
+    'opf:file-as': always_pass,
+    'id': always_pass,
+    'opf:role': always_pass,
+    'xml:lang': always_pass,
 
     # subject only
-    'opf:authority': always_true,
+    'opf:authority': always_pass,
 
     # Meta only
-    'property': always_true,
-    'scheme': always_true
+    'property': always_pass,
+    'scheme': always_pass
+}
+
+DC_URI = 'http://purl.org/dc/elements/1.1/'
+OPF_URI = 'http://www.idpf.org/2007/opf'
+
+namespace_map = {
+    'dc': DC_URI,
+    'opf': OPF_URI,
+    'xml': xl.XML_URI
 }
 
 
@@ -32,13 +43,24 @@ class Metadata(List):
 
 
 class _Meta(Dict):
+
     def __init__(self, text):
         super().__init__()
+
         self._text = None
-        self._attrs = {}
+
+        self._text_check_func = always_pass
+
+        self.element_attrs = {}
+        self._attrs_check_funcs = check_funcs
 
         if text:
             self['text'] = text
+
+    @property
+    @abstractmethod
+    def element_name(self):
+        return None
 
     @property
     @abstractmethod
@@ -47,25 +69,50 @@ class _Meta(Dict):
 
     def __setitem__(self, key, value):
         if key == 'text':
+            self._text_check_func(key, value)
+
             self._text = value
-            self._attrs = {}
+            self.element_attrs = {}
 
         elif key in self.available_attrs:
+            self._attrs_check_funcs[key](value)
 
-            if check_funcs[key](value):
-                self._attrs[key] = value
-
-            else:
-                raise ValueError
+            self.element_attrs[key] = value
 
         else:
             raise KeyError
 
     def to_element(self):
-        for
+
+        if ':' in self.element_name:
+            prefix, name = self.element_name.split(':')
+            uri = namespace_map[prefix]
+            e = xl.Element(name=(uri, name), namespaces={uri: prefix})
+
+        else:
+            e = xl.Element((None, self.element_name))
+
+        for attr_name, value in self.element_attrs.items():
+
+            uri = None
+            if ':' in attr_name:
+                prefix, attr = attr_name.split(':')
+                uri = namespace_map[prefix]
+                e.namespaces[uri] = prefix
+
+            else:
+                attr = attr_name
+
+            e.attributes[(uri,attr)] = value
+
+        return e
 
 
 class Identifier(_Meta):
+    @property
+    def element_name(self):
+        return 'dc:identifier'
+
     @property
     def available_attrs(self):
         return 'id', 'opf:scheme'
@@ -73,11 +120,19 @@ class Identifier(_Meta):
 
 class Title(_Meta):
     @property
+    def element_name(self):
+        return 'dc:title'
+
+    @property
     def available_attrs(self):
         return 'opf:alt-script', 'dir', 'opf:file-as', 'id', 'xml:lang'
 
 
 class Language(_Meta):
+    @property
+    def element_name(self):
+        return 'dc:language'
+
     @property
     def available_attrs(self):
         return 'id',
@@ -87,11 +142,19 @@ class Language(_Meta):
 
 class Contributor(_Meta):
     @property
+    def element_name(self):
+        return 'dc:contributor'
+
+    @property
     def available_attrs(self):
         return 'opf:alt-script', 'dir', 'opf:file-as', 'id', 'opf:role', 'xml:lang'
 
 
 class Coverage(_Meta):
+    @property
+    def element_name(self):
+        return 'dc:coverage'
+
     @property
     def available_attrs(self):
         return 'dir', 'xml:lang'
@@ -99,11 +162,19 @@ class Coverage(_Meta):
 
 class Creator(_Meta):
     @property
+    def element_name(self):
+        return 'dc:creator'
+
+    @property
     def available_attrs(self):
         return 'opf:alt-script', 'dir', 'opf:file-as', 'id', 'opf:role', 'xml:lang'
 
 
 class Date(_Meta):
+    @property
+    def element_name(self):
+        return 'dc:date'
+
     @property
     def available_attrs(self):
         return 'id',
@@ -111,11 +182,19 @@ class Date(_Meta):
 
 class Description(_Meta):
     @property
+    def element_name(self):
+        return 'dc:discription'
+
+    @property
     def available_attrs(self):
         return 'dir', 'id', 'xml:lang'
 
 
 class Format(_Meta):
+    @property
+    def element_name(self):
+        return 'dc:format'
+
     @property
     def available_attrs(self):
         return 'id',
@@ -123,17 +202,29 @@ class Format(_Meta):
 
 class Publisher(_Meta):
     @property
+    def element_name(self):
+        return 'dc:publisher'
+
+    @property
     def available_attrs(self):
         return 'opf:alt-script', 'dir', 'opf:file-as', 'id', 'xml:lang'
 
 
 class Relation(_Meta):
     @property
+    def element_name(self):
+        return 'dc:relation'
+
+    @property
     def available_attrs(self):
         return 'dir', 'id', 'xml:lang'
 
 
 class Rights(_Meta):
+    @property
+    def element_name(self):
+        return 'dc:rights'
+
     @property
     def available_attrs(self):
         return 'dir', 'id', 'xml:lang'
@@ -167,3 +258,6 @@ class Link(_Meta):
     @property
     def available_attrs(self):
         return 'href', 'id', 'media-type', 'properties', 'rel'
+
+
+import metadata

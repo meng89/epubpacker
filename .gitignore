@@ -5,6 +5,7 @@ dist
 temp
 
 test.py
+test2.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -68,3 +69,4 @@ target/
 
 #Ipython Notebook
 .ipynb_checkpoints
+将删除 epub/metadata/

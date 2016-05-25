@@ -225,7 +225,7 @@ class Epub:
         dcterms_ns = 'http://purl.org/dc/terms/'
         package = xl.Element((None, 'package'),
                              namespaces={def_ns: None, dc_ns: 'dc', dcterms_ns: 'dcterms'},
-                             attributes={(None, 'version'): '3.0', (xl.XML_NS, 'lang'): 'en'})
+                             attributes={(None, 'version'): '3.0', (xl.XML_URI, 'lang'): 'en'})
         # metadata
 
         # manifest

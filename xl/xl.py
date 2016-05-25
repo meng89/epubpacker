@@ -188,7 +188,7 @@ CHILDREN = 'children'
 DESCRIPTORS = 'descriptors'
 
 
-XML_NS = 'http://www.w3.org/XML/1998/namespace'
+XML_URI = 'http://www.w3.org/XML/1998/namespace'
 
 
 class Element:
@@ -196,9 +196,10 @@ class Element:
         self.descriptor = None
 
         self.namespaces = namespaces or Namespaces()
-        self.attributes = attributes or Attributes()
 
         self.name = name
+
+        self.attributes = attributes or Attributes()
 
         self.children = Children()
 
@@ -222,7 +223,10 @@ class Element:
         if self.descriptor:
             self.descriptor[NAME_CHECKFUNC](value)
 
-        if not isinstance(value, tuple) or len(value) != 2:
+        if not isinstance(value, tuple) or not isinstance(value, list) or len(value) != 2:
+            raise Exception
+
+        if value[0] not in self.attributes.keys():
             raise Exception
 
         self.__dict__['name'] = value
@@ -270,7 +274,7 @@ class Element:
             if uri in inherited_prefixes.keys() and inherited_prefixes[uri] == prefix:
                 pass
 
-            elif uri == XML_NS:
+            elif uri == XML_URI:
                 pass
 
             elif uri:
@@ -311,10 +315,10 @@ class Element:
 class Namespaces(Dict):
     def __init__(self):
         super().__init__()
-        self[XML_NS] = 'xml'
+        self[XML_URI] = 'xml'
 
     def __setitem__(self, key, value):
-        if key == XML_NS and value != 'xml':
+        if key == XML_URI and value != 'xml':
             raise Exception
 
         super().__setitem__(key, value)
@@ -360,8 +364,8 @@ class Children(List):
 
         for item in self:
             if not isinstance(item, Text):
-                self.descriptor[NAME_CHECKFUNC](item.name)
-                item.descriptor = self.descriptor[DESCRIPTORS][item.name]
+                self.descriptor[NAME_CHECKFUNC](item.element_name)
+                item.descriptor = self.descriptor[DESCRIPTORS][item.element_name]
 
     def insert(self, i, item):
         if not isinstance(item, (Element, Text)):

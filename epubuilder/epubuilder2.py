@@ -27,8 +27,8 @@ class Epub(object):
             self.metainfo = MetaInfo(epub_zip=epub_zip)
             self.opf = self.metadata.container.rootfiles[0].
             for info in epub_zip.infolist():
-                if info.name.split('/')[1] == 'EPUB':
-                    self.files[info.name] = File(epub_zip.read(info.name), date=info.date_time, comment=info.comment)
+                if info.element_name.split('/')[1] == 'EPUB':
+                    self.files[info.element_name] = File(epub_zip.read(info.element_name), date=info.date_time, comment=info.comment)
 
 
 
