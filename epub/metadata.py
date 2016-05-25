@@ -32,6 +32,13 @@ class Metadata(List):
 
 
 class _Meta(Dict):
+    def __init__(self, text):
+        super().__init__()
+        self._text = None
+        self._attrs = {}
+
+        if text:
+            self['text'] = text
 
     @property
     @abstractmethod
@@ -41,11 +48,12 @@ class _Meta(Dict):
     def __setitem__(self, key, value):
         if key == 'text':
             self._text = value
+            self._attrs = {}
 
         elif key in self.available_attrs:
 
             if check_funcs[key](value):
-                self.__dict__[key] = value
+                self._attrs[key] = value
 
             else:
                 raise ValueError
@@ -54,7 +62,7 @@ class _Meta(Dict):
             raise KeyError
 
     def to_element(self):
-        pass
+        for
 
 
 class Identifier(_Meta):
