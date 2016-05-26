@@ -346,6 +346,9 @@ class Attributes(Dict):
             self.descriptor[NAME_CHECKFUNC](key)
             self.descriptor[VALUE_CHECKFUNCS][key](value)
 
+        if key == 'xmlns':
+            raise AttributeError
+
         super().__setitem__(key, value)
 
 

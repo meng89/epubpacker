@@ -246,9 +246,10 @@ class Epub:
 
     @staticmethod
     def _xmlstr_container(opf_path):
-        e = xl.Element('container')
-        e.attributes['version'] = '1.0'
-        e.attributes['xmlns'] = 'urn:oasis:names:tc:opendocument:xmlns:container'
+        e = xl.Element((None, 'container'))
+        e.attributes[(None, 'version')] = '1.0'
+
+        e.namespaces[None] = 'urn:oasis:names:tc:opendocument:xmlns:container'
 
         rootfiles = xl.Element('rootfiles')
         e.children.append(rootfiles)

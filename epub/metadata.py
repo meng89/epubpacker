@@ -260,7 +260,7 @@ class Type(_Meta):
         return 'id',
 
 
-#
+# End of Optional Elements
 
 class Meta(_Meta):
     @property
