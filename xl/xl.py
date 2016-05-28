@@ -41,13 +41,12 @@ def parse(xmlstr, debug=False):
 
             attributes[(attr_uri, attr_name)] = value
 
-        namespaces = Namespaces()
+        prefixes = Prefixes()
 
         for _uri, _prefix in ns_list:
-            namespaces[_uri] = _prefix
-        print(tag, uri, namespaces, attributes)
-        print()
-        e = Element((uri, tag), namespaces, attributes)
+            prefixes[_uri] = _prefix
+
+        e = Element(name=(uri, tag), attributes=attributes, prefixes=prefixes)
 
         if elements:
             elements[-1].children.append(e)
@@ -191,21 +190,21 @@ DESCRIPTORS = 'descriptors'
 XML_URI = 'http://www.w3.org/XML/1998/namespace'
 
 
+class XLError(Exception):
+    pass
+
+
 class Element:
-    def __init__(self, name, namespaces=None, attributes=None):
-        self.descriptor = None
-
-        self.namespaces = namespaces or Namespaces()
-
+    def __init__(self, name, attributes=None, prefixes=None):
         self.name = name
-
         self.attributes = attributes or Attributes()
+        self.prefixes = prefixes or Prefixes()
 
         self.children = Children()
 
     @property
     def descriptor(self):
-        return self.__dict__['descriptor']
+        return self.__dict__['descriptor'] if 'descriptor' in self.__dict__.keys() else None
 
     @descriptor.setter
     def descriptor(self, value):
@@ -220,24 +219,32 @@ class Element:
 
     @name.setter
     def name(self, value):
+        if not isinstance(value, tuple):
+            value = (None, value)
+
+        if len(value) != 2:
+            raise ValueError
+
+        if value[0] is not None and not isinstance(value[0], str):
+            raise ValueError
+
+        if not isinstance(value[1], str):
+            raise ValueError
+
         if self.descriptor:
             self.descriptor[NAME_CHECKFUNC](value)
 
-        if not isinstance(value, tuple) or not isinstance(value, list) or len(value) != 2:
-            raise Exception
-
-        if value[0] not in self.attributes.keys():
-            raise Exception
+        # if value[0] is not None and value[0] not in self.attributes.keys():
 
         self.__dict__['name'] = value
 
     @property
-    def namespaces(self):
-        return self.__dict__['namespaces']
+    def prefixes(self):
+        return self.__dict__['prefixes']
 
-    @namespaces.setter
-    def namespaces(self, value):
-        self.__dict__['namespaces'] = value
+    @prefixes.setter
+    def prefixes(self, value):
+        self.__dict__['prefixes'] = value
 
     @property
     def attributes(self):
@@ -255,51 +262,76 @@ class Element:
     def children(self, value):
         self.__dict__['children'] = value
 
-    def to_string(self, inherited_namespaces=None):
+    def to_string(self, inherited_prefixes=None):
 
-        inherited_prefixes = inherited_namespaces or Namespaces()
+        inherited_prefixes = inherited_prefixes or Prefixes()
+
+        auto_prefixs = Prefixes()
+
+        def get_prefix(_uri):
+
+            try:
+                _prefix = self.prefixes[_uri]
+            except KeyError:
+                try:
+                    _prefix = auto_prefixs[_uri]
+                except KeyError:
+                    _prefix_num = 0
+                    while 'prefix' + str(_prefix_num) in [one for one in self.prefixes.keys()] +\
+                                                         [one for one in auto_prefixs.keys()]:
+                        _prefix_num += 1
+
+                    _prefix = 'prefix' + str(_prefix_num)
+
+                auto_prefixs[self.name[0]] = _prefix
+
+            return _prefix
 
         s = ''
 
         s += '<'
 
-        full_name = ''
-        if self.name[0] and self.namespaces[self.name[0]]:
-            full_name += self.namespaces[self.name[0]] + ':'
-        full_name += self.name[1]
+        # processing xml tag
+        if self.name[0]:
+
+            prefix = get_prefix(self.name[0])
+            if prefix:
+                full_name = '{}:{}'.format(prefix, self.name[1])
+            else:
+                full_name = self.name[1]
+
+        else:
+            full_name = self.name[1]
+
+        print(repr(full_name))
 
         s += full_name
 
-        for uri, prefix in self.namespaces.items():
-            if uri in inherited_prefixes.keys() and inherited_prefixes[uri] == prefix:
-                pass
+        # processing xml attributes
+        if self.attributes:
+            s += ' ' + self.attributes.to_string(get_prefix)
 
-            elif uri == XML_URI:
-                pass
+        # processing xml namespaces uri prefix
+        self_prefixes_and_auto_prefixes = copy.deepcopy(self.prefixes)
+        self_prefixes_and_auto_prefixes.update(auto_prefixs)
 
-            elif uri:
-                if prefix:
-                    s += ' xmlns:{}="{}"'.format(prefix, uri)
-                else:
-                    s += ' xmlns="{}"'.format(uri)
+        prefixes_string = self_prefixes_and_auto_prefixes.to_string(inherited_prefixes)
 
-        for name, value in self.attributes.items():
-            s += ' '
+        print(repr(s))
 
-            if name[0]:
-                s += self.namespaces[name[0]] + ':'
-
-            s += name[1]
-            s += '="{}"'.format(value)
+        if prefixes_string:
+            s += ' ' + prefixes_string
 
         if self.children:
             s += '>'
 
+            prefixes_for_subs = inherited_prefixes.copy()
+            prefixes_for_subs.update(self.prefixes)
+
             for child in self.children:
                 if isinstance(child, Element):
-                    inherited_prefixes_for_subs = inherited_prefixes.copy()
-                    inherited_prefixes_for_subs.update(self.namespaces)
-                    s += child.to_string(inherited_namespaces=inherited_prefixes_for_subs)
+
+                    s += child.to_string(inherited_prefixes=prefixes_for_subs)
 
                 elif isinstance(child, Text):
                     s += child.to_string()
@@ -312,16 +344,45 @@ class Element:
         return s
 
 
-class Namespaces(Dict):
+class Prefixes(Dict):
     def __init__(self):
         super().__init__()
+
         self[XML_URI] = 'xml'
 
-    def __setitem__(self, key, value):
-        if key == XML_URI and value != 'xml':
-            raise Exception
+    def __getitem__(self, uri):
+        if uri == XML_URI:
+            return 'xml'
+        else:
+            return super().__getitem__(uri)
 
-        super().__setitem__(key, value)
+    def __setitem__(self, uri, prefix):
+        if uri == XML_URI:
+            if prefix != 'xml':
+                print(uri, prefix)
+                raise Exception
+
+        else:
+            super().__setitem__(uri, prefix)
+
+    def to_string(self, inherited_prefixes):
+        inherited_prefixes = inherited_prefixes or Prefixes()
+
+        string_list = []
+        for url, prefix in self.items():
+            if url == XML_URI:
+                continue
+
+            if url in inherited_prefixes.keys() and prefix == inherited_prefixes[url]:
+                continue
+
+            if url:
+                if prefix:
+                    string_list.append('xmlns:{}="{}"'.format(prefix, url))
+                else:
+                    string_list.append('xmlns="{}"'.format(url))
+
+        return ' '.join(string_list)
 
 
 class Attributes(Dict):
@@ -342,24 +403,39 @@ class Attributes(Dict):
             self[attr_name] = value
 
     def __setitem__(self, key, value):
+        if not isinstance(key, tuple):
+            key = (None, key)
+
         if self.descriptor:
             self.descriptor[NAME_CHECKFUNC](key)
             self.descriptor[VALUE_CHECKFUNCS][key](value)
 
-        if key == 'xmlns':
+        if key == (None, 'xmlns'):
             raise AttributeError
 
         super().__setitem__(key, value)
+
+    def to_string(self, get_prefix_func):
+        string_list = []
+        for attr_name, attr_value in self.items():
+
+            if attr_name[0]:
+                prefix = get_prefix_func(attr_name[0])
+                string_list.append('{}:{}="{}"'.format(prefix, attr_name[1], attr_value))
+
+            else:
+                string_list.append('{}="{}"'.format(attr_name[1], attr_value))
+
+        return ' '.join(string_list)
 
 
 class Children(List):
     def __init__(self):
         super().__init__()
-        self.descriptor = None
 
     @property
     def descriptor(self):
-        return self.__dict__['descriptors']
+        return self.__dict__['descriptors'] if 'descriptors' in self.__dict__.keys() else None
 
     @descriptor.setter
     def descriptor(self, value):
@@ -374,7 +450,7 @@ class Children(List):
         if not isinstance(item, (Element, Text)):
             raise Exception
 
-        if isinstance(item, Element):
+        if isinstance(item, Element) and self.descriptor:
             self.descriptor[NAME_CHECKFUNC](item.name)
             item.descriptor = self.descriptor[DESCRIPTORS][item.name]
 

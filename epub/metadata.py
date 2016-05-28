@@ -87,7 +87,7 @@ class _Meta(Dict):
         if ':' in self.element_name:
             prefix, name = self.element_name.split(':')
             uri = namespace_map[prefix]
-            e = xl.Element(name=(uri, name), namespaces={uri: prefix})
+            e = xl.Element(name=(uri, name), prefixes={uri: prefix})
 
         else:
             e = xl.Element((None, self.element_name))
@@ -98,7 +98,7 @@ class _Meta(Dict):
             if ':' in attr_name:
                 prefix, attr = attr_name.split(':')
                 uri = namespace_map[prefix]
-                e.namespaces[uri] = prefix
+                e.prefixes[uri] = prefix
 
             else:
                 attr = attr_name

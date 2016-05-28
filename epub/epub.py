@@ -202,11 +202,11 @@ class Epub:
         default_ns = 'http://www.w3.org/1999/xhtml'
         epub_ns = 'http://www.idpf.org/2007/ops'
 
-        html = xl.Element((None, 'html'), namespaces={default_ns: None, epub_ns: 'epub'})
+        html = xl.Element((None, 'html'), prefixes={default_ns: None, epub_ns: 'epub'})
         body = xl.Element((None, 'body'))
 
         if self.toc:
-            nav = xl.Element((None, 'nav'), namespaces={epub_ns: 'epub'}, attributes={(epub_ns, 'type'): 'toc'})
+            nav = xl.Element((None, 'nav'), prefixes={epub_ns: 'epub'}, attributes={(epub_ns, 'type'): 'toc'})
             ol = xl.Element((None, 'ol'))
 
             for section in self.toc:
@@ -224,7 +224,7 @@ class Epub:
         dc_ns = 'http://purl.org/dc/elements/1.1/'
         dcterms_ns = 'http://purl.org/dc/terms/'
         package = xl.Element((None, 'package'),
-                             namespaces={def_ns: None, dc_ns: 'dc', dcterms_ns: 'dcterms'},
+                             prefixes={def_ns: None, dc_ns: 'dc', dcterms_ns: 'dcterms'},
                              attributes={(None, 'version'): '3.0', (xl.XML_URI, 'lang'): 'en'})
         # metadata
 
@@ -249,7 +249,7 @@ class Epub:
         e = xl.Element((None, 'container'))
         e.attributes[(None, 'version')] = '1.0'
 
-        e.namespaces[None] = 'urn:oasis:names:tc:opendocument:xmlns:container'
+        e.prefixes[None] = 'urn:oasis:names:tc:opendocument:xmlns:container'
 
         rootfiles = xl.Element('rootfiles')
         e.children.append(rootfiles)
