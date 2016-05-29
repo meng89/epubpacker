@@ -202,11 +202,11 @@ class Epub:
         default_ns = 'http://www.w3.org/1999/xhtml'
         epub_ns = 'http://www.idpf.org/2007/ops'
 
-        html = xl.Element((None, 'html'), namespaces={default_ns: None, epub_ns: 'epub'})
+        html = xl.Element((None, 'html'), prefixes={default_ns: None, epub_ns: 'epub'})
         body = xl.Element((None, 'body'))
 
         if self.toc:
-            nav = xl.Element((None, 'nav'), namespaces={epub_ns: 'epub'}, attributes={(epub_ns, 'type'): 'toc'})
+            nav = xl.Element((None, 'nav'), prefixes={epub_ns: 'epub'}, attributes={(epub_ns, 'type'): 'toc'})
             ol = xl.Element((None, 'ol'))
 
             for section in self.toc:
@@ -217,15 +217,15 @@ class Epub:
 
         html.children.append(body)
 
-        return html.to_string()
+        return html.xml_string()
 
     def _xmlstr_opf(self):
         def_ns = 'http://www.idpf.org/2007/opf'
         dc_ns = 'http://purl.org/dc/elements/1.1/'
         dcterms_ns = 'http://purl.org/dc/terms/'
         package = xl.Element((None, 'package'),
-                             namespaces={def_ns: None, dc_ns: 'dc', dcterms_ns: 'dcterms'},
-                             attributes={(None, 'version'): '3.0', (xl.XML_URI, 'lang'): 'en'})
+                             prefixes={def_ns: None, dc_ns: 'dc', dcterms_ns: 'dcterms'},
+                             attributes={(None, 'version'): '3.0', (xl.URI_XML, 'lang'): 'en'})
         # metadata
 
         # manifest
@@ -242,14 +242,14 @@ class Epub:
 
         package.children.append(spine)
 
-        return package.to_string()
+        return package.xml_string()
 
     @staticmethod
     def _xmlstr_container(opf_path):
         e = xl.Element((None, 'container'))
         e.attributes[(None, 'version')] = '1.0'
 
-        e.namespaces[None] = 'urn:oasis:names:tc:opendocument:xmlns:container'
+        e.prefixes[None] = 'urn:oasis:names:tc:opendocument:xmlns:container'
 
         rootfiles = xl.Element('rootfiles')
         e.children.append(rootfiles)
@@ -261,7 +261,7 @@ class Epub:
 
         rootfile.attributes['media-type'] = 'application/oebps-package+xml'
 
-        return xl.xml_header() + e.to_string()
+        return xl.xml_header() + e.xml_string()
 
     def write(self, filename):
         z = zipfile.ZipFile(filename, 'w')

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<taga xmlns:x="jjjj" xmlns:jbm="http://www.w3.org/1999/afafasfsfasfsaf">
+<taga xmlns:x="jjjj" xmlns:jbm="http://www.w3.org/1999/afafasfsfasfsaf" xmlns="alskfjaslkfjlj">
     <jbm:tagb>bbb</jbm:tagb>
     <a />
     <b />
@@ -11,4 +11,6 @@
             <jbm:j jbm:s="slajfalsk"/>
         </i>
     </x:e>
+    <test property="kx:hahah"/>
 </taga>
+

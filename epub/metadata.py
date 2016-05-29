@@ -28,13 +28,13 @@ check_funcs = {
     'scheme': always_pass
 }
 
-DC_URI = 'http://purl.org/dc/elements/1.1/'
-OPF_URI = 'http://www.idpf.org/2007/opf'
+URI_DC = 'http://purl.org/dc/elements/1.1/'
+URI_OPF = 'http://www.idpf.org/2007/opf'
 
 namespace_map = {
-    'dc': DC_URI,
-    'opf': OPF_URI,
-    'xml': xl.XML_URI
+    'dc': URI_DC,
+    'opf': URI_OPF,
+    'xml': xl.URI_XML
 }
 
 
@@ -88,7 +88,7 @@ class _Meta(Dict):
         if ':' in self.element_name:
             prefix, name = self.element_name.split(':')
             uri = namespace_map[prefix]
-            e = xl.Element(name=(uri, name), namespaces={uri: prefix})
+            e = xl.Element(name=(uri, name), prefixes={uri: prefix})
 
         else:
             e = xl.Element((None, self.element_name))
@@ -99,7 +99,7 @@ class _Meta(Dict):
             if ':' in attr_name:
                 prefix, attr = attr_name.split(':')
                 uri = namespace_map[prefix]
-                e.namespaces[uri] = prefix
+                e.prefixes[uri] = prefix
 
             else:
                 attr = attr_name
