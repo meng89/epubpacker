@@ -217,7 +217,7 @@ class Epub:
 
         html.children.append(body)
 
-        return html.to_string()
+        return html.xml_string()
 
     def _xmlstr_opf(self):
         def_ns = 'http://www.idpf.org/2007/opf'
@@ -242,7 +242,7 @@ class Epub:
 
         package.children.append(spine)
 
-        return package.to_string()
+        return package.xml_string()
 
     @staticmethod
     def _xmlstr_container(opf_path):
@@ -261,7 +261,7 @@ class Epub:
 
         rootfile.attributes['media-type'] = 'application/oebps-package+xml'
 
-        return xl.xml_header() + e.to_string()
+        return xl.xml_header() + e.xml_string()
 
     def write(self, filename):
         z = zipfile.ZipFile(filename, 'w')

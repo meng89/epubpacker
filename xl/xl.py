@@ -4,7 +4,7 @@ import copy
 
 from hooky import List, Dict
 
-from collections import UserString as Str
+from collections import UserString
 
 import xml.parsers.expat
 
@@ -132,51 +132,51 @@ def xml_header(version=None, encoding=None, standalone=None):
     return s
 
 
-def clean(element):
-    new_element = copy.copy(element)
+def clear_spaces(element):
 
-    children = Children()
+    new_element = Element(name=copy.deepcopy(element.name),
+                          attributes=copy.deepcopy(element.attributes),
+                          prefixes=copy.deepcopy(element.prefixes))
 
-    for child in new_element.children:
+    for child in element.children:
         if isinstance(child, Text):
-            new_string = Text(child.strip())
-            if new_string:
-                children.append(new_string)
+            new_text = Text(child.strip())
+
+            if new_text:
+                new_element.children.append(new_text)
+
         elif isinstance(child, Element):
-            children.append(clean(child))
-    new_element.children = children
+            new_element.children.append(clear_spaces(child))
 
     return new_element
 
 
-def clear_space(element):
-    pass
+def insert_spaces_for_pretty(element, indent=4, indent_after_children=0, one_child_dont_do=True):
 
+    new_element = Element(name=copy.deepcopy(element.name),
+                          attributes=copy.deepcopy(element.attributes),
+                          prefixes=copy.deepcopy(element.prefixes))
 
-def insert_for_pretty(e, indent=4, indent_after_children=0, one_child_dont_do=True):
+    if len(element.children) == 1 and one_child_dont_do:
+        new_element.children = copy.deepcopy(element.children)
 
-    new_e = copy.deepcopy(e)
-
-    if one_child_dont_do and len(new_e.children) == 1:
-        pass
-
-    elif new_e.children:
-        new_children = Children()
-
-        for child in new_e.children:
-            new_children.append(Text('\n' + ' ' * indent))
+    elif element.children:
+        for child in element.children:
+            _indent = Text('\n' + ' ' * indent)
 
             if isinstance(child, Text):
-                new_children.append(child)
+                new_text = _indent + copy.deepcopy(child)
+                new_element.children.append(new_text)
 
             elif isinstance(child, Element):
-                new_children.append(insert_for_pretty(child, indent=indent + indent, indent_after_children=indent))
+                new_element.children.append(_indent)
+                new_element.children.append(insert_spaces_for_pretty(element=child,
+                                                                     indent=indent + indent,
+                                                                     indent_after_children=indent))
 
-        new_children.append(Text('\n' + ' ' * indent_after_children))
+        new_element.children.append(Text('\n' + ' ' * indent_after_children))
 
-        new_e.children = new_children
-
-    return new_e
+    return new_element
 
 
 IS_NAME_FIXED = 'is_name_fixed'
@@ -262,7 +262,7 @@ class Element:
     def children(self, value):
         self.__dict__['children'] = value
 
-    def to_string(self, inherited_prefixes=None):
+    def xml_string(self, inherited_prefixes=None):
 
         inherited_prefixes = inherited_prefixes or Prefixes()
 
@@ -283,13 +283,10 @@ class Element:
 
                     _prefix = 'prefix' + str(_prefix_num)
 
-                auto_prefixs[self.name[0]] = _prefix
-
+            auto_prefixs[self.name[0]] = _prefix
             return _prefix
 
-        s = ''
-
-        s += '<'
+        s = '<'
 
         # processing xml tag
         if self.name[0]:
@@ -303,21 +300,17 @@ class Element:
         else:
             full_name = self.name[1]
 
-        print(repr(full_name))
-
         s += full_name
 
         # processing xml attributes
         if self.attributes:
-            s += ' ' + self.attributes.to_string(get_prefix)
+            s += ' ' + self.attributes.xml_string(get_prefix)
 
         # processing xml namespaces uri prefix
         self_prefixes_and_auto_prefixes = copy.deepcopy(self.prefixes)
         self_prefixes_and_auto_prefixes.update(auto_prefixs)
 
-        prefixes_string = self_prefixes_and_auto_prefixes.to_string(inherited_prefixes)
-
-        print(repr(s))
+        prefixes_string = self_prefixes_and_auto_prefixes.xml_string(inherited_prefixes)
 
         if prefixes_string:
             s += ' ' + prefixes_string
@@ -331,10 +324,10 @@ class Element:
             for child in self.children:
                 if isinstance(child, Element):
 
-                    s += child.to_string(inherited_prefixes=prefixes_for_subs)
+                    s += child.xml_string(inherited_prefixes=prefixes_for_subs)
 
                 elif isinstance(child, Text):
-                    s += child.to_string()
+                    s += child.xml_string()
 
             s += '</{}>'.format(full_name)
 
@@ -359,13 +352,12 @@ class Prefixes(Dict):
     def __setitem__(self, uri, prefix):
         if uri == XML_URI:
             if prefix != 'xml':
-                print(uri, prefix)
                 raise Exception
 
         else:
             super().__setitem__(uri, prefix)
 
-    def to_string(self, inherited_prefixes):
+    def xml_string(self, inherited_prefixes):
         inherited_prefixes = inherited_prefixes or Prefixes()
 
         string_list = []
@@ -415,7 +407,7 @@ class Attributes(Dict):
 
         super().__setitem__(key, value)
 
-    def to_string(self, get_prefix_func):
+    def xml_string(self, get_prefix_func):
         string_list = []
         for attr_name, attr_value in self.items():
 
@@ -457,8 +449,8 @@ class Children(List):
         super().insert(i, item)
 
 
-class Text(Str):
-    def to_string(self):
+class Text(UserString):
+    def xml_string(self):
         s = ''
         for char in self:
             if char == '&':

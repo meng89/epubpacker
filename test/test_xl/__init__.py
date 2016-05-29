@@ -1,5 +1,5 @@
 
-from xl import parse, Element
+from xl import parse, Element, clear_spaces, insert_spaces_for_pretty
 
 import os
 
@@ -7,10 +7,12 @@ path = os.path.dirname(__file__)
 
 
 def test_parse():
-    doc = parse(open(os.path.join(path, '1.xml')).read())
+    e = parse(open(os.path.join(path, '1.xml')).read())
 
-    print(doc.to_string())
+    e = clear_spaces(e)
+    e = insert_spaces_for_pretty(e)
+    print(e.xml_string())
 
 
 def test_element():
-    print('hello nose')
+    pass

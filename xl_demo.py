@@ -8,4 +8,4 @@ html = Element((None, 'html'), {default_ns: None, epub_ns: 'epub'}, attributes={
 # html.namespaces[default_ns] = None
 # html.namespaces.update({epub_ns: 'epub'})
 
-print(html.to_string())
+print(html.xml_string())
