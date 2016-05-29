@@ -44,18 +44,19 @@ class Metadata(List):
 
 class _Meta(Dict):
 
-    def __init__(self, text):
+    def __init__(self, text, attrs=None):
         super().__init__()
 
         self._text = None
 
         self._text_check_func = always_pass
 
-        self.element_attrs = {}
+        self._attrs = {}
         self._attrs_check_funcs = check_funcs
 
-        if text:
-            self['text'] = text
+        self['text'] = text
+
+        self.update(attrs or {})
 
     @property
     @abstractmethod
@@ -72,12 +73,12 @@ class _Meta(Dict):
             self._text_check_func(key, value)
 
             self._text = value
-            self.element_attrs = {}
+            self._attrs = {}
 
         elif key in self.available_attrs:
             self._attrs_check_funcs[key](value)
 
-            self.element_attrs[key] = value
+            self._attrs[key] = value
 
         else:
             raise KeyError
@@ -92,7 +93,7 @@ class _Meta(Dict):
         else:
             e = xl.Element((None, self.element_name))
 
-        for attr_name, value in self.element_attrs.items():
+        for attr_name, value in self._attrs.items():
 
             uri = None
             if ':' in attr_name:
