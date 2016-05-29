@@ -28,13 +28,13 @@ check_funcs = {
     'scheme': always_pass
 }
 
-DC_URI = 'http://purl.org/dc/elements/1.1/'
-OPF_URI = 'http://www.idpf.org/2007/opf'
+URI_DC = 'http://purl.org/dc/elements/1.1/'
+URI_OPF = 'http://www.idpf.org/2007/opf'
 
 namespace_map = {
-    'dc': DC_URI,
-    'opf': OPF_URI,
-    'xml': xl.XML_URI
+    'dc': URI_DC,
+    'opf': URI_OPF,
+    'xml': xl.URI_XML
 }
 
 

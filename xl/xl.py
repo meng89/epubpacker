@@ -187,7 +187,7 @@ CHILDREN = 'children'
 DESCRIPTORS = 'descriptors'
 
 
-XML_URI = 'http://www.w3.org/XML/1998/namespace'
+URI_XML = 'http://www.w3.org/XML/1998/namespace'
 
 
 class XLError(Exception):
@@ -341,16 +341,16 @@ class Prefixes(Dict):
     def __init__(self):
         super().__init__()
 
-        self[XML_URI] = 'xml'
+        self[URI_XML] = 'xml'
 
     def __getitem__(self, uri):
-        if uri == XML_URI:
+        if uri == URI_XML:
             return 'xml'
         else:
             return super().__getitem__(uri)
 
     def __setitem__(self, uri, prefix):
-        if uri == XML_URI:
+        if uri == URI_XML:
             if prefix != 'xml':
                 raise Exception
 
@@ -362,7 +362,7 @@ class Prefixes(Dict):
 
         string_list = []
         for url, prefix in self.items():
-            if url == XML_URI:
+            if url == URI_XML:
                 continue
 
             if url in inherited_prefixes.keys() and prefix == inherited_prefixes[url]:
