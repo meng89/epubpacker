@@ -1,2 +1,2 @@
 class EasyEpub:
-    pass
+    def 
