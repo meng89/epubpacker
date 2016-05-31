@@ -165,7 +165,7 @@ meta_des = {
 }
 
 
-# package/metadata/dc:type
+# package/metadata/metadata:type
 
 dc_type_attributes_descriptors = {
     (None, 'id'): id_func
@@ -184,7 +184,7 @@ dc_type_des = {
 }
 
 
-# package/metadata/dc:publisher
+# package/metadata/metadata:publisher
 
 dc_publisher_attributes_descriptors = {
     (None, 'id'): id_func,
@@ -206,7 +206,7 @@ dc_publisher_des = {
 }
 
 
-# package/metadata/dc:creator
+# package/metadata/metadata:creator
 
 dc_creator_attributes_descriptors = {
     (None, 'id'): id_func,
@@ -227,7 +227,7 @@ dc_creator_des = {
 }
 
 
-# package/metadata/dc:language
+# package/metadata/metadata:language
 
 dc_language_attributes_descriptors = {
     (None, 'id'): id_func
@@ -244,7 +244,7 @@ dc_language_des = {
         NAME_CHECKFUNC: value_checkfunc(()),
     },
 }
-# package/metadata/dc:identifier
+# package/metadata/metadata:identifier
 
 dc_identifier_attributes_descriptors = {
     (None, 'id'): id_func
@@ -262,7 +262,7 @@ dc_identifier_des = {
     },
 }
 
-# package/metadata/dc:title
+# package/metadata/metadata:title
 
 dc_title_attributes_descriptors = {
 
@@ -281,7 +281,7 @@ dc_title_des = {
     }
 }
 
-DC_URI = 'http://purl.org/dc/elements/1.1/'
+DC_URI = 'http://purl.org/metadata/elements/1.1/'
 
 
 # package/metadata
@@ -324,7 +324,7 @@ package_children_descriptors = {
 package_attributes_descriptors = {
     # required
     (None, 'version'): value_checkfunc(('3.1',)),
-    (None, 'unique-identifier'): pass_func,  # same dc:identifier
+    (None, 'unique-identifier'): pass_func,  # same metadata:identifier
 
     # optional
     (None, 'prefix'): pass_func,

@@ -229,10 +229,10 @@ class Epub(object):
         return doc
 
     def _create_xml_content_metadata(self, node):
-        dc = "http://purl.org/dc/elements/1.1/"
+        dc = "http://purl.org/metadata/elements/1.1/"
         opf = "http://www.idpf.org/2007/opf"
 
-        metadata = etree.SubElement(node, 'metadata', nsmap={'dc': dc, 'opf': opf})
+        metadata = etree.SubElement(node, 'metadata', nsmap={'metadata': dc, 'opf': opf})
 
         dc_identifier = etree.SubElement(metadata, '{' + dc + '}' + 'identifier')
         dc_identifier.set('id', 'uid')
@@ -245,7 +245,7 @@ class Epub(object):
         meta_property_dcterms_modified = etree.SubElement(metadata, 'meta', property='dcterms:modified')
         meta_property_dcterms_modified.text = time.strftime('%Y-%m-%dT%XZ', time.gmtime())
         '''
-        <dc:language>en</dc:language>
+        <metadata:language>en</metadata:language>
         <meta property="dcterms:modified">2011-01-01T12:00:00Z</meta>
         '''
 

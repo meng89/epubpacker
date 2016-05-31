@@ -221,10 +221,10 @@ class Epub:
 
     def _xmlstr_opf(self):
         def_ns = 'http://www.idpf.org/2007/opf'
-        dc_ns = 'http://purl.org/dc/elements/1.1/'
-        dcterms_ns = 'http://purl.org/dc/terms/'
+        dc_ns = 'http://purl.org/metadata/elements/1.1/'
+        dcterms_ns = 'http://purl.org/metadata/terms/'
         package = xl.Element((None, 'package'),
-                             prefixes={def_ns: None, dc_ns: 'dc', dcterms_ns: 'dcterms'},
+                             prefixes={def_ns: None, dc_ns: 'metadata', dcterms_ns: 'dcterms'},
                              attributes={(None, 'version'): '3.0', (xl.URI_XML, 'lang'): 'en'})
         # metadata
 

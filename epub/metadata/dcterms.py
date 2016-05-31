@@ -1,11 +1,19 @@
-"""
-Dublin Core Metadata Element Set
-http://dublincore.org/documents/dces/
-"""
+"""Dublin Core Metadata Initiative"""
+
+from .dcmes import _Meta
+
+
+def always_true():
+    pass
+
+
+def w3c_date(string):
+    return True
+
+
 l = [
-    'abstract',
-    'accessRights', 'accrualMethod', 'accrualPeriodicity', 'accrualPolicy', 'alternative',
-    'audience', 'available',
+    'abstract', 'accessRights', 'accrualMethod', 'accrualPeriodicity', 'accrualPolicy', 'alternative', 'audience',
+    'available',
     'bibliographicCitation',
     'conformsTo', 'contributor', 'coverage', 'created', 'creator',
     'date', 'dateAccepted', 'dateCopyrighted', 'dateSubmitted', 'description',
@@ -22,3 +30,28 @@ l = [
     'tableOfContents', 'temporal', 'title', 'type',
     'valid'
 ]
+
+
+check_funcs = {
+    'modified': w3c_date,
+}
+
+
+check_funcs.update(dict((one, always_true) for one in l if one not in check_funcs.keys()))
+
+
+_classes = {}
+
+
+class _MyMeta:
+    def element(self):
+        pass
+
+
+for k, v in check_funcs.items():
+    _class = type(k, (), {'check_func': v})
+    _classes[k] = _class
+
+
+def get_class(name):
+    return _classes[name]

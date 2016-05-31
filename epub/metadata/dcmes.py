@@ -1,31 +1,37 @@
-from hooky import Dict, List
+"""
+Dublin Core Metadata Element Set
+http://dublincore.org/documents/dces/
+"""
+
 
 from abc import abstractmethod
+
+from hooky import Dict
 
 import xl
 
 
-def always_pass(*args, **kwargs):
-    pass
+def always_true(*args, **kwargs):
+    return True
 
 
 check_funcs = {
     # identifier only
-    'opf:scheme': always_pass,
+    'opf:scheme': always_true,
 
-    'opf:alt-script': always_pass,
-    'dir': always_pass,
-    'opf:file-as': always_pass,
-    'id': always_pass,
-    'opf:role': always_pass,
-    'xml:lang': always_pass,
+    'opf:alt-script': always_true,
+    'dir': always_true,
+    'opf:file-as': always_true,
+    'id': always_true,
+    'opf:role': always_true,
+    'xml:lang': always_true,
 
     # subject only
-    'opf:authority': always_pass,
+    'opf:authority': always_true,
 
     # Meta only
-    'property': always_pass,
-    'scheme': always_pass
+    'property': always_true,
+    'scheme': always_true
 }
 
 URI_DC = 'http://purl.org/dc/elements/1.1/'
@@ -38,10 +44,6 @@ namespace_map = {
 }
 
 
-class Metadata(List):
-    pass
-
-
 class _Meta(Dict):
 
     def __init__(self, text, attrs=None):
@@ -49,7 +51,7 @@ class _Meta(Dict):
 
         self._text = None
 
-        self._text_check_func = always_pass
+        self._text_check_func = always_true
 
         self._attrs = {}
         self._attrs_check_funcs = check_funcs
@@ -76,7 +78,9 @@ class _Meta(Dict):
             self._attrs = {}
 
         elif key in self.available_attrs:
-            self._attrs_check_funcs[key](value)
+
+            if not self._attrs_check_funcs[key](value):
+                raise Exception
 
             self._attrs[key] = value
 
@@ -138,8 +142,6 @@ class Language(_Meta):
     def available_attrs(self):
         return 'id',
 
-
-# Optional Elements
 
 class Contributor(_Meta):
     @property
@@ -259,25 +261,3 @@ class Type(_Meta):
     @property
     def available_attrs(self):
         return 'id',
-
-
-# End of Optional Elements
-
-class Meta(_Meta):
-    @property
-    def element_name(self):
-        return 'meta'
-
-    @property
-    def available_attrs(self):
-        return 'opf:alt-script', 'dir', 'opf:file-as', 'id', 'property', 'scheme', 'xml:lang'
-
-
-class Link(_Meta):
-    @property
-    def element_name(self):
-        return 'link'
-
-    @property
-    def available_attrs(self):
-        return 'href', 'id', 'media-type', 'properties', 'rel'

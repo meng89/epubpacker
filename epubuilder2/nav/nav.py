@@ -11,7 +11,7 @@ package_children_descriptors = {
 package_attributes_descriptors = {
     # required
     (None, 'version'): value_checkfunc(('3.1',)),
-    (None, 'unique-identifier'): pass_func,  # same dc:identifier
+    (None, 'unique-identifier'): pass_func,  # same metadata:identifier
 
     # optional
     (None, 'prefix'): pass_func,
