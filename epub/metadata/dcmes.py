@@ -8,6 +8,8 @@ from abc import abstractmethod
 
 from hooky import Dict
 
+from .metadata import Public
+
 import xl
 
 
@@ -44,7 +46,7 @@ namespace_map = {
 }
 
 
-class _Meta(Dict):
+class _Meta(Dict, Public):
 
     def __init__(self, text, attrs=None):
         super().__init__()
@@ -53,7 +55,7 @@ class _Meta(Dict):
 
         self._text_check_func = always_true
 
-        self._attrs = {}
+        self.data = {}
         self._attrs_check_funcs = check_funcs
 
         self['text'] = text
@@ -75,19 +77,19 @@ class _Meta(Dict):
             self._text_check_func(key, value)
 
             self._text = value
-            self._attrs = {}
+            self.data = {}
 
         elif key in self.available_attrs:
 
             if not self._attrs_check_funcs[key](value):
                 raise Exception
 
-            self._attrs[key] = value
+            self.data[key] = value
 
         else:
             raise KeyError
 
-    def to_element(self):
+    def as_element(self):
 
         if ':' in self.element_name:
             prefix, name = self.element_name.split(':')
@@ -97,7 +99,7 @@ class _Meta(Dict):
         else:
             e = xl.Element((None, self.element_name))
 
-        for attr_name, value in self._attrs.items():
+        for attr_name, value in self.data.items():
 
             uri = None
             if ':' in attr_name:
