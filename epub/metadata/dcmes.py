@@ -40,66 +40,61 @@ URI_DC = 'http://purl.org/dc/elements/1.1/'
 URI_OPF = 'http://www.idpf.org/2007/opf'
 
 namespace_map = {
-    'dc': URI_DC,
     'opf': URI_OPF,
     'xml': xl.URI_XML
 }
 
 
-class _Meta(Dict, Public):
+class Attrs(Dict):
 
-    def __init__(self, text, attrs=None):
+    def __init__(self, available_attrs, attr_check_funcs):
         super().__init__()
-
-        self._text = None
-
-        self._text_check_func = always_true
-
-        self.data = {}
-        self._attrs_check_funcs = check_funcs
-
-        self['text'] = text
-
-        self.update(attrs or {})
-
-    @property
-    @abstractmethod
-    def element_name(self):
-        return None
-
-    @property
-    @abstractmethod
-    def available_attrs(self):
-        return ()
+        self._available_attrs = available_attrs
+        self._attr_check_funcs = attr_check_funcs
 
     def __setitem__(self, key, value):
-        if key == 'text':
-            self._text_check_func(key, value)
-
-            self._text = value
-            self.data = {}
-
-        elif key in self.available_attrs:
-
-            if not self._attrs_check_funcs[key](value):
-                raise Exception
-
-            self.data[key] = value
-
-        else:
+        if key not in self._available_attrs:
             raise KeyError
 
-    def as_element(self):
+        if not self._attr_check_funcs[key](value):
+            raise ValueError
 
-        if ':' in self.element_name:
-            prefix, name = self.element_name.split(':')
-            uri = namespace_map[prefix]
-            e = xl.Element(name=(uri, name), prefixes={uri: prefix})
+        super().__setitem__(key, value)
 
+
+class _Meta(Public):
+    _text_check_func = always_true
+
+    available_attrs = ()
+    _attrs_check_funcs = check_funcs
+
+    def __init__(self, text):
+        super().__init__()
+
+        self._attrs = Attrs(available_attrs=self.available_attrs, attr_check_funcs=self._attrs_check_funcs)
+
+        self.text = text
+
+    @property
+    def text(self):
+        return self.__dict__['text']
+
+    @text.setter
+    def text(self, value):
+        if self._text_check_func(value):
+            self.__dict__['text'] = value
         else:
-            e = xl.Element((None, self.element_name))
+            raise Exception
 
-        for attr_name, value in self.data.items():
+    @property
+    def attrs(self):
+        return self._attrs
+
+    def as_element(self):
+        e = xl.Element((URI_DC, self.__class__.__name__.lower()))
+        e.prefixes[URI_DC] = 'dc'
+
+        for attr_name, value in self.attrs.items():
 
             uri = None
             if ':' in attr_name:
@@ -112,154 +107,66 @@ class _Meta(Dict, Public):
 
             e.attributes[(uri, attr)] = value
 
+        e.children.append(xl.Text(self.text))
+
         return e
 
 
 class Identifier(_Meta):
-    @property
-    def element_name(self):
-        return 'dc:identifier'
-
-    @property
-    def available_attrs(self):
-        return 'id', 'opf:scheme'
+    available_attrs = 'id', 'opf:scheme'
 
 
 class Title(_Meta):
-    @property
-    def element_name(self):
-        return 'dc:title'
-
-    @property
-    def available_attrs(self):
-        return 'opf:alt-script', 'dir', 'opf:file-as', 'id', 'xml:lang'
+    available_attrs = 'opf:alt-script', 'dir', 'opf:file-as', 'id', 'xml:lang'
 
 
 class Language(_Meta):
-    @property
-    def element_name(self):
-        return 'dc:language'
-
-    @property
-    def available_attrs(self):
-        return 'id',
+    available_attrs = 'id',
 
 
 class Contributor(_Meta):
-    @property
-    def element_name(self):
-        return 'dc:contributor'
-
-    @property
-    def available_attrs(self):
-        return 'opf:alt-script', 'dir', 'opf:file-as', 'id', 'opf:role', 'xml:lang'
+    available_attrs = 'opf:alt-script', 'dir', 'opf:file-as', 'id', 'opf:role', 'xml:lang'
 
 
 class Coverage(_Meta):
-    @property
-    def element_name(self):
-        return 'dc:coverage'
-
-    @property
-    def available_attrs(self):
-        return 'dir', 'xml:lang'
+    available_attrs = 'dir', 'xml:lang'
 
 
 class Creator(_Meta):
-    @property
-    def element_name(self):
-        return 'dc:creator'
-
-    @property
-    def available_attrs(self):
-        return 'opf:alt-script', 'dir', 'opf:file-as', 'id', 'opf:role', 'xml:lang'
+    available_attrs = 'opf:alt-script', 'dir', 'opf:file-as', 'id', 'opf:role', 'xml:lang'
 
 
 class Date(_Meta):
-    @property
-    def element_name(self):
-        return 'dc:date'
-
-    @property
-    def available_attrs(self):
-        return 'id',
+    available_attrs = 'id',
 
 
 class Description(_Meta):
-    @property
-    def element_name(self):
-        return 'dc:discription'
-
-    @property
-    def available_attrs(self):
-        return 'dir', 'id', 'xml:lang'
+    available_attrs = 'dir', 'id', 'xml:lang'
 
 
 class Format(_Meta):
-    @property
-    def element_name(self):
-        return 'dc:format'
-
-    @property
-    def available_attrs(self):
-        return 'id',
+    available_attrs = 'id',
 
 
 class Publisher(_Meta):
-    @property
-    def element_name(self):
-        return 'dc:publisher'
-
-    @property
-    def available_attrs(self):
-        return 'opf:alt-script', 'dir', 'opf:file-as', 'id', 'xml:lang'
+    available_attrs = 'opf:alt-script', 'dir', 'opf:file-as', 'id', 'xml:lang'
 
 
 class Relation(_Meta):
-    @property
-    def element_name(self):
-        return 'dc:relation'
-
-    @property
-    def available_attrs(self):
-        return 'dir', 'id', 'xml:lang'
+    available_attrs = 'dir', 'id', 'xml:lang'
 
 
 class Rights(_Meta):
-    @property
-    def element_name(self):
-        return 'dc:rights'
-
-    @property
-    def available_attrs(self):
-        return 'dir', 'id', 'xml:lang'
+    available_attrs = 'dir', 'id', 'xml:lang'
 
 
 class Source(_Meta):
-    @property
-    def element_name(self):
-        return 'dc:source'
-
-    @property
-    def available_attrs(self):
-        return 'id',
+    available_attrs = 'id',
 
 
 class Subject(_Meta):
-    @property
-    def element_name(self):
-        return 'dc:subject'
-
-    @property
-    def available_attrs(self):
-        return 'dir', 'id', 'xml:lang', 'opf:authority'
+    available_attrs = 'dir', 'id', 'xml:lang', 'opf:authority'
 
 
 class Type(_Meta):
-    @property
-    def element_name(self):
-        return 'dc:type'
-
-    @property
-    def available_attrs(self):
-        return 'id',
+    available_attrs = 'id',

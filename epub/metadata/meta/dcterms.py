@@ -2,9 +2,13 @@
 
 import time
 
+from abc import abstractmethod
+
+from hooky import Dict
+
 import xl
 
-from abc import abstractmethod
+from ..metadata import Public
 
 
 def always_true():
@@ -74,48 +78,51 @@ namespace_map = {
 }
 
 
-class _Meta:
-    @abstractmethod
-    def _text_check_func(self, text):
-        pass
-
-    def __init__(self, text):
-        self._text = text
-
-    @property
-    def text(self):
-        return self._text
-
-    @text.setter
-    def text(self, value):
-        if self._text_check_func(value):
-            self._text = value
-        else:
-            raise Exception
-
+class _Attrs(Dict):
     def __setitem__(self, key, value):
-        if key == 'text':
-            self._text_check_func(key, value)
-
-            self._text = value
-            self._attrs = {}
-
-        elif key in ('opf:alt-script', 'dir', 'opf:file-as', 'id', 'scheme', 'xml:lang'):
+        if key in ('opf:alt-script', 'dir', 'opf:file-as', 'id', 'scheme', 'xml:lang'):
 
             if not _attr_check_funcs[key](value):
                 raise Exception
 
-            self._attrs[key] = value
+            self.data[key] = value
 
         else:
             raise KeyError
 
-    def element(self):
+
+class _Meta(Public):
+    def __init__(self, text):
+        super().__init__()
+
+        self.text = text
+        self._attrs = _Attrs()
+
+    @abstractmethod
+    def _text_check_func(self, text):
+        pass
+
+    @property
+    def text(self):
+        return self.__dict__['text']
+
+    @text.setter
+    def text(self, value):
+        if self._text_check_func(value):
+            self.__dict__['text'] = value
+        else:
+            raise Exception
+
+    @property
+    def attrs(self):
+        return self._attrs
+
+    def as_element(self):
         e = xl.Element((None, 'meta'))
 
         e.attributes[(None, 'property')] = 'dcterms:{}'.format(self.__class__.__name__)
 
-        for attr_name, value in self._attrs.items():
+        for attr_name, value in self.attrs.items():
 
             uri = None
             if ':' in attr_name:
@@ -128,6 +135,8 @@ class _Meta:
 
             e.attributes[(uri, attr)] = value
 
+        e.children.append(xl.Text(self.text))
+
         return e
 
 
@@ -137,6 +146,3 @@ for k, v in check_funcs.items():
 
 def get_class(name):
     return _classes[name]
-
-
-time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())

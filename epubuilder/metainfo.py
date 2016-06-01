@@ -84,7 +84,7 @@ class Rootfiles(List):
     def element(self):
         e = xl.Element(name='rootfiles')
         for sub in self.subs:
-            e.attributes.append(sub.element)
+            e.attributes.append(sub.as_element)
 
 
 class Rootfile:
