@@ -83,7 +83,6 @@ class Section:
     def subsections(self):
         return self._subsections
 
-    #
     @property
     def hidden_sub(self):
         return self._hidden_sub
@@ -117,8 +116,7 @@ class Section:
 
 
 #####################################
-# Manifest
-
+# for Manifest
 class Item:
     def __init__(self, **kwargs):
         self._id = kwargs['id']
@@ -134,7 +132,7 @@ class Item:
 
 
 #####################################
-# Spine
+# for Spine
 
 class Itemref:
     def __init__(self, idref, linear=None):
