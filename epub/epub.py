@@ -1,5 +1,3 @@
-"""用户不用关心 OPF 的文件名"""
-
 import zipfile
 import random
 import os
@@ -10,6 +8,7 @@ from hooky import List, Dict
 
 import xl
 
+from .tools import identify_mime
 
 from .package_descriptor import package_descriptor
 
@@ -118,15 +117,22 @@ class Section:
 #####################################
 # for Manifest
 class Item:
-    def __init__(self, **kwargs):
-        self._id = kwargs['id']
-        self._href = kwargs['href']
-        self._media_type = kwargs['media_type']
+    def __init__(self, href, media_type=None, id_=None):
+        self._href = href
+        self.media_type = media_type or identify_mime(href)
+        self.id = id_
+
+    @property
+    def href(self):
+        return self._href
 
     def to_element(self):
-        return xl.Element((None, 'item'), attributes={(None, 'id'): self._id,
-                                                      (None, 'href'): self._href,
-                                                      (None, 'media-type'): self._media_type})
+        e = xl.Element((None, 'item'), attributes={(None, 'href'): self.href})
+        e.attributes[(None, 'media-type')] = self.media_type
+        if self.id is not None:
+            e.attributes[(None, 'id')] = self.id
+
+        return e
 
 #####################################
 
@@ -139,13 +145,19 @@ class Itemref:
         self._idref = idref
         self._linear = linear
 
+    @property
+    def idref(self):
+        return self._idref
+
     def to_element(self):
-        element = xl.Element((None, 'itemref'), attributes={(None, 'idref'): self._idref})
+        e = xl.Element((None, 'itemref'), attributes={(None, 'idref'): self.idref})
 
         if self._linear is True:
-            element.attributes[(None, 'linear')] = 'yes'
+            e.attributes[(None, 'linear')] = 'yes'
         elif self._linear is False:
-            element.attributes[(None, 'linear')] = 'no'
+            e.attributes[(None, 'linear')] = 'no'
+
+        return e
 
 #####################################
 
