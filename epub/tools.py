@@ -1,3 +1,5 @@
+import magic
+
 
 def relative_path(full_path, dirt):
     paths = full_path.split('/')
@@ -8,5 +10,5 @@ def relative_path(full_path, dirt):
             return '/'.join(['..'] * len(dirs[i:]) + list(paths[i:]))
 
 
-def identify_mime():
-    pass
+def identify_mime(binary):
+    return magic.from_buffer(binary, mime=True)

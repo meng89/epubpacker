@@ -16,10 +16,6 @@ from .package_descriptor import package_descriptor
 from .metadata import Metadata
 
 
-class Files(Dict):
-    pass
-
-
 CONTAINER_PATH = 'META-INF' + os.sep + 'container.xml'
 
 ROOT_OF_OPF = 'EPUB'
@@ -114,6 +110,30 @@ class Section:
         return li
 
 
+class Files(Dict):
+    def to_element(self):
+        manifest = xl.Element((None, 'manifest'))
+        for path, file in self:
+            item = xl.Element((None, 'item'), attributes={(None, 'href'): path, (None, 'media-type'): file.mime})
+            if file.identification is not None:
+                item.attributes[(None, 'id')] = file.identification
+
+            manifest.children.append(item)
+
+        return manifest
+
+
+class File:
+    def __init__(self, binary, mime=None, identification=None):
+        self._binary = binary
+        self.mime = mime or identify_mime(self.binary)
+        self.identification = identification
+
+    @property
+    def binary(self):
+        return self._binary
+
+
 #####################################
 # for Manifest
 class Item:
@@ -139,6 +159,10 @@ class Item:
 
 #####################################
 # for Spine
+
+class Spine(List):
+    pass
+
 
 class Itemref:
     def __init__(self, idref, linear=None):
@@ -171,7 +195,7 @@ class Epub:
 
         self._manifest = List()
 
-        self._spine = List()
+        self._spine = Spine()
 
         # nav
         self._toc = List()
