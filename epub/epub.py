@@ -110,7 +110,12 @@ class Section:
         return li
 
 
+####################################
 class Files(Dict):
+    def _add_before_func(self, key, item):
+        if isinstance(item, File):
+            raise TypeError
+
     def to_element(self):
         manifest = xl.Element((None, 'manifest'))
         for path, file in self:
