@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 .idea/
 
 build
@@ -7,6 +8,8 @@ temp
 test.py
 test2.py
 
+=======
+>>>>>>> 31afea7557d55b5c69187d981e263cbc34c92330
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -68,5 +71,9 @@ docs/_build/
 target/
 
 #Ipython Notebook
+<<<<<<< HEAD
 .ipynb_checkpoints
 将删除 epub/metadata/
+=======
+.ipynb_checkpoints
+>>>>>>> 31afea7557d55b5c69187d981e263cbc34c92330
