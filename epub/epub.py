@@ -111,8 +111,10 @@ class Section:
 
 
 ####################################
+# for Manifest and zip files
+
 class Files(Dict):
-    def _add_before_func(self, key, item):
+    def _before_add(self, key=None, item=None):
         if isinstance(item, File):
             raise TypeError
 
@@ -137,29 +139,6 @@ class File:
     @property
     def binary(self):
         return self._binary
-
-
-#####################################
-# for Manifest
-class Item:
-    def __init__(self, href, media_type=None, id_=None):
-        self._href = href
-        self.media_type = media_type or identify_mime(href)
-        self.id = id_
-
-    @property
-    def href(self):
-        return self._href
-
-    def to_element(self):
-        e = xl.Element((None, 'item'), attributes={(None, 'href'): self.href})
-        e.attributes[(None, 'media-type')] = self.media_type
-        if self.id is not None:
-            e.attributes[(None, 'id')] = self.id
-
-        return e
-
-#####################################
 
 
 #####################################
