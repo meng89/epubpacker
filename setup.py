@@ -3,7 +3,7 @@ import os
 
 NAME = "epubuilder"
 
-VERSION = '0.5.5'
+VERSION = '0.5.6'
 
 DESCRIPTION = 'A library to write EPUB v3.'
 
