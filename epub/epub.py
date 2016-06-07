@@ -112,7 +112,7 @@ class Section:
 
 ####################################
 class Files(Dict):
-    def _add_before_func(self, key, item):
+    def _b(self, key, item):
         if isinstance(item, File):
             raise TypeError
 
