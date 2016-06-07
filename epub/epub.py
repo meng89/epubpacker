@@ -50,6 +50,15 @@ media_table = [
 ]
 
 
+##################################################
+# toc
+
+class Toc(List):
+    def _before_add(self, key=None, item=None):
+        if not isinstance(item, Section):
+            raise TypeError
+
+
 class Section:
     def __init__(self, title, href=None):
         self._title = title
@@ -145,7 +154,9 @@ class File:
 # for Spine
 
 class Spine(List):
-    pass
+    def _before_add(self, key=None, item=None):
+        if not isinstance(item, Itemref):
+            raise TypeError
 
 
 class Itemref:
@@ -167,8 +178,8 @@ class Itemref:
 
         return e
 
-#####################################
 
+#####################################
 
 class Epub:
     def __init__(self):
@@ -177,12 +188,10 @@ class Epub:
 
         self._metadata = Metadata()
 
-        self._manifest = List()
-
         self._spine = Spine()
 
         # nav
-        self._toc = List()
+        self._toc = Toc()
         self._landmark = List()
         self._pagelist = List()
 
@@ -195,10 +204,6 @@ class Epub:
     @property
     def metadata(self):
         return self._metadata
-
-    @property
-    def manifest(self):
-        return self._manifest
 
     @property
     def spine(self):
@@ -248,7 +253,7 @@ class Epub:
 
         # manifest
         manifest = xl.Element((None, 'manifest'))
-        for item in self.manifest:
+        for item in self.files:
             manifest.children.append(item.to_element())
 
         package.children.append(manifest)
