@@ -1,7 +1,6 @@
-
 from epub import Epub
 
-from epub.metadata import Identifier, Title, Language, Meta
+from epubuilder.epub.metadata import Identifier, Title, Language, Meta
 
 
 ebook = Epub()

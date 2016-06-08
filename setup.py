@@ -1,7 +1,7 @@
 from setuptools import setup
 import os 
 
-NAME = "epubuilder"
+NAME = "epubuilder_old"
 
 VERSION = '0.5.6'
 
@@ -28,7 +28,7 @@ setup(name=NAME,
       author_email='ObserverChan@gmail.com',
       license='MIT',
       url=URL,
-      packages=['epubuilder'],
+      packages=['epubuilder_old'],
       install_requires=[
           'lxml>=3.4.4',
           'python-magic>=0.4.3'
