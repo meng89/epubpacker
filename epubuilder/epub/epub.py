@@ -3,10 +3,13 @@ import random
 import os
 import string
 
+import uuid
 
 from hooky import List, Dict
 
 import xl
+
+from xl import insert_spaces_for_pretty
 
 from .tools import identify_mime
 
@@ -124,26 +127,26 @@ class Section:
 
 class Files(Dict):
     def _before_add(self, key=None, item=None):
-        if isinstance(item, File):
+        if not isinstance(item, File):
             raise TypeError
 
-    def to_element(self):
-        manifest = xl.Element((None, 'manifest'))
-        for path, file in self:
+    def to_elements(self):
+        elements = []
+        for path, file in self.items():
             item = xl.Element((None, 'item'), attributes={(None, 'href'): path, (None, 'media-type'): file.mime})
             if file.identification is not None:
                 item.attributes[(None, 'id')] = file.identification
 
-            manifest.children.append(item)
+            elements.append(item)
 
-        return manifest
+        return elements
 
 
 class File:
     def __init__(self, binary, mime=None, identification=None):
         self._binary = binary
         self.mime = mime or identify_mime(self.binary)
-        self.identification = identification
+        self.identification = identification or uuid.uuid4().hex
 
     @property
     def binary(self):
@@ -240,7 +243,7 @@ class Epub:
 
         html.children.append(body)
 
-        return html.xml_string()
+        return insert_spaces_for_pretty(html, one_child_dont_do=False).xml_string()
 
     def _xmlstr_opf(self):
         def_ns = 'http://www.idpf.org/2007/opf'
@@ -253,8 +256,7 @@ class Epub:
 
         # manifest
         manifest = xl.Element((None, 'manifest'))
-        for item in self.files:
-            manifest.children.append(item.to_element())
+        manifest.children.extend(self.files.to_elements())
 
         package.children.append(manifest)
 
@@ -265,7 +267,7 @@ class Epub:
 
         package.children.append(spine)
 
-        return package.xml_string()
+        return insert_spaces_for_pretty(package, one_child_dont_do=False).xml_string()
 
     @staticmethod
     def _xmlstr_container(opf_path):
@@ -284,14 +286,14 @@ class Epub:
 
         rootfile.attributes['media-type'] = 'application/oebps-package+xml'
 
-        return xl.xml_header() + e.xml_string()
+        return xl.xml_header() + insert_spaces_for_pretty(e, one_child_dont_do=False).xml_string()
 
     def write(self, filename):
         z = zipfile.ZipFile(filename, 'w')
-        z.writestr('mimetype', b'application/epub+zip', compress_type=zipfile.ZIP_STORED)
+        z.writestr('mimetype', 'application/epub+zip', compress_type=zipfile.ZIP_STORED)
 
-        for file, data in self._files:
-            z.writestr(ROOT_OF_OPF + os.sep + file, data, zipfile.ZIP_DEFLATED)
+        for filename, file in self.files.items():
+            z.writestr(ROOT_OF_OPF + os.sep + filename, file.binary, zipfile.ZIP_DEFLATED)
 
         opf_path = ROOT_OF_OPF + os.sep + 'package.opf'
 
@@ -300,8 +302,8 @@ class Epub:
                 random.random(''.join(random.sample(string.ascii_letters + string.digits, 8)))
             )
 
-        z.writestr(opf_path, self._xmlstr_opf(), zipfile.ZIP_DEFLATED)
+        z.writestr(opf_path, self._xmlstr_opf().encode(), zipfile.ZIP_DEFLATED)
 
-        z.writestr(CONTAINER_PATH, self._xmlstr_container(opf_path).decode(), zipfile.ZIP_DEFLATED)
+        z.writestr(CONTAINER_PATH, self._xmlstr_container(opf_path).encode(), zipfile.ZIP_DEFLATED)
 
-        z.close()
+

@@ -1,4 +1,4 @@
-from epubuilder.epub import epub, File
+from epubuilder.epub import epub, File, Section, Itemref
 
 from epubuilder.epub.metadata.dcmes import Title, Language, Identifier
 
@@ -6,15 +6,23 @@ from epubuilder.epub.metadata.meta.dcterms import get_class
 
 import uuid
 
-book = epub.Epub()
 
-book.files['html/hi.html'] = File(b"""<html><body><p>hello wrold</p></body></html>""")
+def test_1():
+    book = epub.Epub()
 
-book.spine
+    p1_path = 'html/p1.html'
 
-book.toc
+    page1 = File(b"""<html><body><p>hello wrold</p></body></html>""")
 
-book.metadata.append(Title('EPUB demo'))
-book.metadata.append(Language('en'))
-book.metadata.append(Identifier(uuid.uuid4().hex))
-book.metadata.append(get_class(''))
+    book.files[p1_path] = page1
+
+    book.spine.append(Itemref(page1.identification))
+
+    book.toc.append(Section('P1', href=p1_path))
+
+    book.metadata.append(Title('EPUB demo'))
+    book.metadata.append(Language('en'))
+    book.metadata.append(Identifier(uuid.uuid4().hex))
+    book.metadata.append(get_class('modified')('2012'))
+
+    book.write('demo.epub')

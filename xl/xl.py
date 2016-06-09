@@ -172,7 +172,8 @@ def insert_spaces_for_pretty(element, indent=4, indent_after_children=0, one_chi
                 new_element.children.append(_indent)
                 new_element.children.append(insert_spaces_for_pretty(element=child,
                                                                      indent=indent + indent,
-                                                                     indent_after_children=indent))
+                                                                     indent_after_children=indent,
+                                                                     one_child_dont_do=one_child_dont_do))
 
         new_element.children.append(Text('\n' + ' ' * indent_after_children))
 
@@ -197,8 +198,10 @@ class XLError(Exception):
 class Element:
     def __init__(self, name, attributes=None, prefixes=None):
         self.name = name
-        self.attributes = attributes or Attributes()
-        self.prefixes = prefixes or Prefixes()
+
+        self.attributes = Attributes(attributes) if attributes else Attributes()
+
+        self.prefixes = Prefixes(prefixes) if prefixes else Prefixes()
 
         self.children = Children()
 
@@ -338,10 +341,13 @@ class Element:
 
 
 class Prefixes(Dict):
-    def __init__(self):
+    def __init__(self, prefixes=None):
         super().__init__()
 
         self[URI_XML] = 'xml'
+
+        if prefixes:
+            self.update(prefixes)
 
     def __getitem__(self, uri):
         if uri == URI_XML:
@@ -378,10 +384,13 @@ class Prefixes(Dict):
 
 
 class Attributes(Dict):
-    def __init__(self):
+    def __init__(self, attributes=None):
         super().__init__()
 
         self.descriptor = None
+
+        if attributes:
+            self.update(attributes)
 
     @property
     def descriptor(self):

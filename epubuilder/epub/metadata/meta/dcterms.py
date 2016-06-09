@@ -48,8 +48,6 @@ check_funcs = {
 check_funcs.update(dict((one, always_true) for one in l if one not in check_funcs.keys()))
 
 
-_classes = {}
-
 _attr_check_funcs = {
     # identifier only
     'opf:scheme': always_true,
@@ -98,8 +96,8 @@ class _Meta(Public):
         self.text = text
         self._attrs = _Attrs()
 
-    @abstractmethod
-    def _text_check_func(self, text):
+    @staticmethod
+    def _text_check_func(text):
         pass
 
     @property
@@ -140,8 +138,14 @@ class _Meta(Public):
         return e
 
 
+_classes = {}
+
+
 for k, v in check_funcs.items():
-    _classes[k] = type(k, (_Meta,), {'_text_check_func': v})
+
+    _v = staticmethod(v)
+
+    _classes[k] = type(k, (_Meta,), {'_text_check_func': _v})
 
 
 def get_class(name):

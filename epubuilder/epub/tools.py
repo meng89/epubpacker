@@ -11,4 +11,4 @@ def relative_path(full_path, dirt):
 
 
 def identify_mime(binary):
-    return magic.from_buffer(binary, mime=True)
+    return magic.from_buffer(binary, mime=True).decode()
