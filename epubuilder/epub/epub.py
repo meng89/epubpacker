@@ -1,24 +1,16 @@
-import zipfile
-import random
-import os
 import string
-
 import uuid
+import zipfile
 
+import os
+import random
 from hooky import List, Dict
 
 import xl
-
+from epubuilder.tools import identify_mime
 from xl import insert_spaces_for_pretty
-
-from .tools import identify_mime
-
-from .package_descriptor import package_descriptor
-
 from .metadata import Metadata
-
 from .metadata.dcmes import Identifier, URI_DC
-
 
 CONTAINER_PATH = 'META-INF' + os.sep + 'container.xml'
 
@@ -56,6 +48,10 @@ media_table = [
 # toc
 
 class Toc(List):
+    def __init__(self):
+        super().__init__()
+        self.title = None
+
     def _before_add(self, key=None, item=None):
         if not isinstance(item, Section):
             raise TypeError
@@ -228,11 +224,20 @@ class Epub:
     def pagelist(self):
         return self._pagelist
 
-    def _xmlstr_nav(self):
+    def _xmlstr_toc(self):
         default_ns = 'http://www.w3.org/1999/xhtml'
         epub_ns = 'http://www.idpf.org/2007/ops'
 
         html = xl.Element((None, 'html'), prefixes={default_ns: None, epub_ns: 'epub'})
+
+        head = xl.Element('head')
+
+        if self.toc.title:
+            _title = xl.Element('title')
+            _title.children.append(xl.Text(self.toc.title))
+
+        html.children.append(head)
+
         body = xl.Element((None, 'body'))
 
         if self.toc:
@@ -337,7 +342,7 @@ class Epub:
 
         nav_toc_filename = get_unused_filename(ROOT_OF_OPF, 'nav.xhtml')
         z.writestr(ROOT_OF_OPF + '/' + nav_toc_filename,
-                   self._xmlstr_nav().encode(),
+                   self._xmlstr_toc().encode(),
                    zipfile.ZIP_DEFLATED)
 
         opf_filename = get_unused_filename(ROOT_OF_OPF, 'package.opf')
