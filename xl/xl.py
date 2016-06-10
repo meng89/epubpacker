@@ -124,9 +124,9 @@ def xml_header(version=None, encoding=None, standalone=None):
     s = ''
     s += '<?xml'
 
-    s += " version='{}'".format(version) if version else '1.0'
-    s += " encoding='{}'".format(encoding) if encoding else 'utf-8'
-    s += " standalone='{}'".format(standalone) if standalone else 'yes'
+    s += " version='{}'".format(version if version else '1.0')
+    s += " encoding='{}'".format(encoding if encoding else 'utf-8')
+    s += " standalone='{}'".format(standalone if standalone else 'yes')
 
     s += '?>\n'
     return s
@@ -271,62 +271,105 @@ class Element:
 
         auto_prefixs = Prefixes()
 
+        def make_a_auto_prefix(_uri):
+            _prefix_num = 0
+            while 'prefix' + str(_prefix_num) in \
+                    [one for one in self.prefixes.values()] + \
+                    [one for one in inherited_prefixes.values()] + \
+                    [one for one in auto_prefixs.values()]:
+
+                _prefix_num += 1
+
+            _prefix = 'prefix' + str(_prefix_num)
+            auto_prefixs[_uri] = _prefix
+
+            return _prefix
+
         def get_prefix(_uri):
 
-            try:
+            if _uri in self.prefixes.keys():
                 _prefix = self.prefixes[_uri]
-            except KeyError:
-                try:
-                    _prefix = auto_prefixs[_uri]
-                except KeyError:
-                    _prefix_num = 0
-                    while 'prefix' + str(_prefix_num) in [one for one in self.prefixes.keys()] +\
-                                                         [one for one in auto_prefixs.keys()]:
-                        _prefix_num += 1
 
-                    _prefix = 'prefix' + str(_prefix_num)
+            elif _uri in inherited_prefixes.keys():
+                _prefix = inherited_prefixes[_uri]
 
-            auto_prefixs[self.name[0]] = _prefix
+            elif _uri in auto_prefixs.keys():
+                _prefix = auto_prefixs[_uri]
+
+            else:
+                raise ValueError
+
             return _prefix
 
         s = '<'
 
+        ################################################################################################################
         # processing xml tag
-        if self.name[0]:
+        if self.name[0] is not None:
+            try:
+                prefix = get_prefix(self.name[0])
+            except ValueError:
+                prefix = make_a_auto_prefix(self.name[0])
 
-            prefix = get_prefix(self.name[0])
-            if prefix:
+            if prefix is not None:
                 full_name = '{}:{}'.format(prefix, self.name[1])
             else:
                 full_name = self.name[1]
-
         else:
             full_name = self.name[1]
 
         s += full_name
 
+        ################################################################################################################
         # processing xml attributes
-        if self.attributes:
-            s += ' ' + self.attributes.xml_string(get_prefix)
+        _attrs_string_list = []
+        for attr_name, attr_value in self.attributes.items():
 
-        # processing xml namespaces uri prefix
-        self_prefixes_and_auto_prefixes = copy.deepcopy(self.prefixes)
-        self_prefixes_and_auto_prefixes.update(auto_prefixs)
+            if attr_name[0] is not None:
+                try:
+                    prefix = get_prefix(attr_name[0])
+                except ValueError:
+                    prefix = make_a_auto_prefix(attr_name[0])
+                _attrs_string_list.append('{}:{}="{}"'.format(prefix, attr_name[1], attr_value))
 
-        prefixes_string = self_prefixes_and_auto_prefixes.xml_string(inherited_prefixes)
+            else:
+                _attrs_string_list.append('{}="{}"'.format(attr_name[1], attr_value))
 
-        if prefixes_string:
-            s += ' ' + prefixes_string
+        if _attrs_string_list:
+            s += ' '
+            s += ' '.join(_attrs_string_list)
 
+        ################################################################################################################
+        # processing xml prefixes
+        _prefix_string_list = []
+        for url, prefix in self.prefixes.items():
+            if url == URI_XML:
+                continue
+
+            if url in inherited_prefixes.keys() and prefix == inherited_prefixes[url]:
+                continue
+
+            if url:
+                if prefix:
+                    _prefix_string_list.append('xmlns:{}="{}"'.format(prefix, url))
+                else:
+                    _prefix_string_list.append('xmlns="{}"'.format(url))
+
+        if _prefix_string_list:
+            s += ' '
+            s += ' '.join(_prefix_string_list)
+
+        ################################################################################################################
+        # processing children
         if self.children:
             s += '>'
 
             prefixes_for_subs = inherited_prefixes.copy()
             prefixes_for_subs.update(self.prefixes)
+            prefixes_for_subs.update(auto_prefixs)
 
             for child in self.children:
                 if isinstance(child, Element):
-
                     s += child.xml_string(inherited_prefixes=prefixes_for_subs)
 
                 elif isinstance(child, Text):
@@ -341,6 +384,10 @@ class Element:
 
 
 class Prefixes(Dict):
+    def _before_add(self, key=None, item=None):
+        if key == URI_XML and item != 'xml':
+            raise ValueError
+
     def __init__(self, prefixes=None):
         super().__init__()
 
@@ -348,39 +395,6 @@ class Prefixes(Dict):
 
         if prefixes:
             self.update(prefixes)
-
-    def __getitem__(self, uri):
-        if uri == URI_XML:
-            return 'xml'
-        else:
-            return super().__getitem__(uri)
-
-    def __setitem__(self, uri, prefix):
-        if uri == URI_XML:
-            if prefix != 'xml':
-                raise Exception
-
-        else:
-            super().__setitem__(uri, prefix)
-
-    def xml_string(self, inherited_prefixes):
-        inherited_prefixes = inherited_prefixes or Prefixes()
-
-        string_list = []
-        for url, prefix in self.items():
-            if url == URI_XML:
-                continue
-
-            if url in inherited_prefixes.keys() and prefix == inherited_prefixes[url]:
-                continue
-
-            if url:
-                if prefix:
-                    string_list.append('xmlns:{}="{}"'.format(prefix, url))
-                else:
-                    string_list.append('xmlns="{}"'.format(url))
-
-        return ' '.join(string_list)
 
 
 class Attributes(Dict):
@@ -416,19 +430,6 @@ class Attributes(Dict):
 
         super().__setitem__(key, value)
 
-    def xml_string(self, get_prefix_func):
-        string_list = []
-        for attr_name, attr_value in self.items():
-
-            if attr_name[0]:
-                prefix = get_prefix_func(attr_name[0])
-                string_list.append('{}:{}="{}"'.format(prefix, attr_name[1], attr_value))
-
-            else:
-                string_list.append('{}="{}"'.format(attr_name[1], attr_value))
-
-        return ' '.join(string_list)
-
 
 class Children(List):
     def __init__(self):
@@ -449,7 +450,8 @@ class Children(List):
 
     def insert(self, i, item):
         if not isinstance(item, (Element, Text)):
-            raise Exception
+            print(item)
+            raise TypeError('{} is not legal'.format(item.__class__.__name__))
 
         if isinstance(item, Element) and self.descriptor:
             self.descriptor[NAME_CHECKFUNC](item.name)

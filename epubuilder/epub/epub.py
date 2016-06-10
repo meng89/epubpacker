@@ -15,13 +15,12 @@ from .tools import identify_mime
 
 from .package_descriptor import package_descriptor
 
-
 from .metadata import Metadata
+
+from .metadata.dcmes import Identifier, URI_DC
 
 
 CONTAINER_PATH = 'META-INF' + os.sep + 'container.xml'
-
-ROOT_OF_OPF = 'EPUB'
 
 
 media_table = [
@@ -110,6 +109,8 @@ class Section:
         else:
             a_or_span = xl.Element((None, 'span'))
 
+        a_or_span.children.append(xl.Text(self.title))
+
         if self.subsections:
             ol = xl.Element('ol')
             for one in self.subsections:
@@ -146,7 +147,7 @@ class File:
     def __init__(self, binary, mime=None, identification=None):
         self._binary = binary
         self.mime = mime or identify_mime(self.binary)
-        self.identification = identification or uuid.uuid4().hex
+        self.identification = identification or 'id_' + uuid.uuid4().hex
 
     @property
     def binary(self):
@@ -183,6 +184,9 @@ class Itemref:
 
 
 #####################################
+
+ROOT_OF_OPF = 'EPUB'
+
 
 class Epub:
     def __init__(self):
@@ -243,20 +247,41 @@ class Epub:
 
         html.children.append(body)
 
-        return insert_spaces_for_pretty(html, one_child_dont_do=False).xml_string()
+        return insert_spaces_for_pretty(html).xml_string()
 
-    def _xmlstr_opf(self):
+    def _xmlstr_opf(self, nav_toc_path=None):
         def_ns = 'http://www.idpf.org/2007/opf'
-        dc_ns = 'http://purl.org/metadata/elements/1.1/'
-        dcterms_ns = 'http://purl.org/metadata/terms/'
+        # dcterms_ns = 'http://purl.org/metadata/terms/'
+
         package = xl.Element((None, 'package'),
-                             prefixes={def_ns: None, dc_ns: 'metadata', dcterms_ns: 'dcterms'},
+                             prefixes={def_ns: None},
                              attributes={(None, 'version'): '3.0', (xl.URI_XML, 'lang'): 'en'})
+
+        for m in self.metadata:
+            if isinstance(m, Identifier):
+                package.attributes['unique-identifier'] = m.as_element().attributes[(None, 'id')]
+
+        # unique - identifier = "pub-id"
         # metadata
+        metadata_e = xl.Element((None, 'metadata'),
+                                prefixes={URI_DC: 'dc'})
+
+        for m in self.metadata:
+            metadata_e.children.append(m.as_element())
+
+        package.children.append(metadata_e)
 
         # manifest
         manifest = xl.Element((None, 'manifest'))
         manifest.children.extend(self.files.to_elements())
+        # nav_toc
+        if nav_toc_path:
+            nav_toc_item_e = xl.Element((None, 'item'),
+                                        attributes={(None, 'href'): nav_toc_path,
+                                                    (None, 'id'): 'id' + uuid.uuid4().hex,
+                                                    (None, 'properties'): 'nav',
+                                                    (None, 'media-type'): 'application/xhtml+xml'})
+            manifest.children.insert(0, nav_toc_item_e)
 
         package.children.append(manifest)
 
@@ -272,9 +297,10 @@ class Epub:
     @staticmethod
     def _xmlstr_container(opf_path):
         e = xl.Element((None, 'container'))
+
         e.attributes[(None, 'version')] = '1.0'
 
-        e.prefixes[None] = 'urn:oasis:names:tc:opendocument:xmlns:container'
+        e.prefixes['urn:oasis:names:tc:opendocument:xmlns:container'] = None
 
         rootfiles = xl.Element('rootfiles')
         e.children.append(rootfiles)
@@ -288,22 +314,37 @@ class Epub:
 
         return xl.xml_header() + insert_spaces_for_pretty(e, one_child_dont_do=False).xml_string()
 
-    def write(self, filename):
+    def write(self, filename, version=None):
+        # version = version or '3.1'
+
         z = zipfile.ZipFile(filename, 'w')
         z.writestr('mimetype', 'application/epub+zip', compress_type=zipfile.ZIP_STORED)
 
         for filename, file in self.files.items():
             z.writestr(ROOT_OF_OPF + os.sep + filename, file.binary, zipfile.ZIP_DEFLATED)
 
-        opf_path = ROOT_OF_OPF + os.sep + 'package.opf'
+        def get_unused_filename(dire, filename_ext):
+            only_name, ext = os.path.splitext(filename_ext)
+            unused_filename = filename_ext
 
-        while opf_path in [ROOT_OF_OPF + os.sep + path for path in self.files.keys()]:
-            opf_path = ROOT_OF_OPF + os.sep + 'package_{}.opf'.format(
-                random.random(''.join(random.sample(string.ascii_letters + string.digits, 8)))
-            )
+            while ROOT_OF_OPF + '/' + unused_filename in [ROOT_OF_OPF + '/' + path for path in self.files.keys()]:
+                unused_filename = '_{){}'.format(
+                    random.random(''.join(random.sample(string.ascii_letters + string.digits, 8))),
+                    ext
+                )
 
-        z.writestr(opf_path, self._xmlstr_opf().encode(), zipfile.ZIP_DEFLATED)
+            return unused_filename
 
-        z.writestr(CONTAINER_PATH, self._xmlstr_container(opf_path).encode(), zipfile.ZIP_DEFLATED)
+        nav_toc_filename = get_unused_filename(ROOT_OF_OPF, 'nav.xhtml')
+        z.writestr(ROOT_OF_OPF + '/' + nav_toc_filename,
+                   self._xmlstr_nav().encode(),
+                   zipfile.ZIP_DEFLATED)
 
+        opf_filename = get_unused_filename(ROOT_OF_OPF, 'package.opf')
+        z.writestr(ROOT_OF_OPF + '/' + opf_filename,
+                   self._xmlstr_opf(nav_toc_filename).encode(),
+                   zipfile.ZIP_DEFLATED)
 
+        z.writestr(CONTAINER_PATH,
+                   self._xmlstr_container(ROOT_OF_OPF + '/' + opf_filename).encode(),
+                   zipfile.ZIP_DEFLATED)

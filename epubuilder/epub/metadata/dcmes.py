@@ -6,6 +6,8 @@ http://dublincore.org/documents/dces/
 
 from abc import abstractmethod
 
+import uuid
+
 from hooky import Dict
 
 from .metadata import Public
@@ -46,20 +48,20 @@ namespace_map = {
 
 
 class Attrs(Dict):
-
-    def __init__(self, available_attrs, attr_check_funcs):
+    def __init__(self, available_attrs, attr_check_funcs, attrs=None):
         super().__init__()
         self._available_attrs = available_attrs
         self._attr_check_funcs = attr_check_funcs
 
-    def __setitem__(self, key, value):
+        if attrs:
+            self.update(attrs)
+
+    def _before_add(self, key=None, item=None):
         if key not in self._available_attrs:
             raise KeyError
 
-        if not self._attr_check_funcs[key](value):
+        if not self._attr_check_funcs[key](item):
             raise ValueError
-
-        super().__setitem__(key, value)
 
 
 class _Meta(Public):
@@ -68,10 +70,10 @@ class _Meta(Public):
     available_attrs = ()
     _attrs_check_funcs = check_funcs
 
-    def __init__(self, text):
+    def __init__(self, text, attrs=None):
         super().__init__()
 
-        self._attrs = Attrs(available_attrs=self.available_attrs, attr_check_funcs=self._attrs_check_funcs)
+        self._attrs = Attrs(available_attrs=self.available_attrs, attr_check_funcs=self._attrs_check_funcs, attrs=attrs)
 
         self.text = text
 
@@ -96,16 +98,17 @@ class _Meta(Public):
 
         for attr_name, value in self.attrs.items():
 
-            uri = None
             if ':' in attr_name:
                 prefix, attr = attr_name.split(':')
                 uri = namespace_map[prefix]
                 e.prefixes[uri] = prefix
 
+                e.attributes[(uri, attr)] = value
+
             else:
                 attr = attr_name
 
-            e.attributes[(uri, attr)] = value
+                e.attributes[(None, attr)] = value
 
         e.children.append(xl.Text(self.text))
 
@@ -113,6 +116,13 @@ class _Meta(Public):
 
 
 class Identifier(_Meta):
+    def __init__(self, text, attrs=None):
+        _attrs = {'id': 'id_' + uuid.uuid4().hex}
+        if attrs:
+            _attrs.update(attrs)
+
+        super().__init__(text, _attrs)
+
     available_attrs = 'id', 'opf:scheme'
 
 
