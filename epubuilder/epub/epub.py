@@ -233,6 +233,22 @@ class Epub:
         # for self.write()
         self._temp_files = Files()
 
+    def _get_unused_filename(self, dire, filename):
+        dire = dire or ''
+
+        only_name, ext = os.path.splitext(filename)
+        unused_filename = filename
+
+        while ROOT_OF_OPF + dire + '/' + unused_filename in [ROOT_OF_OPF + '/' + path for path in self.files.keys()] +\
+                [ROOT_OF_OPF + '/' + self._temp_files.keys()]:
+
+            unused_filename = '_{}{}'.format(
+                random.random(''.join(random.sample(string.ascii_letters + string.digits, 8))),
+                ext
+            )
+
+        return unused_filename
+
     @property
     def files(self):
         return self._files
@@ -285,6 +301,9 @@ class Epub:
             body.children.append(nav)
 
         if self.toc.add_js_for_nav_flod:
+            js_path = self._get_unused_filename(ROOT_OF_OPF, )
+
+            self._temp_files
 
             head.children.append(Element('script', attributes={'src': js_path}))
 
