@@ -8,7 +8,7 @@ from hooky import List, Dict
 
 import xl
 from epubuilder.tools import identify_mime
-from xl import insert_spaces_for_pretty
+from xl import pretty_insert, Element, Text
 from .metadata import Metadata
 from .metadata.dcmes import Identifier, URI_DC
 
@@ -51,6 +51,14 @@ class Toc(List):
     def __init__(self):
         super().__init__()
         self.title = None
+
+        self.add_js_for_nav_flod = False
+
+        # todo
+        self.ncx_uid = None
+        self.ncx_depth = None
+        self.ncx_totalPageCount = None
+        self.ncx_maxPageNumber = None
 
     def _before_add(self, key=None, item=None):
         if not isinstance(item, Section):
@@ -96,7 +104,7 @@ class Section:
         else:
             self._hidden_sub = value
 
-    def to_element(self):
+    def to_toc_element(self):
         li = xl.Element('li')
 
         if self.href:
@@ -107,16 +115,40 @@ class Section:
 
         a_or_span.children.append(xl.Text(self.title))
 
-        if self.subsections:
-            ol = xl.Element('ol')
-            for one in self.subsections:
-                ol.children.append(one.to_element())
-
-            a_or_span.children.append(ol)
-
         li.children.append(a_or_span)
 
+        if self.subsections:
+            ol = xl.Element('ol')
+
+            if self.hidden_sub:
+                ol.attributes[(None, 'hidden')] = ''
+
+            for one in self.subsections:
+                ol.children.append(one.to_toc_element())
+
+            li.children.append(ol)
+
         return li
+
+    def to_toc_ncx_element(self):
+        nav_point = Element('navPoint', attributes={'id': 'id_' + uuid.uuid4().hex})
+
+        nav_label = Element('navLabel')
+        nav_point.children.append(nav_label)
+
+        text = Element('text')
+        nav_label.children.append(text)
+
+        text.children.append(Text(self.title))
+
+        if self.href:
+            content = Element('content', attributes={'src': self.href})
+            nav_point.children.append(content)
+
+        for subsection in self.subsections:
+            nav_point.children.append(subsection.to_toc_ncx_element())
+
+        return nav_point
 
 
 ####################################
@@ -198,7 +230,8 @@ class Epub:
         self._landmark = List()
         self._pagelist = List()
 
-        # self._package_element.descriptor = package_descriptor
+        # for self.write()
+        self._temp_files = Files()
 
     @property
     def files(self):
@@ -231,30 +264,67 @@ class Epub:
         html = xl.Element((None, 'html'), prefixes={default_ns: None, epub_ns: 'epub'})
 
         head = xl.Element('head')
+        html.children.append(head)
 
         if self.toc.title:
             _title = xl.Element('title')
+            head.children.append(_title)
             _title.children.append(xl.Text(self.toc.title))
 
-        html.children.append(head)
-
         body = xl.Element((None, 'body'))
+        html.children.append(body)
 
         if self.toc:
             nav = xl.Element((None, 'nav'), prefixes={epub_ns: 'epub'}, attributes={(epub_ns, 'type'): 'toc'})
             ol = xl.Element((None, 'ol'))
 
             for section in self.toc:
-                ol.children.append(section.to_element())
+                ol.children.append(section.to_toc_element())
 
             nav.children.append(ol)
             body.children.append(nav)
 
-        html.children.append(body)
+        if self.toc.add_js_for_nav_flod:
 
-        return insert_spaces_for_pretty(html).xml_string()
+            head.children.append(Element('script', attributes={'src': js_path}))
 
-    def _xmlstr_opf(self, nav_toc_path=None):
+            script_before_body_close = Element('script', attributes={'type': 'text/javascript'})
+            body.children.append(script_before_body_close)
+
+            script_before_body_close.children.append(Text('set_button();'))
+
+        return pretty_insert(html, dont_do_when_one_child=True).xml_string()
+
+    def _xmlstr_toc_ncx(self):
+        def_ns_uri = 'http://www.daisy.org/z3986/2005/ncx/'
+
+        ncx = xl.Element('ncx', attributes={'version': '2005-1'}, prefixes={def_ns_uri: None})
+        head = xl.Element('head')
+        ncx.children.append(head)
+        head.children.append(Element('meta', attributes={'name': 'dtb:uid', 'content': self.toc.ncx_uid}))
+        head.children.append(Element('meta', attributes={'name': 'dtb:depth', 'content': self.toc.ncx_depth}))
+        head.children.append(Element('meta', attributes={'name': 'dtb:totalPageCount',
+                                                         'content': self.toc.ncx_totalPageCount}))
+        head.children.append(Element('meta', attributes={'name': 'dtb:maxPageNumber',
+                                                         'content': self.toc.ncx_maxPageNumber}))
+
+        doc_title = Element('docTitle')
+        ncx.children.append(doc_title)
+
+        text = Element('text')
+        doc_title.children.append(text)
+
+        text.children.append(Text(self.toc.title))
+
+        nav_map = Element('navMap')
+        ncx.children.append(nav_map)
+
+        for one in self.toc:
+            nav_map.children.append(one.to_toc_ncx_element())
+
+        return pretty_insert(ncx, dont_do_when_one_child=True).xml_string()
+
+    def _xmlstr_opf(self, toc_path=None, ncx_path=None):
         def_ns = 'http://www.idpf.org/2007/opf'
         # dcterms_ns = 'http://purl.org/metadata/terms/'
 
@@ -280,24 +350,36 @@ class Epub:
         manifest = xl.Element((None, 'manifest'))
         manifest.children.extend(self.files.to_elements())
         # nav_toc
-        if nav_toc_path:
-            nav_toc_item_e = xl.Element((None, 'item'),
-                                        attributes={(None, 'href'): nav_toc_path,
-                                                    (None, 'id'): 'id' + uuid.uuid4().hex,
-                                                    (None, 'properties'): 'nav',
-                                                    (None, 'media-type'): 'application/xhtml+xml'})
-            manifest.children.insert(0, nav_toc_item_e)
+        if toc_path:
+            toc_item_e = xl.Element((None, 'item'), attributes={(None, 'href'): toc_path,
+                                                                (None, 'id'): 'id_' + uuid.uuid4().hex,
+                                                                (None, 'properties'): 'nav',
+                                                                (None, 'media-type'): 'application/xhtml+xml'})
+            manifest.children.insert(0, toc_item_e)
+
+        # for ncx
+        toc_ncx_item_e_id = 'id' + uuid.uuid4().hex
+        if ncx_path:
+            toc_ncx_item_e = xl.Element((None, 'item'), attributes={(None, 'href'): ncx_path,
+                                                                    (None, 'id'): toc_ncx_item_e_id,
+                                                                    (None, 'media-type'): 'application/x-dtbncx+xml'})
+            manifest.children.insert(0, toc_ncx_item_e)
 
         package.children.append(manifest)
 
         # spine
         spine = xl.Element((None, 'spine'))
+
+        # for ncx
+        if ncx_path:
+            spine.attributes['toc'] = toc_ncx_item_e_id
+
         for itemref in self.spine:
             spine.children.append(itemref.to_element())
 
         package.children.append(spine)
 
-        return insert_spaces_for_pretty(package, one_child_dont_do=False).xml_string()
+        return pretty_insert(package, dont_do_when_one_child=True).xml_string()
 
     @staticmethod
     def _xmlstr_container(opf_path):
@@ -317,13 +399,13 @@ class Epub:
 
         rootfile.attributes['media-type'] = 'application/oebps-package+xml'
 
-        return xl.xml_header() + insert_spaces_for_pretty(e, one_child_dont_do=False).xml_string()
+        return xl.xml_header() + pretty_insert(e, dont_do_when_one_child=True).xml_string()
 
-    def write(self, filename, version=None):
-        # version = version or '3.1'
+    def write(self, filename):
 
-        z = zipfile.ZipFile(filename, 'w')
-        z.writestr('mimetype', 'application/epub+zip', compress_type=zipfile.ZIP_STORED)
+        z = zipfile.ZipFile(filename, 'w', compression=zipfile.ZIP_DEFLATED)
+
+        z.writestr('mimetype', 'application/epub+zip'.encode('ascii'), compress_type=zipfile.ZIP_STORED)
 
         for filename, file in self.files.items():
             z.writestr(ROOT_OF_OPF + os.sep + filename, file.binary, zipfile.ZIP_DEFLATED)
@@ -332,7 +414,7 @@ class Epub:
             only_name, ext = os.path.splitext(filename_ext)
             unused_filename = filename_ext
 
-            while ROOT_OF_OPF + '/' + unused_filename in [ROOT_OF_OPF + '/' + path for path in self.files.keys()]:
+            while dire + '/' + unused_filename in [ROOT_OF_OPF + '/' + path for path in self.files.keys()]:
                 unused_filename = '_{){}'.format(
                     random.random(''.join(random.sample(string.ascii_letters + string.digits, 8))),
                     ext
@@ -340,16 +422,23 @@ class Epub:
 
             return unused_filename
 
-        nav_toc_filename = get_unused_filename(ROOT_OF_OPF, 'nav.xhtml')
-        z.writestr(ROOT_OF_OPF + '/' + nav_toc_filename,
+        toc_filename = get_unused_filename(ROOT_OF_OPF, 'nav.xhtml')
+        z.writestr(ROOT_OF_OPF + '/' + toc_filename,
                    self._xmlstr_toc().encode(),
+                   zipfile.ZIP_DEFLATED)
+
+        toc_ncx_filename = get_unused_filename(ROOT_OF_OPF, 'toc.ncx')
+        z.writestr(ROOT_OF_OPF + '/' + toc_ncx_filename,
+                   self._xmlstr_toc_ncx().encode(),
                    zipfile.ZIP_DEFLATED)
 
         opf_filename = get_unused_filename(ROOT_OF_OPF, 'package.opf')
         z.writestr(ROOT_OF_OPF + '/' + opf_filename,
-                   self._xmlstr_opf(nav_toc_filename).encode(),
+                   self._xmlstr_opf(toc_filename, ncx_path=toc_ncx_filename).encode(),
                    zipfile.ZIP_DEFLATED)
 
         z.writestr(CONTAINER_PATH,
                    self._xmlstr_container(ROOT_OF_OPF + '/' + opf_filename).encode(),
                    zipfile.ZIP_DEFLATED)
+
+        z.close()

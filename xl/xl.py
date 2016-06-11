@@ -151,31 +151,49 @@ def clear_spaces(element):
     return new_element
 
 
-def insert_spaces_for_pretty(element, indent=4, indent_after_children=0, one_child_dont_do=True):
+def _is_straight_line(element):
+    if len(element.children) == 0:
+        return True
+
+    if len(element.children) == 1:
+        if isinstance(element.children[0], Element):
+            return _is_straight_line(element.children[0])
+        else:
+            return True
+
+    elif len(element.children) > 1:
+        return False
+
+
+def pretty_insert(element, start_indent=0, step=4, dont_do_when_one_child=True):
 
     new_element = Element(name=copy.deepcopy(element.name),
                           attributes=copy.deepcopy(element.attributes),
                           prefixes=copy.deepcopy(element.prefixes))
 
-    if len(element.children) == 1 and one_child_dont_do:
+    _indent_text = Text('\n' + ' ' * (start_indent + step))
+
+    if _is_straight_line(element) and dont_do_when_one_child:
         new_element.children = copy.deepcopy(element.children)
 
     elif element.children:
         for child in element.children:
-            _indent = Text('\n' + ' ' * indent)
 
             if isinstance(child, Text):
-                new_text = _indent + copy.deepcopy(child)
+                new_text = _indent_text + copy.deepcopy(child)
+
                 new_element.children.append(new_text)
 
             elif isinstance(child, Element):
-                new_element.children.append(_indent)
-                new_element.children.append(insert_spaces_for_pretty(element=child,
-                                                                     indent=indent + indent,
-                                                                     indent_after_children=indent,
-                                                                     one_child_dont_do=one_child_dont_do))
+                new_element.children.append(_indent_text)
 
-        new_element.children.append(Text('\n' + ' ' * indent_after_children))
+                new_element.children.append(pretty_insert(element=child,
+                                                          start_indent=start_indent + step,
+                                                          step=step,
+                                                          dont_do_when_one_child=dont_do_when_one_child,
+                                                          ))
+
+        new_element.children.append(Text('\n' + ' ' * start_indent))
 
     return new_element
 

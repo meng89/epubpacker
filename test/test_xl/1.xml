@@ -9,7 +9,14 @@
         <h/>
         <i>
             <jbm:j jbm:s="slajfalsk"/>
+            <a>
+                <b>
+                    <c>s</c>
+                    <b>a</b>
+                </b>
+            </a>
         </i>
+        <a><b><c>z</c></b></a>
     </x:e>
     <test property="kx:hahah"/>
 </taga>
