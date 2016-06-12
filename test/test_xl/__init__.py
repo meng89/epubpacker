@@ -12,7 +12,7 @@ def test_parse():
 
     e = clear_spaces(e)
     e = pretty_insert(e, dont_do_when_one_child=True)
-    print(e.xml_string())
+    print(e.string())
 
 
 def test_element():

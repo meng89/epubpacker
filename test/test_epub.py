@@ -58,4 +58,4 @@ def test_simple_epub():
 
     book.write('demo.epub')
 
-    print(xl.pretty_insert(sec1.to_toc_element(), dont_do_when_one_child=False).xml_string())
+    print(xl.pretty_insert(sec1.to_toc_element(), dont_do_when_one_child=False).string())

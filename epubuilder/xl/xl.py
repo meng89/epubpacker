@@ -1,5 +1,7 @@
 #!/bin/env python3
 
+from abc import abstractmethod
+
 import copy
 
 from hooky import List, Dict
@@ -213,7 +215,13 @@ class XLError(Exception):
     pass
 
 
-class Element:
+class Node:
+    @abstractmethod
+    def string(self):
+        pass
+
+
+class Element(Node):
     def __init__(self, name, attributes=None, prefixes=None):
         self.name = name
 
@@ -283,7 +291,7 @@ class Element:
     def children(self, value):
         self.__dict__['children'] = value
 
-    def xml_string(self, inherited_prefixes=None):
+    def string(self, inherited_prefixes=None):
 
         inherited_prefixes = inherited_prefixes or Prefixes()
 
@@ -388,10 +396,10 @@ class Element:
 
             for child in self.children:
                 if isinstance(child, Element):
-                    s += child.xml_string(inherited_prefixes=prefixes_for_subs)
+                    s += child.string(inherited_prefixes=prefixes_for_subs)
 
                 elif isinstance(child, Text):
-                    s += child.xml_string()
+                    s += child.string()
 
             s += '</{}>'.format(full_name)
 
@@ -478,8 +486,8 @@ class Children(List):
         super().insert(i, item)
 
 
-class Text(UserString):
-    def xml_string(self):
+class Text(Node, UserString):
+    def string(self):
         s = ''
         for char in self:
             if char == '&':

@@ -343,7 +343,7 @@ class Epub:
         toc_filename = self._get_unused_filename(None, 'nav.xhtml')
 
         self._temp_files[toc_filename] = \
-            _TempFile(pretty_insert(html, dont_do_when_one_child=True).xml_string().encode(),
+            _TempFile(pretty_insert(html, dont_do_when_one_child=True).string().encode(),
                       mime='application/xhtml+xml',
                       properties='nav scripted' if self.toc.add_js_for_nav_flod else 'nav')
 
@@ -391,7 +391,7 @@ class Epub:
 
         toc_ncx_filename = self._get_unused_filename(None, 'toc.ncx')
         self._temp_files[toc_ncx_filename] = \
-            _TempFile(pretty_insert(ncx, dont_do_when_one_child=True).xml_string().encode(),
+            _TempFile(pretty_insert(ncx, dont_do_when_one_child=True).string().encode(),
                       mime='application/x-dtbncx+xml')
 
     def _xmlstr_opf(self):
@@ -439,7 +439,7 @@ class Epub:
         for itemref in self.spine:
             spine.children.append(itemref.to_element())
 
-        return pretty_insert(package, dont_do_when_one_child=True).xml_string()
+        return pretty_insert(package, dont_do_when_one_child=True).string()
 
     @staticmethod
     def _xmlstr_container(opf_path):
@@ -459,7 +459,7 @@ class Epub:
 
         rootfile.attributes['media-type'] = 'application/oebps-package+xml'
 
-        return xml_header() + pretty_insert(e, dont_do_when_one_child=True).xml_string()
+        return xml_header() + pretty_insert(e, dont_do_when_one_child=True).string()
 
     def write(self, filename):
 
