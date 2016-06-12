@@ -163,8 +163,15 @@ class Files(Dict):
         elements = []
         for path, file in self.items():
             item = xl.Element((None, 'item'), attributes={(None, 'href'): path, (None, 'media-type'): file.mime})
+
             if file.identification is not None:
                 item.attributes[(None, 'id')] = file.identification
+
+            # for _TempFile
+            try:
+                item.attributes['properties'] = getattr(file, 'properties')
+            except AttributeError:
+                pass
 
             elements.append(item)
 
@@ -180,6 +187,12 @@ class File:
     @property
     def binary(self):
         return self._binary
+
+
+class _TempFile(File):
+    def __init__(self, binary, mime=None, identification=None, properties=None):
+        super().__init__(binary, mime, identification)
+        self.properties = properties
 
 
 #####################################
@@ -301,9 +314,9 @@ class Epub:
             body.children.append(nav)
 
         if self.toc.add_js_for_nav_flod:
-            js_path = self._get_unused_filename(ROOT_OF_OPF, )
+            js_path = self._get_unused_filename(None, 'a.js')
 
-            self._temp_files
+            self._temp_files.
 
             head.children.append(Element('script', attributes={'src': js_path}))
 
@@ -367,36 +380,26 @@ class Epub:
 
         # manifest
         manifest = xl.Element((None, 'manifest'))
-        manifest.children.extend(self.files.to_elements())
-        # nav_toc
-        if toc_path:
-            toc_item_e = xl.Element((None, 'item'), attributes={(None, 'href'): toc_path,
-                                                                (None, 'id'): 'id_' + uuid.uuid4().hex,
-                                                                (None, 'properties'): 'nav',
-                                                                (None, 'media-type'): 'application/xhtml+xml'})
-            manifest.children.insert(0, toc_item_e)
-
-        # for ncx
-        toc_ncx_item_e_id = 'id' + uuid.uuid4().hex
-        if ncx_path:
-            toc_ncx_item_e = xl.Element((None, 'item'), attributes={(None, 'href'): ncx_path,
-                                                                    (None, 'id'): toc_ncx_item_e_id,
-                                                                    (None, 'media-type'): 'application/x-dtbncx+xml'})
-            manifest.children.insert(0, toc_ncx_item_e)
-
         package.children.append(manifest)
+
+        manifest.children.extend(self.files.to_elements())
+
+        manifest.children.extend(self._temp_files.to_elements())
+
+        # find toc ncx id for spine
+        toc_ncx_item_e_id = None
+        for temp_file_e in self._temp_files.to_elements():
+            if temp_file_e.attributes[(None, 'media-type')] == 'application/x-dtbncx+xml':
+                toc_ncx_item_e_id = temp_file_e.attributes[(None, 'id')]
 
         # spine
         spine = xl.Element((None, 'spine'))
+        package.children.append(spine)
 
-        # for ncx
-        if ncx_path:
-            spine.attributes['toc'] = toc_ncx_item_e_id
+        spine.attributes['toc'] = toc_ncx_item_e_id
 
         for itemref in self.spine:
             spine.children.append(itemref.to_element())
-
-        package.children.append(spine)
 
         return pretty_insert(package, dont_do_when_one_child=True).xml_string()
 
@@ -426,34 +429,20 @@ class Epub:
 
         z.writestr('mimetype', 'application/epub+zip'.encode('ascii'), compress_type=zipfile.ZIP_STORED)
 
+        # wirte custom files
         for filename, file in self.files.items():
             z.writestr(ROOT_OF_OPF + os.sep + filename, file.binary, zipfile.ZIP_DEFLATED)
 
-        def get_unused_filename(dire, filename_ext):
-            only_name, ext = os.path.splitext(filename_ext)
-            unused_filename = filename_ext
+        toc_filename = self._get_unused_filename(None, 'nav.xhtml')
+        self._temp_files[toc_filename] = _TempFile(self._xmlstr_toc().encode(), properties='nav')
 
-            while dire + '/' + unused_filename in [ROOT_OF_OPF + '/' + path for path in self.files.keys()]:
-                unused_filename = '_{){}'.format(
-                    random.random(''.join(random.sample(string.ascii_letters + string.digits, 8))),
-                    ext
-                )
+        toc_ncx_filename = self._get_unused_filename(None, 'toc.ncx')
+        toc_ncx_file = _TempFile(self._xmlstr_toc_ncx().encode())
+        self._temp_files[toc_ncx_filename] = toc_ncx_file
 
-            return unused_filename
-
-        toc_filename = get_unused_filename(ROOT_OF_OPF, 'nav.xhtml')
-        z.writestr(ROOT_OF_OPF + '/' + toc_filename,
-                   self._xmlstr_toc().encode(),
-                   zipfile.ZIP_DEFLATED)
-
-        toc_ncx_filename = get_unused_filename(ROOT_OF_OPF, 'toc.ncx')
-        z.writestr(ROOT_OF_OPF + '/' + toc_ncx_filename,
-                   self._xmlstr_toc_ncx().encode(),
-                   zipfile.ZIP_DEFLATED)
-
-        opf_filename = get_unused_filename(ROOT_OF_OPF, 'package.opf')
+        opf_filename = self._get_unused_filename(None, 'package.opf')
         z.writestr(ROOT_OF_OPF + '/' + opf_filename,
-                   self._xmlstr_opf(toc_filename, ncx_path=toc_ncx_filename).encode(),
+                   self._xmlstr_opf().encode(),
                    zipfile.ZIP_DEFLATED)
 
         z.writestr(CONTAINER_PATH,

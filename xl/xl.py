@@ -71,7 +71,7 @@ def parse(xmlstr, debug=False):
         ns_list.pop()
 
     def character_data_handler(data):
-        print('Character data: "{}"'.format(data)) if debug else None
+        print('Character html: "{}"'.format(data)) if debug else None
         nonlocal s
         s += data
 

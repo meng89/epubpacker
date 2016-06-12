@@ -13,7 +13,7 @@ def relative_path(full_path, dirt):
 def identify_mime(binary):
     """
 
-    :param binary: bytes data
+    :param binary: bytes html
     :return: mime
     """
     return magic.from_buffer(binary, mime=True).decode()
