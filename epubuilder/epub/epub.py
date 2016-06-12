@@ -47,6 +47,14 @@ media_table = [
 ##################################################
 # toc
 
+
+def html_dir():
+    _html_dir = os.path.join(os.path.dirname(__file__, 'html'))
+    if os.path.exists(html_dir):
+        if not os.path.isdir(_html_dir):
+            raise FileNotFoundError
+
+
 class Toc(List):
     def __init__(self):
         super().__init__()
@@ -314,9 +322,15 @@ class Epub:
             body.children.append(nav)
 
         if self.toc.add_js_for_nav_flod:
+
             js_path = self._get_unused_filename(None, 'a.js')
 
-            self._temp_files.
+            self._temp_files[js_path] = _TempFile(open(os.path.join(html_dir(), 'a.js'), 'rb').read(),
+                                                  mime='text/javascript')
+
+            css_path = self._get_unused_filename(None, 'a.css')
+            self._temp_files[css_path] = _TempFile(open(os.path.join(html_dir(), 'css.js'), 'rb').read(),
+                                                   mime='text/style')
 
             head.children.append(Element('script', attributes={'src': js_path}))
 
