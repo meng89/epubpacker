@@ -12,7 +12,7 @@ from hooky import Dict
 
 from .metadata import Public
 
-import xl
+from epubuilder.xl import Element, Text, URI_XML
 
 
 def always_true(*args, **kwargs):
@@ -43,7 +43,7 @@ URI_OPF = 'http://www.idpf.org/2007/opf'
 
 namespace_map = {
     'opf': URI_OPF,
-    'xml': xl.URI_XML
+    'xml': URI_XML
 }
 
 
@@ -93,7 +93,7 @@ class _Meta(Public):
         return self._attrs
 
     def as_element(self):
-        e = xl.Element((URI_DC, self.__class__.__name__.lower()))
+        e = Element((URI_DC, self.__class__.__name__.lower()))
         e.prefixes[URI_DC] = 'dc'
 
         for attr_name, value in self.attrs.items():
@@ -110,7 +110,7 @@ class _Meta(Public):
 
                 e.attributes[(None, attr)] = value
 
-        e.children.append(xl.Text(self.text))
+        e.children.append(Text(self.text))
 
         return e
 

@@ -6,11 +6,14 @@ import os
 import random
 from hooky import List, Dict
 
-import xl
 from epubuilder.tools import identify_mime
-from xl import pretty_insert, Element, Text
+
+from epubuilder.xl import pretty_insert, Element, Text, xml_header, URI_XML
+
 from .metadata import Metadata
 from .metadata.dcmes import Identifier, URI_DC
+
+import epubuilder.version
 
 CONTAINER_PATH = 'META-INF' + os.sep + 'container.xml'
 
@@ -49,10 +52,12 @@ media_table = [
 
 
 def html_dir():
-    _html_dir = os.path.join(os.path.dirname(__file__, 'html'))
-    if os.path.exists(html_dir):
+    _html_dir = os.path.join(os.path.dirname(__file__), 'html')
+    if os.path.exists(_html_dir):
         if not os.path.isdir(_html_dir):
             raise FileNotFoundError
+
+    return _html_dir
 
 
 class Toc(List):
@@ -63,10 +68,9 @@ class Toc(List):
         self.add_js_for_nav_flod = False
 
         # todo
-        self.ncx_uid = None
-        self.ncx_depth = None
-        self.ncx_totalPageCount = None
-        self.ncx_maxPageNumber = None
+        self.ncx_depth = -1
+        self.ncx_totalPageCount = -1
+        self.ncx_maxPageNumber = -1
 
     def _before_add(self, key=None, item=None):
         if not isinstance(item, Section):
@@ -113,20 +117,20 @@ class Section:
             self._hidden_sub = value
 
     def to_toc_element(self):
-        li = xl.Element('li')
+        li = Element('li')
 
         if self.href:
-            a_or_span = xl.Element((None, 'a'))
+            a_or_span = Element((None, 'a'))
             a_or_span.attributes[(None, 'href')] = self.href
         else:
-            a_or_span = xl.Element((None, 'span'))
+            a_or_span = Element((None, 'span'))
 
-        a_or_span.children.append(xl.Text(self.title))
+        a_or_span.children.append(Text(self.title))
 
         li.children.append(a_or_span)
 
         if self.subsections:
-            ol = xl.Element('ol')
+            ol = Element('ol')
 
             if self.hidden_sub:
                 ol.attributes[(None, 'hidden')] = ''
@@ -149,9 +153,8 @@ class Section:
 
         text.children.append(Text(self.title))
 
-        if self.href:
-            content = Element('content', attributes={'src': self.href})
-            nav_point.children.append(content)
+        content = Element('content', attributes={'src': self.href if self.href else ''})
+        nav_point.children.append(content)
 
         for subsection in self.subsections:
             nav_point.children.append(subsection.to_toc_ncx_element())
@@ -170,14 +173,15 @@ class Files(Dict):
     def to_elements(self):
         elements = []
         for path, file in self.items():
-            item = xl.Element((None, 'item'), attributes={(None, 'href'): path, (None, 'media-type'): file.mime})
+            item = Element((None, 'item'), attributes={(None, 'href'): path, (None, 'media-type'): file.mime})
 
             if file.identification is not None:
                 item.attributes[(None, 'id')] = file.identification
 
             # for _TempFile
             try:
-                item.attributes['properties'] = getattr(file, 'properties')
+                if getattr(file, 'properties'):
+                    item.attributes['properties'] = getattr(file, 'properties')
             except AttributeError:
                 pass
 
@@ -222,7 +226,7 @@ class Itemref:
         return self._idref
 
     def to_element(self):
-        e = xl.Element((None, 'itemref'), attributes={(None, 'idref'): self.idref})
+        e = Element((None, 'itemref'), attributes={(None, 'idref'): self.idref})
 
         if self._linear is True:
             e.attributes[(None, 'linear')] = 'yes'
@@ -261,7 +265,7 @@ class Epub:
         unused_filename = filename
 
         while ROOT_OF_OPF + dire + '/' + unused_filename in [ROOT_OF_OPF + '/' + path for path in self.files.keys()] +\
-                [ROOT_OF_OPF + '/' + self._temp_files.keys()]:
+                [ROOT_OF_OPF + '/' + path for path in self._temp_files.keys()]:
 
             unused_filename = '_{}{}'.format(
                 random.random(''.join(random.sample(string.ascii_letters + string.digits, 8))),
@@ -294,26 +298,26 @@ class Epub:
     def pagelist(self):
         return self._pagelist
 
-    def _xmlstr_toc(self):
+    def _nav_to_tempfile(self):
         default_ns = 'http://www.w3.org/1999/xhtml'
         epub_ns = 'http://www.idpf.org/2007/ops'
 
-        html = xl.Element((None, 'html'), prefixes={default_ns: None, epub_ns: 'epub'})
+        html = Element((None, 'html'), prefixes={default_ns: None, epub_ns: 'epub'})
 
-        head = xl.Element('head')
+        head = Element('head')
         html.children.append(head)
 
         if self.toc.title:
-            _title = xl.Element('title')
+            _title = Element('title')
             head.children.append(_title)
-            _title.children.append(xl.Text(self.toc.title))
+            _title.children.append(Text(self.toc.title))
 
-        body = xl.Element((None, 'body'))
+        body = Element((None, 'body'))
         html.children.append(body)
 
         if self.toc:
-            nav = xl.Element((None, 'nav'), prefixes={epub_ns: 'epub'}, attributes={(epub_ns, 'type'): 'toc'})
-            ol = xl.Element((None, 'ol'))
+            nav = Element((None, 'nav'), prefixes={epub_ns: 'epub'}, attributes={(epub_ns, 'type'): 'toc'})
+            ol = Element((None, 'ol'))
 
             for section in self.toc:
                 ol.children.append(section.to_toc_element())
@@ -322,37 +326,54 @@ class Epub:
             body.children.append(nav)
 
         if self.toc.add_js_for_nav_flod:
-
             js_path = self._get_unused_filename(None, 'a.js')
-
             self._temp_files[js_path] = _TempFile(open(os.path.join(html_dir(), 'a.js'), 'rb').read(),
                                                   mime='text/javascript')
 
-            css_path = self._get_unused_filename(None, 'a.css')
-            self._temp_files[css_path] = _TempFile(open(os.path.join(html_dir(), 'css.js'), 'rb').read(),
-                                                   mime='text/style')
+            # css_path = self._get_unused_filename(None, 'a.css')
+            # self._temp_files[css_path] = _TempFile(open(os.path.join(html_dir(), 'css.js'), 'rb').read(),
+            #                                       mime='text/style')
 
             head.children.append(Element('script', attributes={'src': js_path}))
-
             script_before_body_close = Element('script', attributes={'type': 'text/javascript'})
-            body.children.append(script_before_body_close)
-
             script_before_body_close.children.append(Text('set_button();'))
 
-        return pretty_insert(html, dont_do_when_one_child=True).xml_string()
+            body.children.append(script_before_body_close)
 
-    def _xmlstr_toc_ncx(self):
+        toc_filename = self._get_unused_filename(None, 'nav.xhtml')
+
+        self._temp_files[toc_filename] = \
+            _TempFile(pretty_insert(html, dont_do_when_one_child=True).xml_string().encode(),
+                      mime='application/xhtml+xml',
+                      properties='nav scripted' if self.toc.add_js_for_nav_flod else 'nav')
+
+    def _ncx_to_tempfile(self):
         def_ns_uri = 'http://www.daisy.org/z3986/2005/ncx/'
 
-        ncx = xl.Element('ncx', attributes={'version': '2005-1'}, prefixes={def_ns_uri: None})
-        head = xl.Element('head')
+        ncx = Element('ncx', attributes={'version': '2005-1'}, prefixes={def_ns_uri: None})
+        head = Element('head')
         ncx.children.append(head)
-        head.children.append(Element('meta', attributes={'name': 'dtb:uid', 'content': self.toc.ncx_uid}))
+
+        # same as dc:Identifier
+
+        identifier_text = None
+        for m in self.metadata:
+            if isinstance(m, Identifier):
+                identifier_text = m.text
+                break
+
+        head.children.append(Element('meta', attributes={'name': 'dtb:uid', 'content': identifier_text}))
+
         head.children.append(Element('meta', attributes={'name': 'dtb:depth', 'content': self.toc.ncx_depth}))
+
         head.children.append(Element('meta', attributes={'name': 'dtb:totalPageCount',
                                                          'content': self.toc.ncx_totalPageCount}))
+
         head.children.append(Element('meta', attributes={'name': 'dtb:maxPageNumber',
                                                          'content': self.toc.ncx_maxPageNumber}))
+
+        head.children.append(Element('meta', attributes={'name': 'dtb:generator',
+                                                         'content': 'epubuilder ' + epubuilder.version.__version__}))
 
         doc_title = Element('docTitle')
         ncx.children.append(doc_title)
@@ -368,15 +389,18 @@ class Epub:
         for one in self.toc:
             nav_map.children.append(one.to_toc_ncx_element())
 
-        return pretty_insert(ncx, dont_do_when_one_child=True).xml_string()
+        toc_ncx_filename = self._get_unused_filename(None, 'toc.ncx')
+        self._temp_files[toc_ncx_filename] = \
+            _TempFile(pretty_insert(ncx, dont_do_when_one_child=True).xml_string().encode(),
+                      mime='application/x-dtbncx+xml')
 
-    def _xmlstr_opf(self, toc_path=None, ncx_path=None):
+    def _xmlstr_opf(self):
         def_ns = 'http://www.idpf.org/2007/opf'
         # dcterms_ns = 'http://purl.org/metadata/terms/'
 
-        package = xl.Element((None, 'package'),
-                             prefixes={def_ns: None},
-                             attributes={(None, 'version'): '3.0', (xl.URI_XML, 'lang'): 'en'})
+        package = Element((None, 'package'),
+                          prefixes={def_ns: None},
+                          attributes={(None, 'version'): '3.0', (URI_XML, 'lang'): 'en'})
 
         for m in self.metadata:
             if isinstance(m, Identifier):
@@ -384,8 +408,8 @@ class Epub:
 
         # unique - identifier = "pub-id"
         # metadata
-        metadata_e = xl.Element((None, 'metadata'),
-                                prefixes={URI_DC: 'dc'})
+        metadata_e = Element((None, 'metadata'),
+                             prefixes={URI_DC: 'dc'})
 
         for m in self.metadata:
             metadata_e.children.append(m.as_element())
@@ -393,7 +417,7 @@ class Epub:
         package.children.append(metadata_e)
 
         # manifest
-        manifest = xl.Element((None, 'manifest'))
+        manifest = Element((None, 'manifest'))
         package.children.append(manifest)
 
         manifest.children.extend(self.files.to_elements())
@@ -407,7 +431,7 @@ class Epub:
                 toc_ncx_item_e_id = temp_file_e.attributes[(None, 'id')]
 
         # spine
-        spine = xl.Element((None, 'spine'))
+        spine = Element((None, 'spine'))
         package.children.append(spine)
 
         spine.attributes['toc'] = toc_ncx_item_e_id
@@ -419,23 +443,23 @@ class Epub:
 
     @staticmethod
     def _xmlstr_container(opf_path):
-        e = xl.Element((None, 'container'))
+        e = Element((None, 'container'))
 
         e.attributes[(None, 'version')] = '1.0'
 
         e.prefixes['urn:oasis:names:tc:opendocument:xmlns:container'] = None
 
-        rootfiles = xl.Element('rootfiles')
+        rootfiles = Element('rootfiles')
         e.children.append(rootfiles)
 
-        rootfile = xl.Element('rootfile')
+        rootfile = Element('rootfile')
         rootfiles.children.append(rootfile)
 
         rootfile.attributes['full-path'] = opf_path
 
         rootfile.attributes['media-type'] = 'application/oebps-package+xml'
 
-        return xl.xml_header() + pretty_insert(e, dont_do_when_one_child=True).xml_string()
+        return xml_header() + pretty_insert(e, dont_do_when_one_child=True).xml_string()
 
     def write(self, filename):
 
@@ -447,12 +471,12 @@ class Epub:
         for filename, file in self.files.items():
             z.writestr(ROOT_OF_OPF + os.sep + filename, file.binary, zipfile.ZIP_DEFLATED)
 
-        toc_filename = self._get_unused_filename(None, 'nav.xhtml')
-        self._temp_files[toc_filename] = _TempFile(self._xmlstr_toc().encode(), properties='nav')
+        self._nav_to_tempfile()
+        self._ncx_to_tempfile()
 
-        toc_ncx_filename = self._get_unused_filename(None, 'toc.ncx')
-        toc_ncx_file = _TempFile(self._xmlstr_toc_ncx().encode())
-        self._temp_files[toc_ncx_filename] = toc_ncx_file
+        # write nav nav's js and ncx
+        for filename, file in self._temp_files.items():
+            z.writestr(ROOT_OF_OPF + os.sep + filename, file.binary, zipfile.ZIP_DEFLATED)
 
         opf_filename = self._get_unused_filename(None, 'package.opf')
         z.writestr(ROOT_OF_OPF + '/' + opf_filename,

@@ -32,7 +32,9 @@ function guid() {
 
 
 function set_button() {
-    var ols = document.getElementsByClassName('toc-ol');
+    var master_ol = document.getElementsByTagName('ol')[0];
+
+    var ols = master_ol.getElementsByTagName('ol');
 
     for (var i=0; i<ols.length; i++) {
 

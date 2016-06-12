@@ -1,5 +1,5 @@
 
-from xl import parse, Element, clear_spaces, pretty_insert
+from epubuilder.xl import parse, Element, clear_spaces, pretty_insert
 
 import os
 

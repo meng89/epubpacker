@@ -6,7 +6,7 @@ from abc import abstractmethod
 
 from hooky import Dict
 
-import xl
+from epubuilder.xl import Element, Text, URI_XML
 
 from ..metadata import Public
 
@@ -72,7 +72,7 @@ URI_OPF = 'http://www.idpf.org/2007/opf'
 namespace_map = {
     'dc': URI_DC,
     'opf': URI_OPF,
-    'xml': xl.URI_XML
+    'xml': URI_XML
 }
 
 
@@ -116,7 +116,7 @@ class _Meta(Public):
         return self._attrs
 
     def as_element(self):
-        e = xl.Element((None, 'meta'))
+        e = Element((None, 'meta'))
 
         e.attributes[(None, 'property')] = 'dcterms:{}'.format(self.__class__.__name__)
 
@@ -133,7 +133,7 @@ class _Meta(Public):
 
             e.attributes[(uri, attr)] = value
 
-        e.children.append(xl.Text(self.text))
+        e.children.append(Text(self.text))
 
         return e
 
