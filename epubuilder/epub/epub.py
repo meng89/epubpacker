@@ -33,6 +33,9 @@ media_table = [
     ['application/smil+xml', [], 'Text'],  # EPUB Media Overlay documents
     ['application/pls+xml', [], ''],  # Text-to-Speech (TTS) Pronunciation lexicons
 
+    # ncx
+    ['application/x-dtbncx+xml', [], ''],
+
     # Audio Types
     ['audio/mpeg', [], ''],
     ['audio/mp4', ['.mp4'], ''],
@@ -175,33 +178,36 @@ class Files(Dict):
             if file.identification is not None:
                 item.attributes[(None, 'id')] = file.identification
 
-            # for _TempFile
-            try:
-                if getattr(file, 'properties'):
-                    item.attributes['properties'] = getattr(file, 'properties')
-            except AttributeError:
-                pass
+            if file.properties:
+                item.attributes['properties'] = ' '.join(file.properties)
 
             elements.append(item)
 
         return elements
 
 
+class _Properties(List):
+    def _before_add(self, key=None, item=None):
+        if item in self:
+            raise ValueError
+        if item not in ('cover-image', 'mathml', 'nav', 'remote-resources', 'scripted', 'svg', 'switch'):
+            raise ValueError
+
+
 class File:
-    def __init__(self, binary, mime=None, identification=None):
+    def __init__(self, binary, mime=None, identification=None, properties=None):
         self._binary = binary
         self.mime = mime or identify_mime(self.binary)
         self.identification = identification or 'id_' + uuid.uuid4().hex
+        self._properties = _Properties(properties)
 
     @property
     def binary(self):
         return self._binary
 
-
-class _TempFile(File):
-    def __init__(self, binary, mime=None, identification=None, properties=None):
-        super().__init__(binary, mime, identification)
-        self.properties = properties
+    @property
+    def properties(self):
+        return self._properties
 
 
 #####################################
@@ -209,8 +215,18 @@ class _TempFile(File):
 
 class Spine(List):
     def _before_add(self, key=None, item=None):
-        if not isinstance(item, Itemref):
+        if not isinstance(item, Joint):
             raise TypeError
+
+
+class Joint:
+    def __init__(self, path, linear=None):
+        self._path = path
+        self.linear = linear
+
+    @property
+    def path(self):
+        return self._path
 
 
 class Itemref:
@@ -295,7 +311,7 @@ class Epub:
     def pagelist(self):
         return self._pagelist
 
-    def _nav_to_tempfile(self):
+    def _nav_to_element(self):
         default_ns = 'http://www.w3.org/1999/xhtml'
         epub_ns = 'http://www.idpf.org/2007/ops'
 
@@ -322,27 +338,57 @@ class Epub:
             nav.children.append(ol)
             body.children.append(nav)
 
-        if self.toc.add_js_for_nav_flod:
-            js_path = self._get_unused_filename(None, 'a.js')
-            self._temp_files[js_path] = _TempFile(open(os.path.join(html_dir(), 'a.js'), 'rb').read(),
-                                                  mime='text/javascript')
+        return html
 
-            # css_path = self._get_unused_filename(None, 'a.css')
-            # self._temp_files[css_path] = _TempFile(open(os.path.join(html_dir(), 'css.js'), 'rb').read(),
-            #                                       mime='text/style')
-
-            head.children.append(Element('script', attributes={'src': js_path}))
-            script_before_body_close = Element('script', attributes={'type': 'text/javascript'})
-            script_before_body_close.children.append(Text('set_button();'))
-
-            body.children.append(script_before_body_close)
+    def _nav_to_tempfile(self):
+        html = self._nav_to_element()
 
         toc_filename = self._get_unused_filename(None, 'nav.xhtml')
 
         self._temp_files[toc_filename] = \
-            _TempFile(pretty_insert(html, dont_do_when_one_child=True).string().encode(),
-                      mime='application/xhtml+xml',
-                      properties='nav scripted' if self.toc.add_js_for_nav_flod else 'nav')
+            File(pretty_insert(html, dont_do_when_one_child=True).string().encode(),
+                 mime='application/xhtml+xml',
+                 properties=['nav'])
+
+    # have this function because some EPUB reader not supports nav hidden
+    # some day, should delete this function when readers doing well.
+    def addons_make_user_toc(self):
+        html = self._nav_to_element()
+
+        def find_element_by_name(name):
+            e = None
+            for one in html.children:
+                if one.name == (None, name):
+                    e = one
+                    break
+            return e
+
+        head = find_element_by_name('head')
+        body = find_element_by_name('body')
+
+        js_path = self._get_unused_filename(None, 'epubuilder_addons_user_toc_attach.js')
+        self.files[js_path] = File(open(os.path.join(html_dir(), 'a.js'), 'rb').read(),
+                                   mime='text/javascript')
+
+        head.children.append(Element('script', attributes={'src': js_path}))
+
+        css_path = self._get_unused_filename(None, 'epubuilder_addons_user_toc_attach.css')
+        self.files[css_path] = File(open(os.path.join(html_dir(), 'a.css'), 'rb').read(),
+                                    mime='text/style')
+
+        # 'type': 'text/css',
+        head.children.append(Element('link', attributes={'rel': 'stylesheet', 'type': 'text/css', 'href': css_path}))
+
+        script_before_body_close = Element('script', attributes={'type': 'text/javascript'})
+        script_before_body_close.children.append(Text('set_button();'))
+        body.children.append(script_before_body_close)
+
+        user_toc_path = self._get_unused_filename(None, 'epubuilder_addons_user_toc.xhtml')
+        self.files[user_toc_path] = File(pretty_insert(html).string().encode(),
+                                         mime='application/xhtml+xml',
+                                         properties=['scripted'])
+
+        return user_toc_path, (js_path, css_path)
 
     def _ncx_to_tempfile(self):
         def_ns_uri = 'http://www.daisy.org/z3986/2005/ncx/'
@@ -388,8 +434,8 @@ class Epub:
 
         toc_ncx_filename = self._get_unused_filename(None, 'toc.ncx')
         self._temp_files[toc_ncx_filename] = \
-            _TempFile(pretty_insert(ncx, dont_do_when_one_child=True).string().encode(),
-                      mime='application/x-dtbncx+xml')
+            File(pretty_insert(ncx, dont_do_when_one_child=True).string().encode(),
+                 mime='application/x-dtbncx+xml')
 
     def _xmlstr_opf(self):
         def_ns = 'http://www.idpf.org/2007/opf'
@@ -433,8 +479,15 @@ class Epub:
 
         spine.attributes['toc'] = toc_ncx_item_e_id
 
-        for itemref in self.spine:
-            spine.children.append(itemref.to_element())
+        for joint in self.spine:
+
+            itemref = Element((None, 'itemref'), attributes={(None, 'idref'): self.files[joint.path].identification})
+            if joint.linear is True:
+                itemref.attributes[(None, 'linear')] = 'yes'
+            elif joint.linear is False:
+                itemref.attributes[(None, 'linear')] = 'no'
+
+            spine.children.append(itemref)
 
         return pretty_insert(package, dont_do_when_one_child=True).string()
 
@@ -484,4 +537,5 @@ class Epub:
                    self._xmlstr_container(ROOT_OF_OPF + '/' + opf_filename).encode(),
                    zipfile.ZIP_DEFLATED)
 
+        self._temp_files.clear()
         z.close()

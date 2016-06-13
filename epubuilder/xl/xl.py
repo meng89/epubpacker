@@ -458,6 +458,10 @@ class Attributes(Dict):
 
 
 class Children(List):
+    def _before_add(self, key=None, item=None):
+        if not isinstance(item, Node):
+            raise TypeError('{} is not legal'.format(item.__class__.__name__))
+
     def __init__(self):
         super().__init__()
 
@@ -475,10 +479,6 @@ class Children(List):
                 item.descriptor = self.descriptor[DESCRIPTORS][item.element_name]
 
     def insert(self, i, item):
-        if not isinstance(item, (Element, Text)):
-            print(item)
-            raise TypeError('{} is not legal'.format(item.__class__.__name__))
-
         if isinstance(item, Element) and self.descriptor:
             self.descriptor[NAME_CHECKFUNC](item.name)
             item.descriptor = self.descriptor[DESCRIPTORS][item.name]

@@ -1,6 +1,6 @@
 import uuid
 
-from epubuilder.epub import epub, File, Section, Itemref
+from epubuilder.epub import epub, File, Section, Joint
 
 from epubuilder.epub.metadata.dcmes import Title, Language, Identifier
 
@@ -25,8 +25,7 @@ def test_simple_epub():
             p = File(xhtml_template.format(title, content), mime='application/xhtml+xml')
             book.files[html_path] = p
 
-            # todo
-            book.spine.append(Itemref(p.identification))
+            book.spine.append(Joint(html_path))
 
         sec = Section(title, href=html_path)
         return sec
@@ -56,6 +55,13 @@ def test_simple_epub():
     book.metadata.append(Identifier('identifier_' + uuid.uuid4().hex))
     book.metadata.append(get_class('modified')(w3c_utc_date()))
 
+    user_toc_path, other_paths = book.addons_make_user_toc()
+
+    book.spine.insert(0, Joint(user_toc_path))
+
+    book.toc.insert(0, Section('Table of Contents', href=user_toc_path))
+
     book.write('demo.epub')
 
     print(xl.pretty_insert(sec1.to_toc_element(), dont_do_when_one_child=False).string())
+
