@@ -65,9 +65,6 @@ class Toc(List):
         super().__init__()
         self.title = None
 
-        self.add_js_for_nav_flod = False
-
-        # todo
         self.ncx_depth = -1
         self.ncx_totalPageCount = -1
         self.ncx_maxPageNumber = -1
