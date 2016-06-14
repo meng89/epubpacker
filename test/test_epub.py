@@ -55,7 +55,7 @@ def test_simple_epub():
     book.metadata.append(Identifier('identifier_' + uuid.uuid4().hex))
     book.metadata.append(get_class('modified')(w3c_utc_date()))
 
-    user_toc_path, other_paths = book.addons_make_user_toc()
+    user_toc_path, other_paths = book.addons_make_user_toc_page()
 
     book.spine.insert(0, Joint(user_toc_path))
 

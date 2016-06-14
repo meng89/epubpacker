@@ -11,44 +11,12 @@ from epubuilder.tools import identify_mime
 from epubuilder.xl import pretty_insert, Element, Text, xml_header, URI_XML
 
 from .metadata import Metadata
-from .metadata.dcmes import Identifier, URI_DC
+from .metadata.dcmes import Identifier, Title, URI_DC
 
 import epubuilder.version
 
 CONTAINER_PATH = 'META-INF' + os.sep + 'container.xml'
-
-
-media_table = [
-
-    # Image Types
-    ['image/gif', ['.gif'], 'Images'],
-    ['image/jpeg', ['.jpg', 'jpeg'], 'Images'],
-    ['image/png', ['.png'], 'Images'],
-    ['image/svg+xml', ['.svg'], 'Images'],
-
-    # Application Types
-    ['application/xhtml+xml', ['.html', '.xhtml'], 'Text'],
-    ['application/font-sfnt', ['.otf', '.ttf', '.ttc'], 'Fonts'],  # old 'application/vnd.ms-opentype'
-    ['application/font-woff', ['.woff'], 'Fonts'],
-    ['application/smil+xml', [], 'Text'],  # EPUB Media Overlay documents
-    ['application/pls+xml', [], ''],  # Text-to-Speech (TTS) Pronunciation lexicons
-
-    # ncx
-    ['application/x-dtbncx+xml', [], ''],
-
-    # Audio Types
-    ['audio/mpeg', [], ''],
-    ['audio/mp4', ['.mp4'], ''],
-
-    # Text Types
-    ['text/html', [], 'Text'],
-    ['text/css', ['.css'], 'Styles'],
-    ['text/javascript', ['.js'], 'Scripts'],
-
-    # Font Types
-    ['font/woff2', ['.woff2'], 'Fonts'],
-]
-
+ROOT_OF_OPF = 'EPUB'
 
 ##################################################
 # toc
@@ -251,9 +219,6 @@ class Itemref:
 
 #####################################
 
-ROOT_OF_OPF = 'EPUB'
-
-
 class Epub:
     def __init__(self):
 
@@ -352,7 +317,7 @@ class Epub:
 
     # have this function because some EPUB reader not supports nav hidden
     # some day, should delete this function when readers doing well.
-    def addons_make_user_toc(self):
+    def addons_make_user_toc_page(self):
         html = self._nav_to_element()
 
         def find_element_by_name(name):
@@ -390,10 +355,39 @@ class Epub:
 
         return user_toc_path, (js_path, css_path)
 
-    def _ncx_to_tempfile(self):
-        def_ns_uri = 'http://www.daisy.org/z3986/2005/ncx/'
+    def addons_make_user_cover_page(self, cover_img_path, title=None):
+        html = Element('html')
 
-        ncx = Element('ncx', attributes={'version': '2005-1'}, prefixes={def_ns_uri: None})
+        head = Element('head')
+        html.children.append(head)
+
+        if not title:
+            for m in self.metadata:
+                if isinstance(m, Title):
+                    title = m.text
+        if title:
+            title = Element('title')
+            title.children.append(title)
+            head.children.append(title)
+
+        body = Element('body')
+        html.children.append(body)
+
+        div = Element('div')
+        body.children.append(div)
+
+        img = Element('img', attributes={'src': cover_img_path, 'alt': 'Cover Image', 'title': 'Cover Image'})
+        body.children.append(img)
+
+        user_cover_page_path = self._get_unused_filename(None, 'cover.xhtml')
+        self.files[user_cover_page_path] = File(pretty_insert(html).string().encode(), mime='application/xhtml+xml')
+
+        return user_cover_page_path
+
+    def _ncx_to_tempfile(self):
+        def_uri = 'http://www.daisy.org/z3986/2005/ncx/'
+
+        ncx = Element('ncx', attributes={'version': '2005-1'}, prefixes={def_uri: None})
         head = Element('head')
         ncx.children.append(head)
 
