@@ -18,9 +18,6 @@ import epubuilder.version
 CONTAINER_PATH = 'META-INF' + os.sep + 'container.xml'
 ROOT_OF_OPF = 'EPUB'
 
-##################################################
-# toc
-
 
 def html_dir():
     _html_dir = os.path.join(os.path.dirname(__file__), 'html')
@@ -31,6 +28,8 @@ def html_dir():
     return _html_dir
 
 
+##################################################
+# toc
 class Toc(List):
     def __init__(self):
         super().__init__()
@@ -275,6 +274,20 @@ class Epub:
     @property
     def pagelist(self):
         return self._pagelist
+
+    def cover(self, file_path):
+        old_cover_path = None
+        old_cover_property_index = None
+        for path, file in self.files.items():
+            if 'cover-image' in file.properties:
+                old_cover_path = path
+                old_cover_property_index = file.properties.index('cover-image')
+
+        if old_cover_path:
+            del self.files[old_cover_path].properties[old_cover_property_index]
+
+        if 'cover-image' not in self.files[file_path].properties:
+            self.files[file_path].properties.append('cover-image')
 
     def _nav_to_element(self):
         default_ns = 'http://www.w3.org/1999/xhtml'

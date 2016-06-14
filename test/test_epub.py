@@ -20,6 +20,14 @@ xhtml_template = """
 def test_simple_epub():
     book = epub.Epub()
 
+    # metadata
+    book.metadata.append(Title('EPUB demo'))
+    book.metadata.append(Language('en'))
+    book.metadata.append(Identifier('identifier_' + uuid.uuid4().hex))
+    book.metadata.append(get_class('modified')(w3c_utc_date()))
+
+    # todo cover
+
     def make_page(title, html_path=None, content=None):
         if html_path and content:
             p = File(xhtml_template.format(title, content), mime='application/xhtml+xml')
@@ -48,20 +56,11 @@ def test_simple_epub():
 
     book.toc.extend([sec1, sec2, sec3])
 
-    book.toc.add_js_for_nav_flod = True
-
-    book.metadata.append(Title('EPUB demo'))
-    book.metadata.append(Language('en'))
-    book.metadata.append(Identifier('identifier_' + uuid.uuid4().hex))
-    book.metadata.append(get_class('modified')(w3c_utc_date()))
-
+    # make user toc
     user_toc_path, other_paths = book.addons_make_user_toc_page()
-
     book.spine.insert(0, Joint(user_toc_path))
-
     book.toc.insert(0, Section('Table of Contents', href=user_toc_path))
 
     book.write('demo.epub')
 
     print(xl.pretty_insert(sec1.to_toc_element(), dont_do_when_one_child=False).string())
-
