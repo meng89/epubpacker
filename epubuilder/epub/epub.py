@@ -13,6 +13,9 @@ from epubuilder.xl import pretty_insert, Element, Text, xml_header, URI_XML
 from .metadata import Metadata
 from .metadata.dcmes import Identifier, Title, URI_DC
 
+from .metadata.meta.dcterms import get_class
+from epubuilder.tools import w3c_utc_date
+
 import epubuilder.version
 
 CONTAINER_PATH = 'META-INF' + os.sep + 'container.xml'
@@ -463,6 +466,13 @@ class Epub:
 
         for m in self.metadata:
             metadata_e.children.append(m.as_element())
+
+        modified = None
+        for m in self.metadata:
+            if isinstance(m, get_class('modified')):
+                modified = m
+        if not modified:
+            metadata_e.children.append(get_class('modified')(w3c_utc_date()))
 
         package.children.append(metadata_e)
 

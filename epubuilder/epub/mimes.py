@@ -25,3 +25,4 @@ JS = 'text/javascript'  # ['.js'], 'Scripts'],
 
 # Font Types
 FONT_WOFF2 = 'font/woff2'  # ['.woff2'], 'Fonts'],
+

@@ -1,5 +1,9 @@
 import magic
 
+from epubuilder.xl import parse, Element
+
+from epubuilder.epub import mimes
+
 
 def relative_path(full_path, dirt):
     paths = full_path.split('/')
@@ -16,7 +20,19 @@ def identify_mime(binary):
     :param binary: bytes html
     :return: mime
     """
-    return magic.from_buffer(binary, mime=True).decode()
+    mime = magic.from_buffer(binary, mime=True).decode()
+
+    xhtml_uri = 'http://www.w3.org/1999/xhtml'
+
+    if mime == mimes.HTML:
+        try:
+            root = parse(binary.decode())
+            if root.name == (None, 'html') and root.prefixs[xhtml_uri] is None:
+                return mimes.XHTML
+        except KeyError:
+            return mimes.HTML
+
+    return mime
 
 
 def w3c_utc_date(date_time=None):

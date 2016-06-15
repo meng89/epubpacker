@@ -12,7 +12,7 @@ from epubuilder import xl
 
 xhtml_template = """
 <html xmlns="http://www.w3.org/1999/xhtml">
-<head><title>{}</title></head>
+<head></head>
 <body>{}</body></html>
 """
 
