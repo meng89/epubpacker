@@ -27,6 +27,7 @@ def test_simple_epub():
     book.metadata.append(get_class('modified')(w3c_utc_date()))
 
     # todo cover
+    book.files['cover.svg'] = File()
 
     def make_page(title, html_path=None, content=None):
         if html_path and content:
@@ -62,5 +63,3 @@ def test_simple_epub():
     book.toc.insert(0, Section('Table of Contents', href=user_toc_path))
 
     book.write('demo.epub')
-
-    print(xl.pretty_insert(sec1.to_toc_element(), dont_do_when_one_child=False).string())
