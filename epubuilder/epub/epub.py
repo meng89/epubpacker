@@ -16,6 +16,8 @@ from .metadata.dcmes import Identifier, Title, URI_DC
 from .metadata.meta.dcterms import get_class
 from epubuilder.tools import w3c_utc_date
 
+from . import mimes
+
 import epubuilder.version
 
 CONTAINER_PATH = 'META-INF' + os.sep + 'container.xml'
@@ -139,6 +141,13 @@ class Files(Dict):
     def _before_add(self, key=None, item=None):
         if not isinstance(item, File):
             raise TypeError
+
+    # auto set file's mime from extension.
+    # mime shoud from file content,
+    # but it's hard to identify right now.
+    def _after_add(self, key=None, item=None):
+        if self[key].mime is None:
+            self[key].mime = mimes.map_from_extension[os.path.splitext(key)[1]]
 
     def to_elements(self):
         elements = []

@@ -15,8 +15,8 @@ PLS = 'application/pls+xml'  # [], ''],  # Text-to-Speech (TTS) Pronunciation le
 NCX = 'application/x-dtbncx+xml'  # [], ''],
 
 # Audio Types
-MPEG = 'audio/mpeg'  # [], ''],
-MP4 = 'audio/mp4'  # ['.mp4'], ''],
+MP3 = 'audio/mpeg'  # ['.mp3'], ''],
+AAC = 'audio/mp4'  # ['.mp4'], ''],
 
 # Text Types
 HTML = 'text/html'  # [], 'Text'],
@@ -26,3 +26,27 @@ JS = 'text/javascript'  # ['.js'], 'Scripts'],
 # Font Types
 FONT_WOFF2 = 'font/woff2'  # ['.woff2'], 'Fonts'],
 
+
+map_from_extension = {
+    '.gif': GIF,
+    '.jpg''.jpeg': JPEG, '.jpeg': JPEG,
+    '.png': PNG,
+    '.svg': SVG,
+
+    '.xhtml': XHTML,
+    '.otf': FONT_SFNT, '.ttf': FONT_SFNT, '.ttc': FONT_SFNT,
+    '.woff': FONT_WOFF,
+    '.smil': SMIL, '.smi': SMIL,
+    '.pls': PLS,
+
+    '.ncx': NCX,
+
+    '.mp3': MP3,
+    '.aac': AAC,
+
+    '.html': HTML,
+    '.css': CSS,
+    '.js': JS,
+    '.woff2': FONT_WOFF2
+
+}
