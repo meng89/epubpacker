@@ -1,5 +1,5 @@
-from xl import IS_NAME_FIXED, ATTRIBUTES, NAME_CHECKFUNC, VALUE_CHECKFUNCS, CHILDREN, DESCRIPTORS
-from xl import URI_XML
+from .xl import IS_NAME_FIXED, ATTRIBUTES, NAME_CHECKFUNC, VALUE_CHECKFUNCS, CHILDREN, DESCRIPTORS
+from .xl import URI_XML
 
 
 def value_checkfunc(legal_values):

@@ -47,6 +47,6 @@ map_from_extension = {
     '.html': HTML,
     '.css': CSS,
     '.js': JS,
-    '.woff2': FONT_WOFF2
 
+    '.woff2': FONT_WOFF2
 }
