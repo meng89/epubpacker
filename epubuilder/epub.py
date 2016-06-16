@@ -1,24 +1,19 @@
+import os
+import random
 import string
 import uuid
 import zipfile
 
-import os
-import random
 from hooky import List, Dict
 
-from epubuilder.tools import identify_mime
-
-from epubuilder.xl import pretty_insert, Element, Text, xml_header, URI_XML
-
-from .metadata import Metadata
-from .metadata.dcmes import Identifier, Title, URI_DC
-
-from .metadata.meta.dcterms import get_class
-from epubuilder.tools import w3c_utc_date
-
-from . import mimes
-
 import epubuilder.version
+from epubuilder import mimes
+from epubuilder.metadata.dcmes import Identifier, Title, URI_DC
+from epubuilder.metadata.dcterms import get_class
+from epubuilder.tools import identify_mime
+from epubuilder.tools import w3c_utc_date
+from epubuilder.xl import pretty_insert, Element, Text, xml_header, URI_XML
+from .metadata import Metadata
 
 CONTAINER_PATH = 'META-INF' + os.sep + 'container.xml'
 ROOT_OF_OPF = 'EPUB'
@@ -142,20 +137,14 @@ class Files(Dict):
         if not isinstance(item, File):
             raise TypeError
 
-    # auto set file's mime from extension.
-    # mime shoud from file content,
-    # but it's hard to identify right now.
-    def _after_add(self, key=None, item=None):
-        if self[key].mime is None:
-            self[key].mime = mimes.map_from_extension[os.path.splitext(key)[1]]
-
     def to_elements(self):
         elements = []
         for path, file in self.items():
-            item = Element((None, 'item'), attributes={(None, 'href'): path, (None, 'media-type'): file.mime})
+            item = Element('item', attributes={(None, 'href'): path})
+            item.attributes['media-type'] = file.mime or mimes.map_from_extension[os.path.splitext(path)[1]]
 
             if file.identification is not None:
-                item.attributes[(None, 'id')] = file.identification
+                item.attributes['id'] = file.identification
 
             if file.properties:
                 item.attributes['properties'] = ' '.join(file.properties)

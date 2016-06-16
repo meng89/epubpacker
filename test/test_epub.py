@@ -1,14 +1,9 @@
 import uuid
 
-from epubuilder.epub import epub, File, Section, Joint
-
-from epubuilder.epub.metadata.dcmes import Title, Language, Identifier
-
-from epubuilder.epub.metadata.meta.dcterms import get_class
-
+from epubuilder import epub, File, Section, Joint
+from epubuilder.metadata.dcmes import Title, Language, Identifier
+from epubuilder.metadata.dcterms import get_class
 from epubuilder.tools import w3c_utc_date
-
-from epubuilder import xl
 
 xhtml_template = """
 <html xmlns="http://www.w3.org/1999/xhtml">

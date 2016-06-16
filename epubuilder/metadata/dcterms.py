@@ -1,14 +1,10 @@
 """Dublin Core Metadata Initiative"""
 
-import time
-
-from abc import abstractmethod
-
 from hooky import Dict
 
 from epubuilder.xl import Element, Text, URI_XML
 
-from ..metadata import Public
+from epubuilder.metadata.metadata import Public
 
 
 def always_true():

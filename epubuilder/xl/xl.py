@@ -1,5 +1,3 @@
-#!/bin/env python3
-
 from abc import abstractmethod
 
 import copy

@@ -1,8 +1,7 @@
 import magic
 
-from epubuilder.xl import parse, Element
-
-from epubuilder.epub import mimes
+from epubuilder import mimes
+from epubuilder.xl import parse
 
 
 def relative_path(full_path, dirt):
