@@ -38,17 +38,17 @@ def test_simple_epub():
     sec1_1 = make_page('Chapter 1', 'pi_c1.xhtml', content='This is Chapter 1 content')
     sec1_2 = make_page('Chapter 2', 'pi_c2.xhtml', content='This is Chapter 2 content')
     sec1.hidden_sub = True
-    sec1.subsections.extend([sec1_1, sec1_2])
+    sec1.subs.extend([sec1_1, sec1_2])
 
     sec2 = make_page('Part II')
     sec2_1 = make_page('Chapter 1', 'pii_c1.xhtml', content='This is Chapter 1 content')
     sec2_2 = make_page('Chapter 2', 'pii_c2.xhtml', content='This is Chapter 2 content')
-    sec2.subsections.extend([sec2_1, sec2_2])
+    sec2.subs.extend([sec2_1, sec2_2])
 
     sec3 = make_page('Part III', 'Part_III.xhtml', content='This is Part III content')
     sec3_1 = make_page('Chapter 1', 'piii_c1.xhtml', content='This is Chapter 1 content')
     sec3_2 = make_page('Chapter 2', 'piii_c2.xhtml', content='This is Chapter 2 content')
-    sec3.subsections.extend([sec3_1, sec3_2])
+    sec3.subs.extend([sec3_1, sec3_2])
 
     book.toc.extend([sec1, sec2, sec3])
 

@@ -31,7 +31,8 @@ def html_dir():
 ##################################################
 
 class _Metadata(List):
-    """list like"""
+    """list like
+    store metadata, such as author,"""
     def _before_add(self, key=None, item=None):
         if not isinstance(item, Base):
             raise TypeError
@@ -41,12 +42,9 @@ class _Metadata(List):
 # toc
 class _Toc(List):
     """
-    test1
+    list like, store
     """
     def __init__(self):
-        """
-        test2
-        """
         super().__init__()
         self.title = None
 
@@ -59,11 +57,24 @@ class _Toc(List):
             raise TypeError
 
 
+class _SubSections(List):
+    __doc__ = _Toc.__doc__
+    _before_add = getattr(_Toc, '_before_add')
+
+
 class Section:
+    """
+
+    """
     def __init__(self, title, href=None):
+        """
+
+        :param title:
+        :param href:
+        """
         self._title = title
         self._href = href
-        self._subsections = []
+        self._subsections = _SubSections()
 
         self._hidden_sub = None
 
@@ -84,7 +95,7 @@ class Section:
         self._href = value
 
     @property
-    def subsections(self):
+    def subs(self):
         return self._subsections
 
     @property
@@ -111,13 +122,13 @@ class Section:
 
         li.children.append(a_or_span)
 
-        if self.subsections:
+        if self.subs:
             ol = Element('ol')
 
             if self.hidden_sub:
                 ol.attributes[(None, 'hidden')] = ''
 
-            for one in self.subsections:
+            for one in self.subs:
                 ol.children.append(one.to_toc_element())
 
             li.children.append(ol)
@@ -138,7 +149,7 @@ class Section:
         content = Element('content', attributes={'src': self.href if self.href else ''})
         nav_point.children.append(content)
 
-        for subsection in self.subsections:
+        for subsection in self.subs:
             nav_point.children.append(subsection.to_toc_ncx_element())
 
         return nav_point
@@ -251,11 +262,11 @@ class Epub:
 
     def files(self):
         return self._files
-    files = property(files, doc=str(_Files.__doc__))
+    files = property(files, doc=str(_Files.__doc__ if _Files.__doc__ else ''))
 
     def metadata(self):
         return self._metadata
-    metadata = property(metadata, doc=str(_Metadata.__doc__))
+    metadata = property(metadata, doc=str(_Metadata.__doc__ if _Metadata.__doc__))
 
     def spine(self):
         return self._spine
