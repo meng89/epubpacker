@@ -1,8 +1,8 @@
 import uuid
 
 from epubuilder import epub, File, Section, Joint
-from epubuilder.metadata.dcmes import Title, Language, Identifier
-from epubuilder.metadata.dcterms import get_class
+from epubuilder.meta.dcmes import Title, Language, Identifier
+from epubuilder.meta.dcterms import get
 from epubuilder.tools import w3c_utc_date
 
 xhtml_template = """
@@ -19,7 +19,7 @@ def test_simple_epub():
     book.metadata.append(Title('EPUB demo'))
     book.metadata.append(Language('en'))
     book.metadata.append(Identifier('identifier_' + uuid.uuid4().hex))
-    book.metadata.append(get_class('modified')(w3c_utc_date()))
+    book.metadata.append(get('modified')(w3c_utc_date()))
 
     # todo cover
     book.files['cover.svg'] = File()

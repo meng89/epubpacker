@@ -1,20 +1,3 @@
-
-from epubuilder2.epub import Epub
+from epubuilder.epub import Epub, File, Section, Joint
 
 book = Epub()
-
-# set metadata
-book.metadata['language'] = 'en-GB'
-book.metadata['title'] = 'This is Title'
-book.metadata['identifier'] = ''
-
-# add file
-path = book.add_file(data='', filename='/text/1.txt')
-
-
-# set toc
-
-
-
-
-

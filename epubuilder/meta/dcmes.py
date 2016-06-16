@@ -3,14 +3,11 @@ Dublin Core Metadata Element Set
 http://dublincore.org/documents/dces/
 """
 
-
-from abc import abstractmethod
-
 import uuid
 
 from hooky import Dict
 
-from .metadata import Public
+from . import Base
 
 from epubuilder.xl import Element, Text, URI_XML
 
@@ -64,35 +61,24 @@ class Attrs(Dict):
             raise ValueError
 
 
-class _Meta(Public):
+class _Meta(Base):
     _text_check_func = always_true
 
     available_attrs = ()
     _attrs_check_funcs = check_funcs
 
     def __init__(self, text, attrs=None):
-        super().__init__()
+        self._text_check_func(text)
+
+        super().__init__(text)
 
         self._attrs = Attrs(available_attrs=self.available_attrs, attr_check_funcs=self._attrs_check_funcs, attrs=attrs)
-
-        self.text = text
-
-    @property
-    def text(self):
-        return self.__dict__['text']
-
-    @text.setter
-    def text(self, value):
-        if self._text_check_func(value):
-            self.__dict__['text'] = value
-        else:
-            raise Exception
 
     @property
     def attrs(self):
         return self._attrs
 
-    def as_element(self):
+    def to_element(self):
         e = Element((URI_DC, self.__class__.__name__.lower()))
         e.prefixes[URI_DC] = 'dc'
 

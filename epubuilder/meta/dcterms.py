@@ -4,7 +4,7 @@ from hooky import Dict
 
 from epubuilder.xl import Element, Text, URI_XML
 
-from epubuilder.metadata.metadata import Public
+from . import Base
 
 
 def always_true():
@@ -85,11 +85,10 @@ class _Attrs(Dict):
             raise KeyError
 
 
-class _Meta(Public):
+class _Meta(Base):
     def __init__(self, text):
-        super().__init__()
+        super().__init__(text)
 
-        self.text = text
         self._attrs = _Attrs()
 
     @staticmethod
@@ -97,21 +96,10 @@ class _Meta(Public):
         pass
 
     @property
-    def text(self):
-        return self.__dict__['text']
-
-    @text.setter
-    def text(self, value):
-        if self._text_check_func(value):
-            self.__dict__['text'] = value
-        else:
-            raise Exception
-
-    @property
     def attrs(self):
         return self._attrs
 
-    def as_element(self):
+    def to_element(self):
         e = Element((None, 'meta'))
 
         e.attributes[(None, 'property')] = 'dcterms:{}'.format(self.__class__.__name__)
@@ -136,13 +124,10 @@ class _Meta(Public):
 
 _classes = {}
 
-
 for k, v in check_funcs.items():
 
-    _v = staticmethod(v)
-
-    _classes[k] = type(k, (_Meta,), {'_text_check_func': _v})
+    _classes[k] = type(k, (_Meta,), {'_text_check_func': staticmethod(v)})
 
 
-def get_class(name):
+def get(name):
     return _classes[name]

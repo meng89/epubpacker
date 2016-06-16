@@ -8,12 +8,12 @@ from hooky import List, Dict
 
 import epubuilder.version
 from epubuilder import mimes
-from epubuilder.metadata.dcmes import Identifier, Title, URI_DC
-from epubuilder.metadata.dcterms import get_class
+from epubuilder.meta.dcmes import Identifier, Title, URI_DC
+from epubuilder.meta.dcterms import get
+from .meta import Base
 from epubuilder.tools import identify_mime
 from epubuilder.tools import w3c_utc_date
 from epubuilder.xl import pretty_insert, Element, Text, xml_header, URI_XML
-from .metadata import Metadata
 
 CONTAINER_PATH = 'META-INF' + os.sep + 'container.xml'
 ROOT_OF_OPF = 'EPUB'
@@ -29,9 +29,24 @@ def html_dir():
 
 
 ##################################################
+
+class _Metadata(List):
+    """list like"""
+    def _before_add(self, key=None, item=None):
+        if not isinstance(item, Base):
+            raise TypeError
+
+
+##################################################
 # toc
-class Toc(List):
+class _Toc(List):
+    """
+    test1
+    """
     def __init__(self):
+        """
+        test2
+        """
         super().__init__()
         self.title = None
 
@@ -132,7 +147,8 @@ class Section:
 ####################################
 # for Manifest and zip files
 
-class Files(Dict):
+class _Files(Dict):
+    """dict like, store file path and """
     def _before_add(self, key=None, item=None):
         if not isinstance(item, File):
             raise TypeError
@@ -164,6 +180,7 @@ class _Properties(List):
 
 class File:
     def __init__(self, binary, mime=None, identification=None, properties=None):
+
         self._binary = binary
         self.mime = mime or identify_mime(self.binary)
         self.identification = identification or 'id_' + uuid.uuid4().hex
@@ -181,7 +198,9 @@ class File:
 #####################################
 # for Spine
 
-class Spine(List):
+class _Spine(List):
+    """lk"""
+
     def _before_add(self, key=None, item=None):
         if not isinstance(item, Joint):
             raise TypeError
@@ -197,44 +216,22 @@ class Joint:
         return self._path
 
 
-class Itemref:
-    def __init__(self, idref, linear=None):
-        self._idref = idref
-        self._linear = linear
-
-    @property
-    def idref(self):
-        return self._idref
-
-    def to_element(self):
-        e = Element((None, 'itemref'), attributes={(None, 'idref'): self.idref})
-
-        if self._linear is True:
-            e.attributes[(None, 'linear')] = 'yes'
-        elif self._linear is False:
-            e.attributes[(None, 'linear')] = 'no'
-
-        return e
-
-
 #####################################
 
 class Epub:
     def __init__(self):
 
-        self._files = Files()
-
-        self._metadata = Metadata()
-
-        self._spine = Spine()
+        self._files = _Files()
+        self._metadata = _Metadata()
+        self._spine = _Spine()
 
         # nav
-        self._toc = Toc()
+        self._toc = _Toc()
         self._landmark = List()
         self._pagelist = List()
 
         # for self.write()
-        self._temp_files = Files()
+        self._temp_files = _Files()
 
     def _get_unused_filename(self, dire, filename):
         dire = dire or ''
@@ -252,17 +249,17 @@ class Epub:
 
         return unused_filename
 
-    @property
     def files(self):
         return self._files
+    files = property(files, doc=str(_Files.__doc__))
 
-    @property
     def metadata(self):
         return self._metadata
+    metadata = property(metadata, doc=str(_Metadata.__doc__))
 
-    @property
     def spine(self):
         return self._spine
+    spine = property(spine, doc=str(_Spine.__doc__ if _Spine.__doc__ else ''))
 
     @property
     def toc(self):
@@ -455,7 +452,7 @@ class Epub:
 
         for m in self.metadata:
             if isinstance(m, Identifier):
-                package.attributes['unique-identifier'] = m.as_element().attributes[(None, 'id')]
+                package.attributes['unique-identifier'] = m.to_element().attributes[(None, 'id')]
 
         # unique - identifier = "pub-id"
         # metadata
@@ -463,14 +460,14 @@ class Epub:
                              prefixes={URI_DC: 'dc'})
 
         for m in self.metadata:
-            metadata_e.children.append(m.as_element())
+            metadata_e.children.append(m.to_element())
 
         modified = None
         for m in self.metadata:
-            if isinstance(m, get_class('modified')):
+            if isinstance(m, get('modified')):
                 modified = m
         if not modified:
-            metadata_e.children.append(get_class('modified')(w3c_utc_date()))
+            metadata_e.children.append(get('modified')(w3c_utc_date()))
 
         package.children.append(metadata_e)
 
@@ -554,3 +551,5 @@ class Epub:
 
         self._temp_files.clear()
         z.close()
+
+Epub.__doc__ = 'jjjjjlsajflkj'
