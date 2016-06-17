@@ -254,12 +254,6 @@ class Epub:
         # for self.write()
         self._temp_files = _Files()
 
-    def test(self):
-        """
-        jbm
-        :return:
-        """
-
     metadata = property(lambda self: self._metadata, doc=str(_Metadata.__doc__ if _Metadata.__doc__ else ''))
 
     files = property(lambda self: self._files, doc=str(_Files.__doc__ if _Files.__doc__ else ''))
