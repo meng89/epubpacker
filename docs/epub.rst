@@ -1,7 +1,16 @@
-epubuilder.epub
-===============
+epubuilder
+==========
 .. automodule:: epubuilder
-    :members: Epub
 
 .. autoclass:: Epub
-    :members: metadata, toc, spine, files
+    :show-inheritance:
+    :members: metadata, toc, spine, files, test
+
+
+.. autoclass:: Section
+    :members: title, href, subs, hidden_subs
+
+.. autoclass:: Joint
+
+.. autoclass:: File
+

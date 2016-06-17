@@ -11,7 +11,6 @@ from epubuilder import mimes
 from epubuilder.meta.dcmes import Identifier, Title, URI_DC
 from epubuilder.meta.dcterms import get
 from .meta import Base
-from epubuilder.tools import identify_mime
 from epubuilder.tools import w3c_utc_date
 from epubuilder.xl import pretty_insert, Element, Text, xml_header, URI_XML
 
@@ -31,7 +30,7 @@ def html_dir():
 ##################################################
 
 class _Metadata(List):
-    """list like.
+    """list-like.
 
     store metadata, such as author, publisher etc."""
     def _before_add(self, key=None, item=None):
@@ -42,7 +41,7 @@ class _Metadata(List):
 ##################################################
 # toc
 class _Toc(List):
-    """list like.
+    """list-like.
 
     store Section object.
     """
@@ -79,16 +78,13 @@ class Section:
 
         self._hidden_subs = None
 
-    @property
-    def title(self):
-        return self._title
-
-    @title.setter
-    def title(self, value):
+    def _s_title(self, value):
         self._title = value
+    title = property(lambda self: self._title, _s_title, doc='see class parameter')
 
     @property
     def href(self):
+        """ see class parmeter"""
         return self._href
 
     @href.setter
@@ -99,6 +95,9 @@ class Section:
 
     @property
     def hidden_subs(self):
+        """some reader just don't show sub sections when this is True
+
+        but I think it's mean FOLD sub sections and you can unfold it to show subs"""
         return self._hidden_subs
 
     @hidden_subs.setter
@@ -158,7 +157,7 @@ class Section:
 # for Manifest and zip files
 
 class _Files(Dict):
-    """dict like.
+    """dict-like.
 
     store file path and File object"""
     def _before_add(self, key=None, item=None):
@@ -211,7 +210,7 @@ class File:
 # for Spine
 
 class _Spine(List):
-    """list like.
+    """list-like.
 
     "The spine defines the default reading order"
 
@@ -254,6 +253,12 @@ class Epub:
 
         # for self.write()
         self._temp_files = _Files()
+
+    def test(self):
+        """
+        jbm
+        :return:
+        """
 
     metadata = property(lambda self: self._metadata, doc=str(_Metadata.__doc__ if _Metadata.__doc__ else ''))
 
