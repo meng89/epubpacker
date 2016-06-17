@@ -31,8 +31,9 @@ def html_dir():
 ##################################################
 
 class _Metadata(List):
-    """list like
-    store metadata, such as author,"""
+    """list like.
+
+    store metadata, such as author, publisher etc."""
     def _before_add(self, key=None, item=None):
         if not isinstance(item, Base):
             raise TypeError
@@ -41,8 +42,9 @@ class _Metadata(List):
 ##################################################
 # toc
 class _Toc(List):
-    """
-    list like, store
+    """list like.
+
+    store Section object.
     """
     def __init__(self):
         super().__init__()
@@ -64,19 +66,18 @@ class _SubSections(List):
 
 class Section:
     """
-
+    store title, href and sub section.
     """
     def __init__(self, title, href=None):
         """
-
-        :param title:
-        :param href:
+        :param title: title in TOC.
+        :param href: html link to a file path in Files, can be have a bookmark.
         """
         self._title = title
         self._href = href
-        self._subsections = _SubSections()
+        self._subs = _SubSections()
 
-        self._hidden_sub = None
+        self._hidden_subs = None
 
     @property
     def title(self):
@@ -94,20 +95,18 @@ class Section:
     def href(self, value):
         self._href = value
 
-    @property
-    def subs(self):
-        return self._subsections
+    subs = property(lambda self: self._subs, doc=str(_SubSections.__doc__))
 
     @property
-    def hidden_sub(self):
-        return self._hidden_sub
+    def hidden_subs(self):
+        return self._hidden_subs
 
-    @hidden_sub.setter
-    def hidden_sub(self, value):
+    @hidden_subs.setter
+    def hidden_subs(self, value):
         if value not in (True, False):
             raise ValueError
         else:
-            self._hidden_sub = value
+            self._hidden_subs = value
 
     def to_toc_element(self):
         li = Element('li')
@@ -125,7 +124,7 @@ class Section:
         if self.subs:
             ol = Element('ol')
 
-            if self.hidden_sub:
+            if self.hidden_subs:
                 ol.attributes[(None, 'hidden')] = ''
 
             for one in self.subs:
@@ -159,7 +158,9 @@ class Section:
 # for Manifest and zip files
 
 class _Files(Dict):
-    """dict like, store file path and """
+    """dict like.
+
+    store file path and File object"""
     def _before_add(self, key=None, item=None):
         if not isinstance(item, File):
             raise TypeError
@@ -193,7 +194,7 @@ class File:
     def __init__(self, binary, mime=None, identification=None, properties=None):
 
         self._binary = binary
-        self.mime = mime or identify_mime(self.binary)
+        self.mime = mime
         self.identification = identification or 'id_' + uuid.uuid4().hex
         self._properties = _Properties(properties)
 
@@ -210,7 +211,12 @@ class File:
 # for Spine
 
 class _Spine(List):
-    """lk"""
+    """list like.
+
+    "The spine defines the default reading order"
+
+    store Joint object.
+    """
 
     def _before_add(self, key=None, item=None):
         if not isinstance(item, Joint):
@@ -219,6 +225,11 @@ class _Spine(List):
 
 class Joint:
     def __init__(self, path, linear=None):
+        """
+
+        :param path: file path in Files
+        :param linear:
+        """
         self._path = path
         self.linear = linear
 
@@ -231,18 +242,34 @@ class Joint:
 
 class Epub:
     def __init__(self):
-
-        self._files = _Files()
         self._metadata = _Metadata()
+        self._files = _Files()
         self._spine = _Spine()
 
         # nav
         self._toc = _Toc()
+
         self._landmark = List()
         self._pagelist = List()
 
         # for self.write()
         self._temp_files = _Files()
+
+    metadata = property(lambda self: self._metadata, doc=str(_Metadata.__doc__ if _Metadata.__doc__ else ''))
+
+    files = property(lambda self: self._files, doc=str(_Files.__doc__ if _Files.__doc__ else ''))
+
+    spine = property(lambda self: self._spine, doc=str(_Spine.__doc__ if _Spine.__doc__ else ''))
+
+    toc = property(lambda self: self._toc, doc=str(_Toc.__doc__ if _Toc.__doc__ else ''))
+
+    @property
+    def landmark(self):
+        return self._landmark
+
+    @property
+    def pagelist(self):
+        return self._pagelist
 
     def _get_unused_filename(self, dire, filename):
         dire = dire or ''
@@ -259,30 +286,6 @@ class Epub:
             )
 
         return unused_filename
-
-    def files(self):
-        return self._files
-    files = property(files, doc=str(_Files.__doc__ if _Files.__doc__ else ''))
-
-    def metadata(self):
-        return self._metadata
-    metadata = property(metadata, doc=str(_Metadata.__doc__ if _Metadata.__doc__))
-
-    def spine(self):
-        return self._spine
-    spine = property(spine, doc=str(_Spine.__doc__ if _Spine.__doc__ else ''))
-
-    @property
-    def toc(self):
-        return self._toc
-
-    @property
-    def landmark(self):
-        return self._landmark
-
-    @property
-    def pagelist(self):
-        return self._pagelist
 
     def cover(self, file_path):
         old_cover_path = None
@@ -535,6 +538,11 @@ class Epub:
         return xml_header() + pretty_insert(e, dont_do_when_one_child=True).string()
 
     def write(self, filename):
+        """
+
+        :param filename: file name.
+        :return: None
+        """
 
         z = zipfile.ZipFile(filename, 'w', compression=zipfile.ZIP_DEFLATED)
 
@@ -562,5 +570,3 @@ class Epub:
 
         self._temp_files.clear()
         z.close()
-
-Epub.__doc__ = 'jjjjjlsajflkj'

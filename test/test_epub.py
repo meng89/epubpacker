@@ -37,7 +37,7 @@ def test_simple_epub():
     sec1 = make_page('Part I', 'Part_I.xhtml',  content='This is Part I content')
     sec1_1 = make_page('Chapter 1', 'pi_c1.xhtml', content='This is Chapter 1 content')
     sec1_2 = make_page('Chapter 2', 'pi_c2.xhtml', content='This is Chapter 2 content')
-    sec1.hidden_sub = True
+    sec1.hidden_subs = True
     sec1.subs.extend([sec1_1, sec1_2])
 
     sec2 = make_page('Part II')
