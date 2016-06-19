@@ -1,5 +1,5 @@
 import uuid
-
+import os
 from epubuilder import epub, File, Section, Joint
 from epubuilder.meta.dcmes import Title, Language, Identifier
 from epubuilder.meta.dcterms import get
@@ -10,6 +10,8 @@ xhtml_template = """
 <head></head>
 <body>{}</body></html>
 """
+
+cur_path = os.path.dirname(__file__)
 
 
 def test_simple_epub():
@@ -22,11 +24,13 @@ def test_simple_epub():
     book.metadata.append(get('modified')(w3c_utc_date()))
 
     # todo cover
-    book.files['cover.svg'] = File()
+    book.files['cover.svg'] = File(os.path.join(cur_path, 'cover', 'cover.svg'))
+
+    book.cover('cover.svg')
 
     def make_page(title, html_path=None, content=None):
         if html_path and content:
-            p = File(xhtml_template.format(title, content), mime='application/xhtml+xml')
+            p = File(xhtml_template.format(title, content).encode(), mime='application/xhtml+xml')
             book.files[html_path] = p
 
             book.spine.append(Joint(html_path))
