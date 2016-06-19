@@ -43,7 +43,7 @@ class _Metadata(List):
 class _Toc(List):
     """list-like.
 
-    store Section object.
+    store :class:`Section` objects.
     """
     def __init__(self):
         super().__init__()
@@ -65,12 +65,14 @@ class _SubSections(List):
 
 class Section:
     """
-    store title, href and sub section.
+    store title, href and sub :class:`Section` object.
     """
     def __init__(self, title, href=None):
         """
         :param title: title in TOC.
+        :type title: str
         :param href: html link to a file path in Files, can be have a bookmark.
+        :type href: str
         """
         self._title = title
         self._href = href
@@ -78,13 +80,18 @@ class Section:
 
         self._hidden_subs = None
 
-    def _s_title(self, value):
+    @property
+    def title(self):
+        """as class parameter"""
+        return self._title
+
+    @title.setter
+    def title(self, value):
         self._title = value
-    title = property(lambda self: self._title, _s_title, doc='see class parameter')
 
     @property
     def href(self):
-        """ see class parmeter"""
+        """ as class parmeter"""
         return self._href
 
     @href.setter
@@ -95,7 +102,9 @@ class Section:
 
     @property
     def hidden_subs(self):
-        """some reader just don't show sub sections when this is True
+        """bool: True for fold sub sections, False unfold.
+
+        some reader just don't show sub sections when this is True,
 
         but I think it's mean FOLD sub sections and you can unfold it to show subs"""
         return self._hidden_subs
@@ -159,7 +168,8 @@ class Section:
 class _Files(Dict):
     """dict-like.
 
-    store file path and File object"""
+    store file path and :class:`File` objects from `key` and `item`,
+    every file you want to package to book, you should use this."""
     def _before_add(self, key=None, item=None):
         if not isinstance(item, File):
             raise TypeError
@@ -182,6 +192,8 @@ class _Files(Dict):
 
 
 class _Properties(List):
+    """list-like.
+    """
     def _before_add(self, key=None, item=None):
         if item in self:
             raise ValueError
@@ -190,7 +202,18 @@ class _Properties(List):
 
 
 class File:
+    """each file you want to put in book, you shoud use this."""
     def __init__(self, binary, mime=None, identification=None, properties=None):
+        """
+        :param binary: binary data
+        :type binary: bytes
+        :param mime: mime
+        :type mime: str
+        :param identification: xml attribute: `id`
+        :type identification: str
+        :param properties:
+        :type properties: list
+        """
 
         self._binary = binary
         self.mime = mime
@@ -199,11 +222,10 @@ class File:
 
     @property
     def binary(self):
+        """as class parmeter"""
         return self._binary
 
-    @property
-    def properties(self):
-        return self._properties
+    properties = property(lambda self: self._properties, doc=str(_Properties.__doc__))
 
 
 #####################################
@@ -214,7 +236,7 @@ class _Spine(List):
 
     "The spine defines the default reading order"
 
-    store Joint object.
+    store :class:`Joint` objects.
     """
 
     def _before_add(self, key=None, item=None):
@@ -225,15 +247,17 @@ class _Spine(List):
 class Joint:
     def __init__(self, path, linear=None):
         """
-
-        :param path: file path in Files
-        :param linear:
+        :param path: file path, should in Epub.Files.keys()
+        :type path: str
+        :param linear: I don't know what is this mean. visit http://idpf.org to find out yourself.
+        :type linear: bool
         """
         self._path = path
         self.linear = linear
 
     @property
     def path(self):
+        """as class parmeter"""
         return self._path
 
 
@@ -537,7 +561,7 @@ class Epub:
         return xml_header() + pretty_insert(e, dont_do_when_one_child=True).string()
 
     def write(self, filename):
-        """
+        """write to file.
 
         :param filename: file name.
         :return: None

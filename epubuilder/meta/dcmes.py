@@ -1,39 +1,14 @@
 """
-Dublin Core Metadata Element Set
-http://dublincore.org/documents/dces/
+Dublin Core Metadata Element Set, see http://dublincore.org/documents/dces/
+
+All classes in this module
 """
 
 import uuid
 
-from hooky import Dict
-
-from . import Base
-
+from . import Id, Scheme, AltScript, Dir, FileAs, Role, Lang, Authority, Attrs
 from epubuilder.xl import Element, Text, URI_XML
-
-
-def always_true(*args, **kwargs):
-    return True
-
-
-check_funcs = {
-    # identifier only
-    'opf:scheme': always_true,
-
-    'opf:alt-script': always_true,
-    'dir': always_true,
-    'opf:file-as': always_true,
-    'id': always_true,
-    'opf:role': always_true,
-    'xml:lang': always_true,
-
-    # subject only
-    'opf:authority': always_true,
-
-    # Meta only
-    'property': always_true,
-    'scheme': always_true
-}
+from . import Base
 
 URI_DC = 'http://purl.org/dc/elements/1.1/'
 URI_OPF = 'http://www.idpf.org/2007/opf'
@@ -44,45 +19,18 @@ namespace_map = {
 }
 
 
-class Attrs(Dict):
-    def __init__(self, available_attrs, attr_check_funcs, attrs=None):
-        super().__init__()
-        self._available_attrs = available_attrs
-        self._attr_check_funcs = attr_check_funcs
+class _Base(Base, Attrs):
+    """the name"""
+    def __init__(self, text):
 
-        if attrs:
-            self.update(attrs)
-
-    def _before_add(self, key=None, item=None):
-        if key not in self._available_attrs:
-            raise KeyError
-
-        if not self._attr_check_funcs[key](item):
-            raise ValueError
-
-
-class _Meta(Base):
-    _text_check_func = always_true
-
-    available_attrs = ()
-    _attrs_check_funcs = check_funcs
-
-    def __init__(self, text, attrs=None):
-        self._text_check_func(text)
-
-        super().__init__(text)
-
-        self._attrs = Attrs(available_attrs=self.available_attrs, attr_check_funcs=self._attrs_check_funcs, attrs=attrs)
-
-    @property
-    def attrs(self):
-        return self._attrs
+        Base.__init__(self, text)
+        Attrs.__init__(self)
 
     def to_element(self):
         e = Element((URI_DC, self.__class__.__name__.lower()))
         e.prefixes[URI_DC] = 'dc'
 
-        for attr_name, value in self.attrs.items():
+        for attr_name, value in self._attrs.items():
 
             if ':' in attr_name:
                 prefix, attr = attr_name.split(':')
@@ -96,73 +44,74 @@ class _Meta(Base):
 
                 e.attributes[(None, attr)] = value
 
-        e.children.append(Text(self.text))
+        e.children.append(Text(self._text))
 
         return e
 
 
-class Identifier(_Meta):
-    def __init__(self, text, attrs=None):
-        _attrs = {'id': 'id_' + uuid.uuid4().hex}
-        if attrs:
-            _attrs.update(attrs)
+##########################################################################
 
-        super().__init__(text, _attrs)
-
-    available_attrs = 'id', 'opf:scheme'
+class Identifier(_Base, Id, Scheme):
+    def __init__(self, text):
+        super().__init__(text)
+        self.id = 'id_' + uuid.uuid4().hex
 
 
-class Title(_Meta):
-    available_attrs = 'opf:alt-script', 'dir', 'opf:file-as', 'id', 'xml:lang'
+class Title(_Base, AltScript, Dir, FileAs, Id, Lang):
+    """ Title of Book
+    """
 
 
-class Language(_Meta):
-    available_attrs = 'id',
+class Language(_Base, Id):
+    """https://tools.ietf.org/html/rfc5646
+
+    example: en-US
+    """
 
 
-class Contributor(_Meta):
-    available_attrs = 'opf:alt-script', 'dir', 'opf:file-as', 'id', 'opf:role', 'xml:lang'
+class Contributor(_Base, AltScript, Dir, FileAs, Id, Role, Lang):
+    """contributor"""
 
 
-class Coverage(_Meta):
-    available_attrs = 'dir', 'xml:lang'
+class Coverage(_Base, Dir, Lang):
+    """coverage"""
 
 
-class Creator(_Meta):
-    available_attrs = 'opf:alt-script', 'dir', 'opf:file-as', 'id', 'opf:role', 'xml:lang'
+class Creator(_Base, AltScript, Dir, FileAs, Id, Role, Lang):
+    """creator"""
 
 
-class Date(_Meta):
-    available_attrs = 'id',
+class Date(_Base, Id):
+    """date"""
 
 
-class Description(_Meta):
-    available_attrs = 'dir', 'id', 'xml:lang'
+class Description(_Base, Dir, Id, Lang):
+    """description"""
 
 
-class Format(_Meta):
-    available_attrs = 'id',
+class Format(_Base, Id):
+    """format"""
 
 
-class Publisher(_Meta):
-    available_attrs = 'opf:alt-script', 'dir', 'opf:file-as', 'id', 'xml:lang'
+class Publisher(_Base, AltScript, Dir, FileAs, Id, Lang):
+    """publisher"""
 
 
-class Relation(_Meta):
-    available_attrs = 'dir', 'id', 'xml:lang'
+class Relation(_Base, Dir, Id, Lang):
+    """relation"""
 
 
-class Rights(_Meta):
-    available_attrs = 'dir', 'id', 'xml:lang'
+class Rights(_Base, Dir, Id, Lang):
+    """rights"""
 
 
-class Source(_Meta):
-    available_attrs = 'id',
+class Source(_Base, Id):
+    """source"""
 
 
-class Subject(_Meta):
-    available_attrs = 'dir', 'id', 'xml:lang', 'opf:authority'
+class Subject(_Base, Dir, Id, Lang, Authority):
+    """subject"""
 
 
-class Type(_Meta):
-    available_attrs = 'id',
+class Type(_Base, Id):
+    """type"""

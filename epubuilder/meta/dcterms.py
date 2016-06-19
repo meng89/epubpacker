@@ -1,10 +1,11 @@
-"""Dublin Core Metadata Initiative"""
+"""Dublin Core Metadata Initiative, see http://dublincore.org/documents/dcmi-terms/"""
 
-from hooky import Dict
 
 from epubuilder.xl import Element, Text, URI_XML
 
-from . import Base
+from . import Base, Attrs
+
+from . import AltScript, Dir, FileAs, Id, Role, Lang
 
 
 def always_true():
@@ -72,39 +73,18 @@ namespace_map = {
 }
 
 
-class _Attrs(Dict):
-    def __setitem__(self, key, value):
-        if key in ('opf:alt-script', 'dir', 'opf:file-as', 'id', 'scheme', 'xml:lang'):
-
-            if not _attr_check_funcs[key](value):
-                raise Exception
-
-            self.data[key] = value
-
-        else:
-            raise KeyError
-
-
-class _Meta(Base):
+class _Base(Base, Attrs):
     def __init__(self, text):
-        super().__init__(text)
-
-        self._attrs = _Attrs()
-
-    @staticmethod
-    def _text_check_func(text):
-        pass
-
-    @property
-    def attrs(self):
-        return self._attrs
+        check_funcs[self.__class__.__name__](text)
+        Base.__init__(self, text)
+        Attrs.__init__(self)
 
     def to_element(self):
         e = Element((None, 'meta'))
 
         e.attributes[(None, 'property')] = 'dcterms:{}'.format(self.__class__.__name__)
 
-        for attr_name, value in self.attrs.items():
+        for attr_name, value in self._attrs.items():
 
             uri = None
             if ':' in attr_name:
@@ -126,8 +106,13 @@ _classes = {}
 
 for k, v in check_funcs.items():
 
-    _classes[k] = type(k, (_Meta,), {'_text_check_func': staticmethod(v)})
+    _classes[k] = type(k, (_Base, AltScript, Dir, FileAs, Id, Role, Lang), {})
 
 
 def get(name):
+    """get a term class by term name"""
     return _classes[name]
+
+
+class Demo(_Base, AltScript, Dir, FileAs, Id, Role, Lang):
+    """this is just a demo class to show members, do not use this class in your codes!"""
