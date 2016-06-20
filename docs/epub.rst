@@ -4,7 +4,7 @@ epubuilder
 
 
 .. autoclass:: Epub
-    :members: metadata, files, spine, toc, write
+    :members: metadata, files, spine, toc, tag_cover, addons_make_user_toc_page, write
 
 
 .. autoclass:: File

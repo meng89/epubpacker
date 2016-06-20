@@ -24,9 +24,9 @@ def test_simple_epub():
     book.metadata.append(get('modified')(w3c_utc_date()))
 
     # todo cover
-    book.files['cover.svg'] = File(os.path.join(cur_path, 'cover', 'cover.svg'))
+    book.files['cover.svg'] = File(open(os.path.join(cur_path, 'cover', 'cover.svg'), 'rb').read())
 
-    book.cover('cover.svg')
+    book.tag_cover('cover.svg')
 
     def make_page(title, html_path=None, content=None):
         if html_path and content:

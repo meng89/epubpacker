@@ -43,6 +43,8 @@ class _Metadata(List):
 class _Toc(List):
     """list-like.
 
+    table of contents
+
     store :class:`Section` objects.
     """
     def __init__(self):
@@ -65,13 +67,13 @@ class _SubSections(List):
 
 class Section:
     """
-    store title, href and sub :class:`Section` object.
+    store title, href and sub :class:`Section` objects.
     """
     def __init__(self, title, href=None):
         """
-        :param title: title in TOC.
+        :param title: title of content.
         :type title: str
-        :param href: html link to a file path in Files, can be have a bookmark.
+        :param href: html link to a file path in :class:`Epub.files`, can have a bookmark. example: `text/a.html#hello`
         :type href: str
         """
         self._title = title
@@ -249,7 +251,7 @@ class Joint:
         """
         :param path: file path, should in Epub.Files.keys()
         :type path: str
-        :param linear: I don't know what is this mean. visit http://idpf.org to find out yourself.
+        :param linear: I don't know what is this mean. visit http://idpf.org to figure out by yourself.
         :type linear: bool
         """
         self._path = path
@@ -310,19 +312,24 @@ class Epub:
 
         return unused_filename
 
-    def cover(self, file_path):
+    def tag_cover(self, path):
+        """ tag your image as cover
+
+        :param path: image path in :class:`Epub.files`
+        :type path: str
+        """
         old_cover_path = None
         old_cover_property_index = None
-        for path, file in self.files.items():
+        for _path, file in self.files.items():
             if 'cover-image' in file.properties:
-                old_cover_path = path
+                old_cover_path = _path
                 old_cover_property_index = file.properties.index('cover-image')
 
         if old_cover_path:
             del self.files[old_cover_path].properties[old_cover_property_index]
 
-        if 'cover-image' not in self.files[file_path].properties:
-            self.files[file_path].properties.append('cover-image')
+        if 'cover-image' not in self.files[path].properties:
+            self.files[path].properties.append('cover-image')
 
     def _nav_to_element(self):
         default_ns = 'http://www.w3.org/1999/xhtml'
@@ -363,9 +370,13 @@ class Epub:
                  mime='application/xhtml+xml',
                  properties=['nav'])
 
-    # have this function because some EPUB reader not supports nav hidden
-    # some day, should delete this function when readers doing well.
     def addons_make_user_toc_page(self):
+        """write this function because some EPUB reader not supports nav hidden attribute,
+         they just ignor sub section, but not fold
+
+        :returns: toc_path, other_paths
+        :rtype: str, tuple
+        """
         html = self._nav_to_element()
 
         def find_element_by_name(name):
@@ -564,7 +575,7 @@ class Epub:
         """write to file.
 
         :param filename: file name.
-        :return: None
+        :type filename: str
         """
 
         z = zipfile.ZipFile(filename, 'w', compression=zipfile.ZIP_DEFLATED)
