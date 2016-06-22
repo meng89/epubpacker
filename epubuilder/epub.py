@@ -185,8 +185,22 @@ class _Files(Dict):
             if file.identification is not None:
                 item.attributes['id'] = file.identification
 
-            if file.properties:
-                item.attributes['properties'] = ' '.join(file.properties)
+            # if file.properties:
+            #    item.attributes['properties'] = ' '.join(file.properties)
+
+            mime = file.mime
+            if not mime:
+                if os.path.splitext(path)[1].lower() in ('html', 'htm'):
+                    mime = mimes.HTML
+
+                elif os.path.splitext(path)[1].lower() in 'xhtml':
+                    mime = mimes.XHTML
+
+                elif os.path.splitext(path)[1].lower() == 'svg':
+                    mime = mimes.SVG
+
+            if mime == mimes.SVG:
+
 
             elements.append(item)
 
@@ -550,7 +564,7 @@ class Epub:
             spine.children.append(itemref)
 
         x = Xl(header=Header(), root=pretty_insert(package, dont_do_when_one_child=True))
-        return x.string()
+        # return x.string()
         return pretty_insert(package, dont_do_when_one_child=True).string()
 
     @staticmethod

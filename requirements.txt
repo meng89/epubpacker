@@ -2,3 +2,4 @@ nose
 lxml>=3.4.4
 python-magic>=0.4.3
 hooky
+html5lib
