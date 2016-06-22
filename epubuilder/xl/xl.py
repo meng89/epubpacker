@@ -86,6 +86,8 @@ def parse(xmlstr, debug=False):
 
     # p.XmlDeclHandler =
 
+    # p.StartDoctypeDeclHandler
+
     p.StartElementHandler = start_element
 
     p.EndElementHandler = end_element
