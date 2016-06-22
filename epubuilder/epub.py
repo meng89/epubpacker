@@ -12,7 +12,7 @@ from epubuilder.meta.dcmes import Identifier, Title, URI_DC
 from epubuilder.meta.dcterms import get
 from .meta import Base
 from epubuilder.tools import w3c_utc_date
-from epubuilder.xl import pretty_insert, Element, Text, xml_header, URI_XML
+from epubuilder.xl import Xl, Header, Element, Text, xml_header, URI_XML, pretty_insert
 
 CONTAINER_PATH = 'META-INF' + os.sep + 'container.xml'
 ROOT_OF_OPF = 'EPUB'
@@ -549,6 +549,8 @@ class Epub:
 
             spine.children.append(itemref)
 
+        x = Xl(header=Header(), root=pretty_insert(package, dont_do_when_one_child=True))
+        return x.string()
         return pretty_insert(package, dont_do_when_one_child=True).string()
 
     @staticmethod

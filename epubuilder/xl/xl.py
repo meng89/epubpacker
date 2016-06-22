@@ -9,7 +9,14 @@ from collections import UserString
 import xml.parsers.expat
 
 
+class HandlerError(Exception):
+    pass
+
+
 def parse(xmlstr, debug=False):
+
+    xl = Xl()
+
     element = None
 
     elements = []
@@ -82,11 +89,23 @@ def parse(xmlstr, debug=False):
             elements[-1].children.append(string)
             s = ''
 
+    def start_doc_type_decl(doc_type_name, system_id, public_id, has_internal_subset):
+        xl.doc_type = DocType(doc_type_name=doc_type_name, system_id=system_id, public_id=public_id)
+
+        if has_internal_subset == 1:
+            raise HandlerError('Has internal subset, cannot handler it!')
+
+    def decl_handler(version, encoding, standalone):
+        xl.header = Header(version=version, encoding=encoding, standalone=standalone)
+
     p = xml.parsers.expat.ParserCreate(namespace_separator=' ')
 
-    # p.XmlDeclHandler =
+    p.XmlDeclHandler = decl_handler
 
-    # p.StartDoctypeDeclHandler
+    p.StartDoctypeDeclHandler = start_doc_type_decl
+
+    # internal dtd
+    # p.EntityDeclHandler = entity_decl_handler
 
     p.StartElementHandler = start_element
 
@@ -100,7 +119,9 @@ def parse(xmlstr, debug=False):
 
     p.Parse(xmlstr, 1)
 
-    return element
+    xl.root = element
+
+    return xl
 
 
 class ObjectAttributeError(Exception):
@@ -135,6 +156,8 @@ def xml_header(version=None, encoding=None, standalone=None):
 
 
 def clear_spaces(element):
+    if not isinstance(element, Element):
+        raise TypeError
 
     new_element = Element(name=copy.deepcopy(element.name),
                           attributes=copy.deepcopy(element.attributes),
@@ -215,14 +238,68 @@ class XLError(Exception):
     pass
 
 
+class Xl:
+    def __init__(self, header=None, doc_type=None, root=None):
+        self.header = header or Header()
+        self.doc_type = doc_type
+        self.root = root or Element()
+
+    def string(self, ):
+        s = ''
+
+        s += self.header.string()
+
+        if self.doc_type:
+            s += '\n' + self.doc_type.string()
+
+        s += '\n' + self.root.string()
+
+
 class Node:
     @abstractmethod
     def string(self):
         pass
 
 
+class Header(Node):
+    def __init__(self, version=None, encoding=None, standalone=None):
+        self.version = version
+        self.encoding = encoding
+        self.standalone = standalone
+
+    def string(self):
+        s = ''
+        s += '<?xml'
+
+        s += " version='{}'".format(self.version if self.version else '1.0')
+        s += " encoding='{}'".format(self.encoding if self.encoding else 'utf-8')
+        s += " standalone='{}'".format(self.standalone if self.standalone else 'yes')
+
+        s += '?>\n'
+        return s
+
+
+class DocType(Node):
+    def __init__(self, doc_type_name=None, system_id=None, public_id=None):
+        self.doc_type_name = doc_type_name
+        self.system_id = system_id
+        self.public_id = public_id
+
+    def string(self):
+        s = ''
+        s += '<!DOCTYPE'
+
+        s += ' {}'.format(self.doc_type_name)
+        s += ' "{}"'.format(self.public_id)
+        s += ' "{}"'.format(self.system_id)
+
+        s += '>'
+
+        return s
+
+
 class Element(Node):
-    def __init__(self, name, attributes=None, prefixes=None):
+    def __init__(self, name=None, attributes=None, prefixes=None):
         self.name = name
 
         self.attributes = Attributes(attributes) if attributes else Attributes()
