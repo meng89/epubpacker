@@ -334,8 +334,8 @@ class Element(Node):
         if value[0] is not None and not isinstance(value[0], str):
             raise ValueError
 
-        if not isinstance(value[1], str):
-            raise ValueError
+        # if not isinstance(value[1], str):
+        #    raise ValueError
 
         if self.descriptor:
             self.descriptor[NAME_CHECKFUNC](value)
@@ -369,6 +369,8 @@ class Element(Node):
         self.__dict__['children'] = value
 
     def string(self, inherited_prefixes=None):
+        if self.name[1] is None:
+            raise TypeError
 
         inherited_prefixes = inherited_prefixes or Prefixes()
 

@@ -3,6 +3,8 @@ import random
 import string
 import uuid
 import zipfile
+import copy
+import html5lib
 
 from hooky import List, Dict
 
@@ -180,7 +182,6 @@ class _Files(Dict):
         elements = []
         for path, file in self.items():
             item = Element('item', attributes={(None, 'href'): path})
-            item.attributes['media-type'] = file.mime or mimes.map_from_extension[os.path.splitext(path)[1]]
 
             if file.identification is not None:
                 item.attributes['id'] = file.identification
@@ -188,19 +189,24 @@ class _Files(Dict):
             # if file.properties:
             #    item.attributes['properties'] = ' '.join(file.properties)
 
-            mime = file.mime
-            if not mime:
-                if os.path.splitext(path)[1].lower() in ('html', 'htm'):
-                    mime = mimes.HTML
+            mime = file.mime or mimes.map_from_extension[os.path.splitext(path)[1]]
 
-                elif os.path.splitext(path)[1].lower() in 'xhtml':
-                    mime = mimes.XHTML
+            item.attributes['media-type'] = mime
 
-                elif os.path.splitext(path)[1].lower() == 'svg':
-                    mime = mimes.SVG
-
+            properties = copy.deepcopy(file.properties)
             if mime == mimes.SVG:
+                if 'svg' not in properties:
+                    properties.append('svg')
 
+            if mime in (mimes.XHTML, mimes.HTML):
+                if 'scripted' not in properties and has_element('script', file.binary.decode()):
+                    properties.append('scripted')
+
+                if 'mathml' not in properties and has_element('math', file.binary.decode()):
+                    properties.append('mathml')
+
+            if file.properties:
+                item.attributes['properties'] = ' '.join(properties)
 
             elements.append(item)
 
@@ -218,7 +224,7 @@ class _Properties(List):
 
 
 class File:
-    """each file you want to put in book, you shoud use this."""
+    """every file you want to put in book, you shoud use this."""
     def __init__(self, binary, mime=None, identification=None, properties=None):
         """
         :param binary: binary data
@@ -422,9 +428,7 @@ class Epub:
         body.children.append(script_before_body_close)
 
         user_toc_path = self._get_unused_filename(None, 'epubuilder_addons_user_toc.xhtml')
-        self.files[user_toc_path] = File(pretty_insert(html).string().encode(),
-                                         mime='application/xhtml+xml',
-                                         properties=['scripted'])
+        self.files[user_toc_path] = File(pretty_insert(html).string().encode(), mime='application/xhtml+xml')
 
         return user_toc_path, (js_path, css_path)
 
@@ -508,9 +512,9 @@ class Epub:
         def_ns = 'http://www.idpf.org/2007/opf'
         # dcterms_ns = 'http://purl.org/metadata/terms/'
 
-        package = Element((None, 'package'),
+        package = Element('package',
                           prefixes={def_ns: None},
-                          attributes={(None, 'version'): '3.0', (URI_XML, 'lang'): 'en'})
+                          attributes={'version': '3.0', (URI_XML, 'lang'): 'en'})
 
         for m in self.metadata:
             if isinstance(m, Identifier):
@@ -518,8 +522,7 @@ class Epub:
 
         # unique - identifier = "pub-id"
         # metadata
-        metadata_e = Element((None, 'metadata'),
-                             prefixes={URI_DC: 'dc'})
+        metadata_e = Element('metadata', prefixes={URI_DC: 'dc'})
 
         for m in self.metadata:
             metadata_e.children.append(m.to_element())
@@ -534,7 +537,7 @@ class Epub:
         package.children.append(metadata_e)
 
         # manifest
-        manifest = Element((None, 'manifest'))
+        manifest = Element('manifest')
         package.children.append(manifest)
 
         manifest.children.extend(self.files.to_elements())
@@ -544,22 +547,22 @@ class Epub:
         # find toc ncx id for spine
         toc_ncx_item_e_id = None
         for temp_file_e in self._temp_files.to_elements():
-            if temp_file_e.attributes[(None, 'media-type')] == 'application/x-dtbncx+xml':
+            if temp_file_e.attributes[(None, 'media-type')] == mimes.NCX:
                 toc_ncx_item_e_id = temp_file_e.attributes[(None, 'id')]
 
         # spine
-        spine = Element((None, 'spine'))
+        spine = Element('spine')
         package.children.append(spine)
 
         spine.attributes['toc'] = toc_ncx_item_e_id
 
         for joint in self.spine:
 
-            itemref = Element((None, 'itemref'), attributes={(None, 'idref'): self.files[joint.path].identification})
+            itemref = Element('itemref', attributes={'idref': self.files[joint.path].identification})
             if joint.linear is True:
-                itemref.attributes[(None, 'linear')] = 'yes'
+                itemref.attributes['linear'] = 'yes'
             elif joint.linear is False:
-                itemref.attributes[(None, 'linear')] = 'no'
+                itemref.attributes['linear'] = 'no'
 
             spine.children.append(itemref)
 
@@ -569,9 +572,9 @@ class Epub:
 
     @staticmethod
     def _xmlstr_container(opf_path):
-        e = Element((None, 'container'))
+        e = Element('container')
 
-        e.attributes[(None, 'version')] = '1.0'
+        e.attributes['version'] = '1.0'
 
         e.prefixes['urn:oasis:names:tc:opendocument:xmlns:container'] = None
 
@@ -620,3 +623,13 @@ class Epub:
 
         self._temp_files.clear()
         z.close()
+
+
+def has_element(tag, file_string):
+    parser = html5lib.HTMLParser(tree=html5lib.getTreeBuilder('dom'))
+    minidom_docment = parser.parse(file_string)
+
+    if minidom_docment.getElementsByTagName(tag):
+        return True
+    else:
+        return False
