@@ -508,13 +508,13 @@ class Epub:
             File(pretty_insert(ncx, dont_do_when_one_child=True).string().encode(),
                  mime='application/x-dtbncx+xml')
 
-    def _xmlstr_opf(self):
+    def _xmlstr_opf_30(self):
         def_ns = 'http://www.idpf.org/2007/opf'
         # dcterms_ns = 'http://purl.org/metadata/terms/'
 
         package = Element('package',
                           prefixes={def_ns: None},
-                          attributes={'version': '3.0', (URI_XML, 'lang'): 'en'})
+                          attributes={'version': '2.0', (URI_XML, 'lang'): 'en'})
 
         for m in self.metadata:
             if isinstance(m, Identifier):
@@ -570,6 +570,10 @@ class Epub:
         # return x.string()
         return pretty_insert(package, dont_do_when_one_child=True).string()
 
+    def _xmlstr_opf_20(self):
+        # todo
+        pass
+
     @staticmethod
     def _xmlstr_container(opf_path):
         e = Element('container')
@@ -590,7 +594,9 @@ class Epub:
 
         return xml_header() + pretty_insert(e, dont_do_when_one_child=True).string()
 
-    def write(self, filename):
+    def write(self, filename, version=None):
+        version = version or '3.0'
+
         """write to file.
 
         :param filename: file name.
@@ -614,7 +620,7 @@ class Epub:
 
         opf_filename = self._get_unused_filename(None, 'package.opf')
         z.writestr(ROOT_OF_OPF + '/' + opf_filename,
-                   self._xmlstr_opf().encode(),
+                   self._xmlstr_opf_30().encode(),
                    zipfile.ZIP_DEFLATED)
 
         z.writestr(CONTAINER_PATH,
