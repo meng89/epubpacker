@@ -21,7 +21,8 @@ def test_simple_epub():
     book.metadata.append(Title('EPUB demo'))
     book.metadata.append(Language('en'))
     book.metadata.append(Identifier('identifier_' + uuid.uuid4().hex))
-    book.metadata.append(get('modified')(w3c_utc_date()))
+
+    # book.metadata.append(get('modified')(w3c_utc_date()))
 
     # todo cover
     book.files['cover.svg'] = File(open(os.path.join(cur_path, 'cover', 'cover.svg'), 'rb').read())
@@ -61,4 +62,4 @@ def test_simple_epub():
     book.spine.insert(0, Joint(user_toc_path))
     book.toc.insert(0, Section('Table of Contents', href=user_toc_path))
 
-    book.write('demo.epub')
+    book.write('demo.epub', version='2.0')

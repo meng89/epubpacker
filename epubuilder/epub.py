@@ -225,7 +225,7 @@ class _Properties(List):
 
 class File:
     """every file you want to put in book, you shoud use this."""
-    def __init__(self, binary, mime=None, identification=None, properties=None):
+    def __init__(self, binary, mime=None, identification=None, properties=None, fallback=None):
         """
         :param binary: binary data
         :type binary: bytes
@@ -235,12 +235,15 @@ class File:
         :type identification: str
         :param properties:
         :type properties: list
+        :param fallback:
+        :type fallback: file
         """
 
         self._binary = binary
         self.mime = mime
         self.identification = identification or 'id_' + uuid.uuid4().hex
         self._properties = _Properties(properties)
+        self.fallback = fallback
 
     @property
     def binary(self):
@@ -461,6 +464,10 @@ class Epub:
 
         return user_cover_page_path
 
+    def addons_epub2_make_cover(self, path, image_path):
+        pass
+        # todo
+
     def _ncx_to_tempfile(self):
         def_uri = 'http://www.daisy.org/z3986/2005/ncx/'
 
@@ -508,13 +515,17 @@ class Epub:
             File(pretty_insert(ncx, dont_do_when_one_child=True).string().encode(),
                  mime='application/x-dtbncx+xml')
 
-    def _xmlstr_opf_30(self):
+    def _xmlstr_opf_30(self, version=None):
+        version = version or '3.0'
+
         def_ns = 'http://www.idpf.org/2007/opf'
         # dcterms_ns = 'http://purl.org/metadata/terms/'
 
-        package = Element('package',
-                          prefixes={def_ns: None},
-                          attributes={'version': '2.0', (URI_XML, 'lang'): 'en'})
+        package = Element('package', prefixes={def_ns: None}, attributes={'version': version})
+        if version == '2.0':
+            pass
+        elif version in ('3.0', ):
+            package.attributes[(URI_XML, 'lang')] = 'en'
 
         for m in self.metadata:
             if isinstance(m, Identifier):
@@ -531,7 +542,9 @@ class Epub:
         for m in self.metadata:
             if isinstance(m, get('modified')):
                 modified = m
-        if not modified:
+
+        if version in ('3.0', ) and not modified:
+            print(version)
             metadata_e.children.append(get('modified')(w3c_utc_date()))
 
         package.children.append(metadata_e)
@@ -539,6 +552,37 @@ class Epub:
         # manifest
         manifest = Element('manifest')
         package.children.append(manifest)
+
+        for path, file in self.files.items():
+            item = Element('item', attributes={(None, 'href'): path})
+
+            if file.identification is not None:
+                item.attributes['id'] = file.identification
+
+            # if file.properties:
+            #    item.attributes['properties'] = ' '.join(file.properties)
+
+            mime = file.mime or mimes.map_from_extension[os.path.splitext(path)[1]]
+
+            item.attributes['media-type'] = mime
+
+            properties = copy.deepcopy(file.properties)
+
+            if mime == mimes.SVG:
+                if 'svg' not in properties:
+                    properties.append('svg')
+
+            if mime in (mimes.XHTML, mimes.HTML):
+                if 'scripted' not in properties and has_element('script', file.binary.decode()):
+                    properties.append('scripted')
+
+                if 'mathml' not in properties and has_element('math', file.binary.decode()):
+                    properties.append('mathml')
+
+            if file.properties and version in ('3.0',):
+                item.attributes['properties'] = ' '.join(properties)
+
+            manifest.children.append(item)
 
         manifest.children.extend(self.files.to_elements())
 
@@ -569,10 +613,6 @@ class Epub:
         x = Xl(header=Header(), root=pretty_insert(package, dont_do_when_one_child=True))
         # return x.string()
         return pretty_insert(package, dont_do_when_one_child=True).string()
-
-    def _xmlstr_opf_20(self):
-        # todo
-        pass
 
     @staticmethod
     def _xmlstr_container(opf_path):
@@ -620,7 +660,7 @@ class Epub:
 
         opf_filename = self._get_unused_filename(None, 'package.opf')
         z.writestr(ROOT_OF_OPF + '/' + opf_filename,
-                   self._xmlstr_opf_30().encode(),
+                   self._xmlstr_opf_30(version=version).encode(),
                    zipfile.ZIP_DEFLATED)
 
         z.writestr(CONTAINER_PATH,
