@@ -403,36 +403,7 @@ class Epub:
 
         return user_toc_path, (js_path, css_path)
 
-    def addons_make_user_cover_page(self, cover_img_path, title=None):
-        html = Element('html')
-
-        head = Element('head')
-        html.children.append(head)
-
-        if not title:
-            for m in self.metadata:
-                if isinstance(m, Title):
-                    title = m.text
-        if title:
-            title = Element('title')
-            title.children.append(title)
-            head.children.append(title)
-
-        body = Element('body')
-        html.children.append(body)
-
-        div = Element('div')
-        body.children.append(div)
-
-        img = Element('img', attributes={'src': cover_img_path, 'alt': 'Cover Image', 'title': 'Cover Image'})
-        body.children.append(img)
-
-        user_cover_page_path = self._get_unused_filename(None, 'cover.xhtml')
-        self.files[user_cover_page_path] = File(pretty_insert(html).string().encode(), mime='application/xhtml+xml')
-
-        return user_cover_page_path
-
-    def addons_epub2_make_cover(self, path, image_path):
+    def addons_epub2_make_cover_xhtml(self, path, image_path):
         pass
         # todo
 
