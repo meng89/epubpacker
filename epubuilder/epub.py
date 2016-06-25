@@ -178,40 +178,6 @@ class _Files(Dict):
         if not isinstance(item, File):
             raise TypeError
 
-    def to_elements(self):
-        elements = []
-        for path, file in self.items():
-            item = Element('item', attributes={(None, 'href'): path})
-
-            if file.identification is not None:
-                item.attributes['id'] = file.identification
-
-            # if file.properties:
-            #    item.attributes['properties'] = ' '.join(file.properties)
-
-            mime = file.mime or mimes.map_from_extension[os.path.splitext(path)[1]]
-
-            item.attributes['media-type'] = mime
-
-            properties = copy.deepcopy(file.properties)
-            if mime == mimes.SVG:
-                if 'svg' not in properties:
-                    properties.append('svg')
-
-            if mime in (mimes.XHTML, mimes.HTML):
-                if 'scripted' not in properties and has_element('script', file.binary.decode()):
-                    properties.append('scripted')
-
-                if 'mathml' not in properties and has_element('math', file.binary.decode()):
-                    properties.append('mathml')
-
-            if file.properties:
-                item.attributes['properties'] = ' '.join(properties)
-
-            elements.append(item)
-
-        return elements
-
 
 class _Properties(List):
     """list-like.
@@ -299,6 +265,8 @@ class Epub:
 
         self._landmark = List()
         self._pagelist = List()
+
+        self._tag = {}
 
         # for self.write()
         self._temp_files = _Files()
@@ -568,19 +536,20 @@ class Epub:
 
             properties = copy.deepcopy(file.properties)
 
-            if mime == mimes.SVG:
-                if 'svg' not in properties:
-                    properties.append('svg')
+            if version in ('3.0',):
+                if mime == mimes.SVG:
+                    if 'svg' not in properties:
+                        properties.append('svg')
 
-            if mime in (mimes.XHTML, mimes.HTML):
-                if 'scripted' not in properties and has_element('script', file.binary.decode()):
-                    properties.append('scripted')
+                if mime in (mimes.XHTML, mimes.HTML):
+                    if 'scripted' not in properties and has_element('script', file.binary.decode()):
+                        properties.append('scripted')
 
-                if 'mathml' not in properties and has_element('math', file.binary.decode()):
-                    properties.append('mathml')
+                    if 'mathml' not in properties and has_element('math', file.binary.decode()):
+                        properties.append('mathml')
 
-            if file.properties and version in ('3.0',):
-                item.attributes['properties'] = ' '.join(properties)
+                if file.properties:
+                    item.attributes['properties'] = ' '.join(properties)
 
             manifest.children.append(item)
 
