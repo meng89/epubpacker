@@ -2,12 +2,22 @@ import uuid
 import os
 from abc import abstractmethod
 
+from epubuilder.meta import Base
 from . import mimes
 
 from .xl import Element, Text
 
 
 from hooky import List, Dict
+
+
+class Metadata(List):
+    """list-like.
+
+    store metadata, such as author, publisher etc."""
+    def _before_add(self, key=None, item=None):
+        if not isinstance(item, Base):
+            raise TypeError
 
 
 class Toc(List):

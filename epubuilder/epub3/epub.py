@@ -7,7 +7,6 @@ import random
 from hooky import List
 
 from epubuilder import mimes
-
 # from epubuilder.epubpublic import Toc, Files, File, Spine, Section, _SubSections
 
 import epubuilder.epubpublic as p
@@ -17,19 +16,9 @@ from epubuilder.meta.dcmes import Identifier, URI_DC
 from epubuilder.meta.dcterms import get
 from epubuilder.tools import w3c_utc_date
 from epubuilder.xl import Xl, Header, Element, Text, xml_header, URI_XML, pretty_insert
-from epubuilder.meta import Base
 
 CONTAINER_PATH = 'META-INF' + os.sep + 'container.xml'
 ROOT_OF_OPF = 'EPUB'
-
-
-class _Metadata(List):
-    """list-like.
-
-    store metadata, such as author, publisher etc."""
-    def _before_add(self, key=None, item=None):
-        if not isinstance(item, Base):
-            raise TypeError
 
 
 # 'cover-image', 'mathml', 'nav', 'remote-resources', 'scripted', 'svg', 'switch'
@@ -138,36 +127,25 @@ class Section(p.Section):
 
 class Epub:
     def __init__(self):
-        self._metadata = _Metadata()
+        self._metadata = p.Metadata()
         self._files = Files()
         self._spine = p.Spine()
 
         # nav
         self._toc = _Toc()
 
-        self._landmark = List()
-        self._pagelist = List()
-
         self._cover_path = None
 
         # for self.write()
         self._temp_files = p.Files()
 
-    metadata = property(lambda self: self._metadata, doc=str(_Metadata.__doc__ if _Metadata.__doc__ else ''))
+    metadata = property(lambda self: self._metadata, doc=str(p.Metadata.__doc__ if p.Metadata.__doc__ else ''))
 
     files = property(lambda self: self._files, doc=str(p.Files.__doc__ if p.Files.__doc__ else ''))
 
     spine = property(lambda self: self._spine, doc=str(p.Spine.__doc__ if p.Spine.__doc__ else ''))
 
     toc = property(lambda self: self._toc, doc=str(p.Toc.__doc__ if p.Toc.__doc__ else ''))
-
-    @property
-    def landmark(self):
-        return self._landmark
-
-    @property
-    def pagelist(self):
-        return self._pagelist
 
     def _get_unused_filename(self, dire, filename):
         dire = dire or ''
@@ -281,10 +259,6 @@ class Epub:
         self._temp_files[toc_ncx_filename] = \
             p.File(pretty_insert(ncx, dont_do_when_one_child=True).string().encode(),
                    mime='application/x-dtbncx+xml')
-
-    def addons_epub2_make_cover_xhtml(self, path, image_path):
-        pass
-        # todo
 
     def _xmlstr_opf(self, toc_path):
 
