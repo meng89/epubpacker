@@ -1,9 +1,9 @@
 import uuid
 import os
-from epubuilder import epub, File, Section, Joint
+from epubuilder.epub3 import Epub, Section
+from epubuilder.epubpublic import Joint, File
+
 from epubuilder.meta.dcmes import Title, Language, Identifier
-from epubuilder.meta.dcterms import get
-from epubuilder.tools import w3c_utc_date
 
 xhtml_template = """
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -15,7 +15,7 @@ cur_path = os.path.dirname(__file__)
 
 
 def test_simple_epub():
-    book = epub.Epub()
+    book = Epub()
 
     # metadata
     book.metadata.append(Title('EPUB demo'))
@@ -27,7 +27,7 @@ def test_simple_epub():
     # todo cover
     book.files['cover.svg'] = File(open(os.path.join(cur_path, 'cover', 'cover.svg'), 'rb').read())
 
-    book.tag_cover('cover.svg')
+    book.cover_path = 'cover.svg'
 
     def make_page(title, html_path=None, content=None):
         if html_path and content:
@@ -58,8 +58,8 @@ def test_simple_epub():
     book.toc.extend([sec1, sec2, sec3])
 
     # make user toc
-    user_toc_path, other_paths = book.addons_make_user_toc_page()
+    user_toc_path, other_paths = book.addons_make_user_toc_xhtml()
     book.spine.insert(0, Joint(user_toc_path))
     book.toc.insert(0, Section('Table of Contents', href=user_toc_path))
 
-    book.write('demo.epub', version='2.0')
+    book.write('demo.epub')

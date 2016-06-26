@@ -254,6 +254,8 @@ class Xl:
 
         s += '\n' + self.root.string()
 
+        return s
+
 
 class Node:
     @abstractmethod
