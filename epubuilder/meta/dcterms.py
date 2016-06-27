@@ -3,9 +3,9 @@
 
 from epubuilder.xl import Element, Text, URI_XML
 
-from . import Base, Attrs
+from .public import Base, Attrs
 
-from . import AltScript, Dir, FileAs, Id, Role, Lang
+from .public import AltScript, Dir, FileAs, Id, Role, Lang
 
 
 def always_true():

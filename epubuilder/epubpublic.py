@@ -2,7 +2,7 @@ import uuid
 import os
 from abc import abstractmethod
 
-from epubuilder.meta import Base
+from epubuilder.meta.public import Base
 from . import mimes
 
 from .xl import Element, Text

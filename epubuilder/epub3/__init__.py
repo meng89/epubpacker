@@ -1,1 +1,1 @@
-from .epub import Epub, Section
+from .epub3 import Epub3, Section

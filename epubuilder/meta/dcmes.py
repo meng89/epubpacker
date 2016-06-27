@@ -6,9 +6,9 @@ All classes in this module
 
 import uuid
 
-from . import Id, Scheme, AltScript, Dir, FileAs, Role, Lang, Authority, Attrs
+from .public import Id, Scheme, AltScript, Dir, FileAs, Role, Lang, Authority, Attrs
 from epubuilder.xl import Element, Text, URI_XML
-from . import Base
+from .public import Base
 
 URI_DC = 'http://purl.org/dc/elements/1.1/'
 URI_OPF = 'http://www.idpf.org/2007/opf'

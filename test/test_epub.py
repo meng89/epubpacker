@@ -1,6 +1,6 @@
 import uuid
 import os
-from epubuilder.epub3 import Epub, Section
+from epubuilder.epub3 import Epub3, Section
 from epubuilder.epubpublic import Joint, File
 
 from epubuilder.meta.dcmes import Title, Language, Identifier
@@ -15,7 +15,7 @@ cur_path = os.path.dirname(__file__)
 
 
 def test_simple_epub():
-    book = Epub()
+    book = Epub3()
 
     # metadata
     book.metadata.append(Title('EPUB demo'))
