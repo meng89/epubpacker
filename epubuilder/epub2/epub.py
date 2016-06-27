@@ -1,7 +1,5 @@
 from hooky import List
 
-from ..epub3 import Epub
-
 import string
 import zipfile
 
@@ -27,7 +25,19 @@ CONTAINER_PATH = 'META-INF' + os.sep + 'container.xml'
 ROOT_OF_OPF = 'EPUB'
 
 
-class Epub2:
+class Epub:
     def __init__(self):
-        self._toc
+        self._metadata = p.Metadata()
+        self._files = p.Files()
+        self._spine = p.Spine()
 
+        # nav
+        self._toc = p.Toc()
+
+        self._cover_path = None
+
+        # for self.write()
+        self._temp_files = p.Files()
+
+    def write(self, filename):
+        pass
