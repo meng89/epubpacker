@@ -4,11 +4,9 @@ import html5lib
 import os
 from hooky import List
 
-from epubuilder import mimes, epub
+from epubuilder import mimes
 
 import epubuilder.epubpublic as p
-
-from epubuilder.epub import CONTAINER_PATH, ROOT_OF_OPF
 
 from epubuilder.meta.dcmes import Identifier, URI_DC
 from epubuilder.meta.dcterms import get
@@ -119,7 +117,7 @@ class Section(p.Section):
         return li
 
 
-class Epub3(epub.Epub):
+class Epub3(p.Epub):
     def __init__(self):
         super().__init__()
 
@@ -248,7 +246,7 @@ class Epub3(epub.Epub):
 
         # wirte custom files
         for filename, file in self.files.items():
-            z.writestr(ROOT_OF_OPF + os.sep + filename, file.binary, zipfile.ZIP_DEFLATED)
+            z.writestr(p.ROOT_OF_OPF + os.sep + filename, file.binary, zipfile.ZIP_DEFLATED)
 
         # nav
         nav_xmlstring = self._get_nav_xmlstring()
@@ -262,15 +260,15 @@ class Epub3(epub.Epub):
 
         # write nav nav's js and ncx
         for filename, file in self._temp_files.items():
-            z.writestr(ROOT_OF_OPF + os.sep + filename, file.binary, zipfile.ZIP_DEFLATED)
+            z.writestr(p.ROOT_OF_OPF + os.sep + filename, file.binary, zipfile.ZIP_DEFLATED)
 
         opf_filename = self._get_unused_filename(None, 'package.opf')
-        z.writestr(ROOT_OF_OPF + '/' + opf_filename,
+        z.writestr(p.ROOT_OF_OPF + '/' + opf_filename,
                    self._get_opf_xmlstring(toc_nav_path).encode(),
                    zipfile.ZIP_DEFLATED)
 
-        z.writestr(CONTAINER_PATH,
-                   self._get_container_xmlstring(ROOT_OF_OPF + '/' + opf_filename).encode(),
+        z.writestr(p.CONTAINER_PATH,
+                   self._get_container_xmlstring(p.ROOT_OF_OPF + '/' + opf_filename).encode(),
                    zipfile.ZIP_DEFLATED)
 
         self._temp_files.clear()

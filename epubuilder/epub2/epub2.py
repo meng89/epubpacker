@@ -14,20 +14,15 @@ from epubuilder import mimes
 
 import epubuilder.epubpublic as p
 
-import epubuilder.version
 from epubuilder.meta.dcmes import Identifier, URI_DC
 from epubuilder.meta.dcterms import get
 from epubuilder.tools import w3c_utc_date
-from epubuilder.xl import Xl, Header, Element, Text, xml_header, URI_XML, pretty_insert
-from epubuilder.meta import Base
+from epubuilder.xl import Xl, Header, Element, URI_XML, pretty_insert
 
-from epubuilder import mimes, epub
-
-CONTAINER_PATH = 'META-INF' + os.sep + 'container.xml'
-ROOT_OF_OPF = 'EPUB'
+from epubuilder import mimes
 
 
-class Epub2(epub.Epub):
+class Epub2(p.Epub):
     def __init__(self):
         super().__init__()
 
@@ -41,7 +36,7 @@ class Epub2(epub.Epub):
         def_ns = 'http://www.idpf.org/2007/opf'
         # dcterms_ns = 'http://purl.org/metadata/terms/'
 
-        package = Element('package', prefixes={def_ns: None}, attributes={'version': '3.0'})
+        package = Element('package', prefixes={def_ns: None}, attributes={'version': '2.0'})
 
         package.attributes[(URI_XML, 'lang')] = 'en'
 
@@ -113,7 +108,7 @@ class Epub2(epub.Epub):
 
         # wirte custom files
         for filename, file in self.files.items():
-            z.writestr(ROOT_OF_OPF + os.sep + filename, file.binary, zipfile.ZIP_DEFLATED)
+            z.writestr(p.ROOT_OF_OPF + os.sep + filename, file.binary, zipfile.ZIP_DEFLATED)
 
         # ncx
         ncx_xmlstring = self._get_ncx_xmlstring()
@@ -122,15 +117,15 @@ class Epub2(epub.Epub):
 
         # write nav nav's js and ncx
         for filename, file in self._temp_files.items():
-            z.writestr(ROOT_OF_OPF + os.sep + filename, file.binary, zipfile.ZIP_DEFLATED)
+            z.writestr(p.ROOT_OF_OPF + os.sep + filename, file.binary, zipfile.ZIP_DEFLATED)
 
         opf_filename = self._get_unused_filename(None, 'package.opf')
-        z.writestr(ROOT_OF_OPF + '/' + opf_filename,
+        z.writestr(p.ROOT_OF_OPF + '/' + opf_filename,
                    self._get_opf_xmlstring().encode(),
                    zipfile.ZIP_DEFLATED)
 
-        z.writestr(CONTAINER_PATH,
-                   self._get_container_xmlstring(ROOT_OF_OPF + '/' + opf_filename).encode(),
+        z.writestr(p.CONTAINER_PATH,
+                   self._get_container_xmlstring(p.ROOT_OF_OPF + '/' + opf_filename).encode(),
                    zipfile.ZIP_DEFLATED)
 
         self._temp_files.clear()
