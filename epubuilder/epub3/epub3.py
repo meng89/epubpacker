@@ -327,8 +327,8 @@ def has_element(tag, file_string):
         return False
 
 
-def html_dir():
-    _html_dir = os.path.join(os.path.dirname(__file__), 'static')
+def html_dir(file):
+    _html_dir = os.path.join(os.path.dirname(file or __file__), 'static')
     if os.path.exists(_html_dir):
         if not os.path.isdir(_html_dir):
             raise FileNotFoundError

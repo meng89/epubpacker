@@ -4,8 +4,8 @@ from epubuilder import mimes
 from epubuilder.xl import parse
 
 
-def relative_path(full_path, dirt):
-    paths = full_path.split('/')
+def relative_path(file_path, dirt):
+    paths = file_path.split('/')
     dirs = dirt.split('/')
     l = len(paths) if len(paths) >= len(dirs) else len(dirs)
     for i in range(l):

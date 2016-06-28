@@ -1,5 +1,8 @@
 import zipfile
 import os
+import io
+
+from PIL import Image
 
 
 import epubuilder.public.epub as p
@@ -9,6 +12,8 @@ from epubuilder.public.meta.dcmes import Identifier, URI_DC
 from epubuilder.xl import Xl, Header, Element, pretty_insert
 
 from epubuilder import mimes
+
+from epubuilder.tools import relative_path
 
 
 class Epub2(p.Epub):
@@ -103,3 +108,19 @@ class Epub2(p.Epub):
 
         self._temp_files.clear()
         z.close()
+
+    def make_cover_page(self, image_path, cover_page_path=None, width=None, heigth=None):
+        if cover_page_path:
+            if cover_page_path in self.files.keys():
+                raise FileExistsError
+        else:
+            cover_page_path or self._get_unused_filename(None, 'cover.xhtml')
+
+        img = Image.open(io.BytesIO(self.files[image_path]))
+        width = width or img.size[0]
+        heigth = heigth or img.size[1]
+
+        page_string = open(os.path.join(os.path.dirname(__file__), 'static')).read().format(title='Cover',
+                                                                                            width=width,
+                                                                                            heigth=heigth,
+                                                                                            )
