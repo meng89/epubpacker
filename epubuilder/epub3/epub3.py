@@ -6,7 +6,7 @@ from hooky import List
 
 from epubuilder import mimes
 
-import epubuilder.epubpublic as p
+import epubuilder.public as p
 
 from epubuilder.meta.dcmes import Identifier, URI_DC
 from epubuilder.meta.dcterms import get
@@ -180,7 +180,7 @@ class Epub3(p.Epub):
         metadata_e = Element('metadata', prefixes={URI_DC: 'dc'})
 
         for m in self.metadata:
-            metadata_e.children.append(m.to_li_element())
+            metadata_e.children.append(m.to_element())
 
         modified = None
         for m in self.metadata:
@@ -188,7 +188,7 @@ class Epub3(p.Epub):
                 modified = m
 
         if not modified:
-            metadata_e.children.append(get('modified')(w3c_utc_date()).to_li_element())
+            metadata_e.children.append(get('modified')(w3c_utc_date()).to_element())
 
         package.children.append(metadata_e)
 

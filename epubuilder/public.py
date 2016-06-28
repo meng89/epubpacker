@@ -299,4 +299,8 @@ class Epub:
 
     @abstractmethod
     def write(self, filename):
-        pass
+        """write to file.
+
+        :param filename: file name.
+        :type filename: str
+        """

@@ -1,7 +1,7 @@
 import uuid
 import os
-from epubuilder.epub3 import Epub3, Section
-from epubuilder.epubpublic import Joint, File
+
+from epubuilder.public import Joint, File
 
 from epubuilder.meta.dcmes import Title, Language, Identifier
 
@@ -14,8 +14,8 @@ xhtml_template = """
 cur_path = os.path.dirname(__file__)
 
 
-def test_simple_epub():
-    book = Epub3()
+def make_epub(epub, section):
+    book = epub()
 
     # metadata
     book.metadata.append(Title('EPUB demo'))
@@ -24,11 +24,6 @@ def test_simple_epub():
 
     # book.metadata.append(get('modified')(w3c_utc_date()))
 
-    # todo cover
-    book.files['cover.svg'] = File(open(os.path.join(cur_path, 'cover', 'cover.svg'), 'rb').read())
-
-    book.cover_path = 'cover.svg'
-
     def make_page(title, html_path=None, content=None):
         if html_path and content:
             p = File(xhtml_template.format(title, content).encode(), mime='application/xhtml+xml')
@@ -36,7 +31,7 @@ def test_simple_epub():
 
             book.spine.append(Joint(html_path))
 
-        sec = Section(title, href=html_path)
+        sec = section(title, href=html_path)
         return sec
 
     sec1 = make_page('Part I', 'Part_I.xhtml',  content='This is Part I content')
@@ -57,9 +52,25 @@ def test_simple_epub():
 
     book.toc.extend([sec1, sec2, sec3])
 
+    return book
+
+
+def test_epub3():
+    from epubuilder.epub3 import Epub3, Section
+    book = make_epub(Epub3, Section)
+    book.files['cover.png'] = File(open(os.path.join(cur_path, 'cover', 'cover.png'), 'rb').read())
+    book.cover_path = 'cover.png'
+
     # make user toc
     user_toc_path, other_paths = book.addons_make_user_toc_xhtml()
     book.spine.insert(0, Joint(user_toc_path))
     book.toc.insert(0, Section('Table of Contents', href=user_toc_path))
 
-    book.write('demo.epub')
+    book.write('demo_3.epub')
+
+
+def test_epub2():
+    from epubuilder.epub2 import Epub2
+    from epubuilder.public import Section
+    book = make_epub(Epub2, Section)
+    book.write('demo_2.epub')

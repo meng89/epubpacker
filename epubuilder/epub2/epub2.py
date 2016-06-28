@@ -1,18 +1,8 @@
-from hooky import List
-
-import string
 import zipfile
-
-import html5lib
 import os
-import random
-from hooky import List
 
-from epubuilder import mimes
 
-# from epubuilder.epubpublic import Toc, Files, File, Spine, Section
-
-import epubuilder.epubpublic as p
+import epubuilder.public as p
 
 from epubuilder.meta.dcmes import Identifier, URI_DC
 from epubuilder.meta.dcterms import get
@@ -49,7 +39,7 @@ class Epub2(p.Epub):
         metadata_e = Element('metadata', prefixes={URI_DC: 'dc'})
 
         for m in self.metadata:
-            metadata_e.children.append(m.to_li_element())
+            metadata_e.children.append(m.to_element())
 
         modified = None
         for m in self.metadata:
@@ -57,7 +47,7 @@ class Epub2(p.Epub):
                 modified = m
 
         if not modified:
-            metadata_e.children.append(get('modified')(w3c_utc_date()).to_li_element())
+            metadata_e.children.append(get('modified')(w3c_utc_date()).to_element())
 
         package.children.append(metadata_e)
 
@@ -96,11 +86,6 @@ class Epub2(p.Epub):
         # return pretty_insert(package, dont_do_when_one_child=True).string()
 
     def write(self, filename):
-        """write to file.
-
-        :param filename: file name.
-        :type filename: str
-        """
 
         z = zipfile.ZipFile(filename, 'w', compression=zipfile.ZIP_DEFLATED)
 
