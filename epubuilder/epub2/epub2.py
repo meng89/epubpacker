@@ -5,9 +5,8 @@ import os
 import epubuilder.public as p
 
 from epubuilder.meta.dcmes import Identifier, URI_DC
-from epubuilder.meta.dcterms import get
-from epubuilder.tools import w3c_utc_date
-from epubuilder.xl import Xl, Header, Element, URI_XML, pretty_insert
+
+from epubuilder.xl import Xl, Header, Element, pretty_insert
 
 from epubuilder import mimes
 
@@ -28,28 +27,17 @@ class Epub2(p.Epub):
 
         package = Element('package', prefixes={def_ns: None}, attributes={'version': '2.0'})
 
-        package.attributes[(URI_XML, 'lang')] = 'en'
-
+        # unique - identifier = "pub-id"
         for m in self.metadata:
             if isinstance(m, Identifier):
                 package.attributes['unique-identifier'] = m.to_element().attributes[(None, 'id')]
 
-        # unique - identifier = "pub-id"
         # metadata
         metadata_e = Element('metadata', prefixes={URI_DC: 'dc'})
+        package.children.append(metadata_e)
 
         for m in self.metadata:
             metadata_e.children.append(m.to_element())
-
-        modified = None
-        for m in self.metadata:
-            if isinstance(m, get('modified')):
-                modified = m
-
-        if not modified:
-            metadata_e.children.append(get('modified')(w3c_utc_date()).to_element())
-
-        package.children.append(metadata_e)
 
         # manifest
         manifest = Element('manifest')
