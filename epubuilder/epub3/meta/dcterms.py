@@ -3,18 +3,13 @@
 
 from epubuilder.xl import Element, Text, URI_XML
 
-from .public import Base, Attrs
+from epubuilder.public.meta import Base
 
-from .public import AltScript, Dir, FileAs, Id, Role, Lang
+from epubuilder.public.meta.attrs import Attrs, AltScript, Dir, FileAs, Id, Role, Lang
 
 
 def always_true():
     pass
-
-
-def _w3c_date(string):
-    return True
-
 
 l = [
     'abstract', 'accessRights', 'accrualMethod', 'accrualPeriodicity', 'accrualPolicy', 'alternative', 'audience',
@@ -38,7 +33,7 @@ l = [
 
 
 check_funcs = {
-    'modified': _w3c_date,
+    'modified': always_true,
 }
 
 
@@ -76,8 +71,14 @@ namespace_map = {
 class _Base(Base, Attrs):
     def __init__(self, text):
         check_funcs[self.__class__.__name__](text)
-        Base.__init__(self, text)
+        Base.__init__(self)
         Attrs.__init__(self)
+
+        self._text = text
+
+    @property
+    def text(self):
+        return self._text
 
     def to_element(self):
         e = Element((None, 'meta'))

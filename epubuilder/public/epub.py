@@ -12,9 +12,9 @@ from hooky import List, Dict
 from epubuilder.xl import Element, Text, pretty_insert, xml_header
 
 import epubuilder.version
-from epubuilder.meta.public import Base
-from . import mimes
-from epubuilder.meta.dcmes import Identifier
+from epubuilder.public.meta.base import Base
+from epubuilder import mimes
+from epubuilder.public.meta.dcmes import Identifier
 
 
 CONTAINER_PATH = 'META-INF' + os.sep + 'container.xml'

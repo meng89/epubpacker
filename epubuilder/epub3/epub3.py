@@ -6,10 +6,10 @@ from hooky import List
 
 from epubuilder import mimes
 
-import epubuilder.public as p
+import epubuilder.public.epub as p
 
-from epubuilder.meta.dcmes import Identifier, URI_DC
-from epubuilder.meta.dcterms import get
+from epubuilder.public.meta.dcmes import Identifier, URI_DC
+from .meta.dcterms import get
 from epubuilder.tools import w3c_utc_date
 from epubuilder.xl import Xl, Header, Element, Text, URI_XML, pretty_insert
 

@@ -2,9 +2,9 @@ import zipfile
 import os
 
 
-import epubuilder.public as p
+import epubuilder.public.epub as p
 
-from epubuilder.meta.dcmes import Identifier, URI_DC
+from epubuilder.public.meta.dcmes import Identifier, URI_DC
 
 from epubuilder.xl import Xl, Header, Element, pretty_insert
 
