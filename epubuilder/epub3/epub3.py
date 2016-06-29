@@ -84,13 +84,7 @@ class Section(p.Section):
         else:
             self._hidden_subs = value
 
-    # subs = property(lambda self: self._subs, doc=_SubSections.__doc__)
-
-    @property
-    def subs(self):
-        return self._subs
-
-    def to_li_element(self):
+    def to_nav_li_element(self):
         li = Element('li')
 
         if self.href:
@@ -110,7 +104,7 @@ class Section(p.Section):
                 ol.attributes[(None, 'hidden')] = ''
 
             for one in self.subs:
-                ol.children.append(one.to_li_element())
+                ol.children.append(one.to_nav_li_element())
 
             li.children.append(ol)
 
@@ -151,7 +145,7 @@ class Epub3(p.Epub):
             ol = Element((None, 'ol'))
 
             for section in self.toc:
-                ol.children.append(section.to_li_element())
+                ol.children.append(section.to_nav_li_element())
 
             nav.children.append(ol)
             body.children.append(nav)
@@ -178,7 +172,7 @@ class Epub3(p.Epub):
         # unique - identifier = "pub-id"
         # metadata
         metadata_e = Element('metadata', prefixes={URI_DC: 'dc'})
-
+        package.children.append(metadata_e)
         for m in self.metadata:
             metadata_e.children.append(m.to_element())
 
@@ -189,8 +183,6 @@ class Epub3(p.Epub):
 
         if not modified:
             metadata_e.children.append(get('modified')(w3c_utc_date()).to_element())
-
-        package.children.append(metadata_e)
 
         # manifest
         manifest = Element('manifest')
@@ -295,13 +287,13 @@ class Epub3(p.Epub):
         body = find_element_by_name('body')
 
         js_path = self._get_unused_filename(None, 'epubuilder_addons_user_toc_attach.js')
-        self.files[js_path] = p.File(open(os.path.join(html_dir(), 'a.js'), 'rb').read(),
+        self.files[js_path] = p.File(open(os.path.join(dirt(__file__), 'static', 'a.js'), 'rb').read(),
                                      mime='text/javascript')
 
         head.children.append(Element('script', attributes={'src': js_path}))
 
         css_path = self._get_unused_filename(None, 'epubuilder_addons_user_toc_attach.css')
-        self.files[css_path] = p.File(open(os.path.join(html_dir(), 'a.css'), 'rb').read(),
+        self.files[css_path] = p.File(open(os.path.join(dirt(__file__), 'static', 'a.css'), 'rb').read(),
                                       mime='text/style')
 
         # 'type': 'text/css',
@@ -327,10 +319,5 @@ def has_element(tag, file_string):
         return False
 
 
-def html_dir(file):
-    _html_dir = os.path.join(os.path.dirname(file or __file__), 'static')
-    if os.path.exists(_html_dir):
-        if not os.path.isdir(_html_dir):
-            raise FileNotFoundError
-
-    return _html_dir
+def dirt(file):
+    return os.path.dirname(file)

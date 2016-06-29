@@ -40,7 +40,6 @@ class Epub2(p.Epub):
         # metadata
         metadata_e = Element('metadata', prefixes={URI_DC: 'dc'})
         package.children.append(metadata_e)
-
         for m in self.metadata:
             metadata_e.children.append(m.to_element())
 

@@ -39,11 +39,20 @@ class Toc(List):
     """
     def __init__(self):
         super().__init__()
-        self.title = None
+        self.title = 'Table of Contents'
 
         self.ncx_depth = -1
         self.ncx_totalPageCount = -1
         self.ncx_maxPageNumber = -1
+
+    def _before_add(self, key=None, item=None):
+        if not isinstance(item, Section):
+            raise TypeError
+
+
+class _SubSections(List):
+    __doc__ = Toc.__doc__
+    _before_add = getattr(Toc, '_before_add')
 
 
 class Section:
@@ -59,6 +68,7 @@ class Section:
         """
         self._title = title
         self._href = href
+        self._subs = _SubSections()
 
     @property
     def title(self):
@@ -79,9 +89,8 @@ class Section:
         self._href = value
 
     @property
-    @abstractmethod
     def subs(self):
-        return []
+        return self._subs
 
     def to_toc_ncx_element(self):
         nav_point = Element('navPoint', attributes={'id': 'id_' + uuid.uuid4().hex})
@@ -94,11 +103,21 @@ class Section:
 
         text.children.append(Text(self.title))
 
-        content = Element('content', attributes={'src': self.href if self.href else ''})
+        content = Element('content')
         nav_point.children.append(content)
 
+        first_sub = None
         for subsection in self.subs:
-            nav_point.children.append(subsection.to_toc_ncx_element())
+            sub = subsection.to_toc_ncx_element()
+            nav_point.children.append(sub)
+
+            first_sub = first_sub or sub
+
+        if self.href:
+            content.attributes[(None, 'src')] = self.href
+
+        elif first_sub:
+            content.attributes[(None, 'src')] = first_sub.children[1].attributes[(None, 'src')]
 
         return nav_point
 

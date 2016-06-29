@@ -3,12 +3,14 @@ import os
 
 from epubuilder.public import Joint, File
 
-from epubuilder.meta.dcmes import Title, Language, Identifier
+from epubuilder.public.meta.dcmes import Title, Language, Identifier
 
 xhtml_template = """
 <html xmlns="http://www.w3.org/1999/xhtml">
-<head></head>
-<body>{}</body></html>
+<head>
+<title>{title}</title>
+</head>
+<body><p>{content}</p></body></html>
 """
 
 cur_path = os.path.dirname(__file__)
@@ -26,7 +28,7 @@ def make_epub(epub, section):
 
     def make_page(title, html_path=None, content=None):
         if html_path and content:
-            p = File(xhtml_template.format(title, content).encode(), mime='application/xhtml+xml')
+            p = File(xhtml_template.format(title=title, content=content).encode(), mime='application/xhtml+xml')
             book.files[html_path] = p
 
             book.spine.append(Joint(html_path))
@@ -51,8 +53,15 @@ def make_epub(epub, section):
     sec3.subs.extend([sec3_1, sec3_2])
 
     book.toc.extend([sec1, sec2, sec3])
+    print(book.toc)
 
     return book
+
+
+def write_epub(book, filename):
+    dirt = '_built_book'
+    os.makedirs(dirt, exist_ok=True)
+    book.write(os.path.join(dirt, filename))
 
 
 def test_epub3():
@@ -66,11 +75,20 @@ def test_epub3():
     book.spine.insert(0, Joint(user_toc_path))
     book.toc.insert(0, Section('Table of Contents', href=user_toc_path))
 
-    book.write('demo_3.epub')
+    write_epub(book, '3.epub')
 
 
 def test_epub2():
     from epubuilder.epub2 import Epub2
-    from epubuilder.public import Section
+    from epubuilder.public.epub import Section
+    from epubuilder.epub2.meta import Cover
+
     book = make_epub(Epub2, Section)
-    book.write('demo_2.epub')
+
+    cover_file = File(open(os.path.join(cur_path, 'cover', 'cover.png'), 'rb').read())
+    book.files['cover.png'] = cover_file
+    book.metadata.append(Cover(cover_file))
+
+    # cover_page_path = book.make_cover_page(image_path='cover.png')
+
+    write_epub(book, '2.epub')

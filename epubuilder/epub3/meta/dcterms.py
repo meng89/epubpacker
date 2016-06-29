@@ -3,12 +3,12 @@
 
 from epubuilder.xl import Element, Text, URI_XML
 
-from epubuilder.public.meta import Base
+from epubuilder.public.meta.base import Base
 
 from epubuilder.public.meta.attrs import Attrs, AltScript, Dir, FileAs, Id, Role, Lang
 
 
-def always_true():
+def always_true(*args, **kwargs):
     pass
 
 l = [
