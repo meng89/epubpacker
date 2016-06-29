@@ -120,7 +120,13 @@ class Epub2(p.Epub):
         width = width or img.size[0]
         heigth = heigth or img.size[1]
 
+        relative = relative_path(os.path.split(cover_page_path)[0], image_path)
+
         page_string = open(os.path.join(os.path.dirname(__file__), 'static')).read().format(title='Cover',
                                                                                             width=width,
                                                                                             heigth=heigth,
+                                                                                            image_href=relative
                                                                                             )
+        self.files[cover_page_path] = p.File(page_string.encode())
+
+        return cover_page_path

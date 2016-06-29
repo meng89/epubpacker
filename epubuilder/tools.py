@@ -4,9 +4,17 @@ from epubuilder import mimes
 from epubuilder.xl import parse
 
 
-def relative_path(file_path, dirt):
-    paths = file_path.split('/')
-    dirs = dirt.split('/')
+def relative_path(in_dir, to_file_path):
+    """
+    if you got file with path "text/cover.xhtml" and it links to "image/cover.png"
+    :param in_dir: "text"
+    :param to_file_path: "image/cover.png"
+    :return: "../image/cover.png"
+    """
+    paths = to_file_path.split('/')
+    dirs = in_dir.split('/')
+    if dirs[-1] == '':
+        dirs = dirs[0:-1]
     l = len(paths) if len(paths) >= len(dirs) else len(dirs)
     for i in range(l):
         if len(paths) == i or len(dirs) == i or paths[i] != dirs[i]:

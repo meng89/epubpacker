@@ -1,7 +1,7 @@
 import uuid
 
-from epubuilder import Epub, File, Section, Joint
-from epubuilder.meta.dcmes import Title, Language, Identifier
+from epubuilder. import Epub, File, Section, Joint
+from epubuilder.public.meta.dcmes import Title, Language, Identifier
 
 html_template = """
 <html>
