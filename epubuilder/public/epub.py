@@ -184,6 +184,21 @@ class Spine(List):
         if not isinstance(item, Joint):
             raise TypeError
 
+    def to_element(self):
+        spine = Element('spine')
+
+        for joint in self:
+            itemref = Element('itemref', attributes={(None, 'idref'): self[joint.path].identification})
+
+            if joint.linear is True:
+                itemref.attributes[(None, 'linear')] = 'yes'
+            elif joint.linear is False:
+                itemref.attributes[(None, 'linear')] = 'no'
+
+            spine.children.append(itemref)
+
+        return spine
+
 
 class Joint:
     def __init__(self, path, linear=None):
@@ -279,6 +294,15 @@ class Epub:
             nav_map.children.append(one.to_toc_ncx_element())
 
         return pretty_insert(ncx, dont_do_when_one_child=True).string()
+
+    @staticmethod
+    def _find_ncx_id(items):
+        ncx_id = None
+        for item in items:
+            if item.attributes[(None, 'media-type')] == mimes.NCX:
+                ncx_id = item.attributes[(None, 'id')]
+                break
+        return ncx_id
 
     @staticmethod
     def _get_container_xmlstring(opf_path):

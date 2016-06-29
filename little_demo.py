@@ -18,7 +18,7 @@ book.metadata.append(Language('en'))
 book.metadata.append(Identifier('uuid_' + uuid.uuid1().hex))
 
 # add a file
-file = File(html_template.format('hello world'))
+file = File(html_template.format('hello world').encode())
 file_path = 'hello_world.html'
 book.files[file_path] = file
 

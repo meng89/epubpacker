@@ -199,27 +199,13 @@ class Epub3(p.Epub):
 
             manifest.children.append(item)
 
-        # find toc ncx id for spine
-        toc_ncx_item_e_id = None
-        for temp_file_e in self._temp_files.to_elements():
-            if temp_file_e.attributes[(None, 'media-type')] == mimes.NCX:
-                toc_ncx_item_e_id = temp_file_e.attributes[(None, 'id')]
+        # find ncx id for spine
+        toc_ncx_item_e_id = self._find_ncx_id(manifest.children)
 
         # spine
-        spine = Element('spine')
+        spine = self.spine.to_element()
         package.children.append(spine)
-
         spine.attributes['toc'] = toc_ncx_item_e_id
-
-        for joint in self.spine:
-            itemref = Element('itemref', attributes={(None, 'idref'): self.files[joint.path].identification})
-
-            if joint.linear is True:
-                itemref.attributes[(None, 'linear')] = 'yes'
-            elif joint.linear is False:
-                itemref.attributes[(None, 'linear')] = 'no'
-
-            spine.children.append(itemref)
 
         x = Xl(header=Header(), root=pretty_insert(package, dont_do_when_one_child=True))
         return x.string()
