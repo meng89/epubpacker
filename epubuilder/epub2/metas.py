@@ -1,6 +1,6 @@
 from epubuilder.xl import Element
 
-from epubuilder.public.meta.base import Base
+from epubuilder.public.metas.base import Base
 
 
 class Meta(Base):

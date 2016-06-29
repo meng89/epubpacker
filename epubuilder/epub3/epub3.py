@@ -8,8 +8,8 @@ from epubuilder import mimes
 
 import epubuilder.public.epub as p
 
-from epubuilder.public.meta.dcmes import Identifier, URI_DC
-from .meta.dcterms import get
+from epubuilder.public.metas.dcmes import Identifier, URI_DC
+from .metas.dcterms import get
 from epubuilder.tools import w3c_utc_date
 from epubuilder.xl import Xl, Header, Element, Text, URI_XML, pretty_insert
 

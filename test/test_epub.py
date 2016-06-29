@@ -3,7 +3,7 @@ import os
 
 from epubuilder.public import Joint, File
 
-from epubuilder.public.meta.dcmes import Title, Language, Identifier
+from epubuilder.public.metas.dcmes import Title, Language, Identifier
 
 xhtml_template = """
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -53,7 +53,6 @@ def make_epub(epub, section):
     sec3.subs.extend([sec3_1, sec3_2])
 
     book.toc.extend([sec1, sec2, sec3])
-    print(book.toc)
 
     return book
 
@@ -81,7 +80,7 @@ def test_epub3():
 def test_epub2():
     from epubuilder.epub2 import Epub2
     from epubuilder.public.epub import Section
-    from epubuilder.epub2.meta import Cover
+    from epubuilder.epub2.metas import Cover
 
     book = make_epub(Epub2, Section)
 

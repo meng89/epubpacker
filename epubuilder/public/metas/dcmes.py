@@ -6,8 +6,9 @@ All classes in this module
 
 import uuid
 
-from .attrs import Id, Scheme, AltScript, Dir, FileAs, Role, Lang, Authority, Attrs
 from epubuilder.xl import Element, Text, URI_XML
+
+from .attrs import Id, Scheme, AltScript, Dir, FileAs, Role, Lang, Authority, Attrs
 from .base import Base
 
 URI_DC = 'http://purl.org/dc/elements/1.1/'

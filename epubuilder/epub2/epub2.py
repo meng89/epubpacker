@@ -7,7 +7,7 @@ from PIL import Image
 
 import epubuilder.public.epub as p
 
-from epubuilder.public.meta.dcmes import Identifier, URI_DC
+from epubuilder.public.metas.dcmes import Identifier, URI_DC
 
 from epubuilder.xl import Xl, Header, Element, pretty_insert
 
