@@ -28,10 +28,10 @@ def make_epub(epub, section):
 
     def make_page(title, html_path=None, content=None):
         if html_path and content:
-            p = File(xhtml_template.format(title=title, content=content).encode(), mime='application/xhtml+xml')
-            book.files[html_path] = p
+            file = File(xhtml_template.format(title=title, content=content).encode(), mime='application/xhtml+xml')
+            book.files[html_path] = file
 
-            book.spine.append(Joint(html_path))
+            book.spine.append(Joint(file))
 
         sec = section(title, href=html_path)
         return sec
@@ -72,7 +72,7 @@ def test_epub3():
 
     # make user toc
     user_toc_path, other_paths = book.addons_make_user_toc_xhtml()
-    book.spine.insert(0, Joint(user_toc_path))
+    book.spine.insert(0, Joint(book.files[user_toc_path]))
     book.toc.insert(0, Section('Table of Contents', href=user_toc_path))
 
     write_epub(book, '3.epub')
@@ -88,6 +88,11 @@ def test_epub2():
     book.files['cover.png'] = cover_file
     book.metadata.append(Cover(cover_file))
 
-    # cover_page_path = book.make_cover_page(image_path='cover.png')
+    cover_page_path = 'cover.xhtml'
+    book.make_cover_page(image_path='cover.png', cover_page_path=cover_page_path)
+
+    book.spine.insert(0, Joint(book.files[cover_page_path]))
+
+    book.toc.ncx_depth = 1
 
     write_epub(book, '2.epub')

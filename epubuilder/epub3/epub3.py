@@ -63,6 +63,8 @@ class _SubSections(List):
 
 
 class Section(epubuilder.epub2.epub2.Section):
+    __doc__ = epubuilder.epub2.epub2.Section.__doc__
+
     def __init__(self, title, href=None):
         super().__init__(title, href)
 
@@ -208,7 +210,7 @@ class Epub3(p.Epub):
         toc_ncx_item_e_id = self._find_ncx_id(manifest.children)
 
         # spine
-        spine = self._get_spine_element()
+        spine = self.spine.to_element()
         package.children.append(spine)
         spine.attributes['toc'] = toc_ncx_item_e_id
 
@@ -217,11 +219,6 @@ class Epub3(p.Epub):
         # return pretty_insert(package, dont_do_when_one_child=True).string()
 
     def write(self, filename):
-        """write to file.
-
-        :param filename: file name.
-        :type filename: str
-        """
 
         z = zipfile.ZipFile(filename, 'w', compression=zipfile.ZIP_DEFLATED)
 
@@ -256,6 +253,8 @@ class Epub3(p.Epub):
 
         self._temp_files.clear()
         z.close()
+
+    write.__doc__ = p.Epub.write.__doc__
 
     def addons_make_user_toc_xhtml(self):
         """write this function because some EPUB reader not supports nav hidden attribute,

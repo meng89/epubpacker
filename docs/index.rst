@@ -9,10 +9,12 @@ Welcome to epubuilder's documentation!
 Contents:
 
 .. toctree::
-    :maxdepth: 1
+    :maxdepth: 2
 
-    epub
-    meta
+
+    epub3
+    epub2
+    public
 
 
 

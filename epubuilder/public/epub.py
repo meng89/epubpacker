@@ -87,22 +87,37 @@ class Spine(List):
         if not isinstance(item, Joint):
             raise TypeError
 
+    def to_element(self):
+        spine = Element('spine')
+
+        for joint in self:
+            itemref = Element('itemref', attributes={(None, 'idref'): joint.file.identification})
+
+            if joint.linear is True:
+                itemref.attributes[(None, 'linear')] = 'yes'
+            elif joint.linear is False:
+                itemref.attributes[(None, 'linear')] = 'no'
+
+            spine.children.append(itemref)
+
+        return spine
+
 
 class Joint:
-    def __init__(self, path, linear=None):
+    def __init__(self, file, linear=None):
         """
-        :param path: file path, should in Epub.Files.keys()
-        :type path: str
+        :param file: file path, should in Epub.Files.keys()
+        :type file: file
         :param linear: I don't know what is this mean. visit http://idpf.org to figure out by yourself.
         :type linear: bool
         """
-        self._path = path
+        self._file = file
         self.linear = linear
 
     @property
-    def path(self):
+    def file(self):
         """as class parmeter"""
-        return self._path
+        return self._file
 
 
 class Toc(List):
@@ -211,21 +226,6 @@ class Epub:
                 ncx_id = item.attributes[(None, 'id')]
                 break
         return ncx_id
-
-    def _get_spine_element(self):
-        spine = Element('spine')
-
-        for joint in self.spine:
-            itemref = Element('itemref', attributes={(None, 'idref'): self.files[joint.path].identification})
-
-            if joint.linear is True:
-                itemref.attributes[(None, 'linear')] = 'yes'
-            elif joint.linear is False:
-                itemref.attributes[(None, 'linear')] = 'no'
-
-            spine.children.append(itemref)
-
-        return spine
 
     @staticmethod
     def _get_container_xmlstring(opf_path):

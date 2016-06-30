@@ -134,7 +134,7 @@ class Epub2(p.Epub):
         toc_ncx_item_e_id = self._find_ncx_id(manifest.children)
 
         # spine
-        spine = self._get_spine_element()
+        spine = self.spine.to_element()
         package.children.append(spine)
         spine.attributes['toc'] = toc_ncx_item_e_id
 
@@ -173,6 +173,8 @@ class Epub2(p.Epub):
         self._temp_files.clear()
         z.close()
 
+    write.__doc__ = p.Epub.write.__doc__
+
     def make_cover_page(self, image_path, cover_page_path=None, width=None, heigth=None):
         if cover_page_path:
             if cover_page_path in self.files.keys():
@@ -180,17 +182,14 @@ class Epub2(p.Epub):
         else:
             cover_page_path or self._get_unused_filename(None, 'cover.xhtml')
 
-        img = Image.open(io.BytesIO(self.files[image_path]))
+        img = Image.open(io.BytesIO(self.files[image_path].binary))
         width = width or img.size[0]
-        heigth = heigth or img.size[1]
+        height = heigth or img.size[1]
 
         relative = relative_path(os.path.split(cover_page_path)[0], image_path)
 
-        page_string = open(os.path.join(os.path.dirname(__file__), 'static')).read().format(title='Cover',
-                                                                                            width=width,
-                                                                                            heigth=heigth,
-                                                                                            image_href=relative
-                                                                                            )
+        xhtml_string = open(os.path.join(os.path.dirname(__file__), 'static', 'cover.xhtml')).read()
+        page_string = xhtml_string.format(title='Cover', width=width, height=height, image_href=relative)
         self.files[cover_page_path] = p.File(page_string.encode())
 
         return cover_page_path
