@@ -49,6 +49,8 @@ class Files(p.Files):
 # TOC nav
 ###############################################################################
 class _Toc(epubuilder.public.epub.Toc):
+    __doc__ = epubuilder.public.epub.Toc.__doc__
+
     def __init__(self):
         super().__init__()
 

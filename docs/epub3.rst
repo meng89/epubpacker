@@ -5,8 +5,11 @@ epub3
 
 
 .. autoclass:: Epub3
-    :members:
-    :inherited-members:
+    :member-order: metadata, files, spine, toc
+    :inherited-members: metadata, files, spine, toc
+    :members: metadata, files, spine, toc
+
+
 
 
 
