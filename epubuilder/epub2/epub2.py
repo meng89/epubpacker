@@ -1,29 +1,108 @@
+import uuid
 import zipfile
-import os
+
 import io
-
+import os
 from PIL import Image
-
+from hooky import List
 
 import epubuilder.public.epub as p
-
+from epubuilder.public.epub import Toc
 from epubuilder.public.metas.dcmes import Identifier, URI_DC
-
-from epubuilder.xl import Xl, Header, Element, pretty_insert
-
-from epubuilder import mimes
-
 from epubuilder.tools import relative_path
+from epubuilder.xl import Xl, Header, Element, pretty_insert, Text
+
+
+class _Toc(Toc):
+    def _before_add(self, key=None, item=None):
+        if not isinstance(item, Section):
+            raise TypeError
+
+
+class _SubSections(List):
+    __doc__ = _Toc.__doc__
+    _before_add = getattr(_Toc, '_before_add')
+
+
+class Section:
+    """
+    store title, href and sub :class:`Section` objects.
+    """
+    def __init__(self, title, href=None):
+        """
+        :param title: title of content.
+        :type title: str
+        :param href: html link to a file path in :class:`Epub.files`, can have a bookmark. example: `text/a.html#hello`
+        :type href: str
+        """
+        self._title = title
+        self._href = href
+        self._subs = _SubSections()
+
+    @property
+    def title(self):
+        """as class parameter"""
+        return self._title
+
+    @title.setter
+    def title(self, value):
+        self._title = value
+
+    @property
+    def href(self):
+        """ as class parmeter"""
+        return self._href
+
+    @href.setter
+    def href(self, value):
+        self._href = value
+
+    @property
+    def subs(self):
+        return self._subs
+
+    def to_toc_ncx_element(self):
+        nav_point = Element('navPoint', attributes={'id': 'id_' + uuid.uuid4().hex})
+
+        nav_label = Element('navLabel')
+        nav_point.children.append(nav_label)
+
+        text = Element('text')
+        nav_label.children.append(text)
+
+        text.children.append(Text(self.title))
+
+        content = Element('content')
+        nav_point.children.append(content)
+
+        first_sub = None
+        for subsection in self.subs:
+            sub = subsection.to_toc_ncx_element()
+            nav_point.children.append(sub)
+
+            first_sub = first_sub or sub
+
+        if self.href:
+            content.attributes[(None, 'src')] = self.href
+
+        elif first_sub:
+            content.attributes[(None, 'src')] = first_sub.children[1].attributes[(None, 'src')]
+
+        return nav_point
 
 
 class Epub2(p.Epub):
     def __init__(self):
         super().__init__()
 
+        self._toc = _Toc()
+
         self._cover_path = None
 
         # for self.write()
         self._temp_files = p.Files()
+
+    toc = property(lambda self: self._toc, doc=str(_Toc.__doc__ if _Toc.__doc__ else ''))
 
     def _get_opf_xmlstring(self):
 

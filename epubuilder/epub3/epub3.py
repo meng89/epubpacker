@@ -4,6 +4,7 @@ import html5lib
 import os
 from hooky import List
 
+import epubuilder.epub2.epub2
 from epubuilder import mimes
 
 import epubuilder.public.epub as p
@@ -47,7 +48,7 @@ class Files(p.Files):
 ###############################################################################
 # TOC nav
 ###############################################################################
-class _Toc(p.Toc):
+class _Toc(epubuilder.public.epub.Toc):
     def __init__(self):
         super().__init__()
 
@@ -61,7 +62,7 @@ class _SubSections(List):
     _before_add = getattr(_Toc, '_before_add')
 
 
-class Section(p.Section):
+class Section(epubuilder.epub2.epub2.Section):
     def __init__(self, title, href=None):
         super().__init__(title, href)
 
@@ -115,6 +116,8 @@ class Epub3(p.Epub):
     def __init__(self):
         super().__init__()
 
+        self._toc = _Toc
+
         self._files = Files()
 
         # nav
@@ -122,6 +125,8 @@ class Epub3(p.Epub):
 
         # for self.write()
         self._temp_files = Files()
+
+    toc = property(lambda self: self._toc, doc=str(_Toc.__doc__ if _Toc.__doc__ else ''))
 
     def _get_nav_element(self):
         default_ns = 'http://www.w3.org/1999/xhtml'

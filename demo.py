@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 from epubuilder.epub3 import Epub3, File, Joint, Section
-from epubuilder.public import Section, File, Joint
+from epubuilder.public import File, Joint
+from epubuilder.epub2.epub2 import Section
 
 from PIL import Image
 

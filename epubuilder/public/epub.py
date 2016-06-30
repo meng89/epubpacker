@@ -1,21 +1,16 @@
-import uuid
-import os
 import string
+import uuid
+
+import os
 import random
-
 from abc import abstractmethod
-
-
 from hooky import List, Dict
 
-
-from epubuilder.xl import Element, Text, pretty_insert, xml_header
-
 import epubuilder.version
-from epubuilder.public.metas.base import Base
 from epubuilder import mimes
+from epubuilder.public.metas.base import Base
 from epubuilder.public.metas.dcmes import Identifier
-
+from epubuilder.xl import Element, Text, pretty_insert, xml_header
 
 CONTAINER_PATH = 'META-INF' + os.sep + 'container.xml'
 ROOT_OF_OPF = 'EPUB'
@@ -28,98 +23,6 @@ class Metadata(List):
     def _before_add(self, key=None, item=None):
         if not isinstance(item, Base):
             raise TypeError
-
-
-class Toc(List):
-    """list-like.
-
-    table of contents
-
-    store :class:`Section` objects.
-    """
-    def __init__(self):
-        super().__init__()
-        self.title = 'Table of Contents'
-
-        self.ncx_depth = -1
-        self.ncx_totalPageCount = -1
-        self.ncx_maxPageNumber = -1
-
-    def _before_add(self, key=None, item=None):
-        if not isinstance(item, Section):
-            raise TypeError
-
-
-class _SubSections(List):
-    __doc__ = Toc.__doc__
-    _before_add = getattr(Toc, '_before_add')
-
-
-class Section:
-    """
-    store title, href and sub :class:`Section` objects.
-    """
-    def __init__(self, title, href=None):
-        """
-        :param title: title of content.
-        :type title: str
-        :param href: html link to a file path in :class:`Epub.files`, can have a bookmark. example: `text/a.html#hello`
-        :type href: str
-        """
-        self._title = title
-        self._href = href
-        self._subs = _SubSections()
-
-    @property
-    def title(self):
-        """as class parameter"""
-        return self._title
-
-    @title.setter
-    def title(self, value):
-        self._title = value
-
-    @property
-    def href(self):
-        """ as class parmeter"""
-        return self._href
-
-    @href.setter
-    def href(self, value):
-        self._href = value
-
-    @property
-    def subs(self):
-        return self._subs
-
-    def to_toc_ncx_element(self):
-        nav_point = Element('navPoint', attributes={'id': 'id_' + uuid.uuid4().hex})
-
-        nav_label = Element('navLabel')
-        nav_point.children.append(nav_label)
-
-        text = Element('text')
-        nav_label.children.append(text)
-
-        text.children.append(Text(self.title))
-
-        content = Element('content')
-        nav_point.children.append(content)
-
-        first_sub = None
-        for subsection in self.subs:
-            sub = subsection.to_toc_ncx_element()
-            nav_point.children.append(sub)
-
-            first_sub = first_sub or sub
-
-        if self.href:
-            content.attributes[(None, 'src')] = self.href
-
-        elif first_sub:
-            content.attributes[(None, 'src')] = first_sub.children[1].attributes[(None, 'src')]
-
-        return nav_point
 
 
 class Files(Dict):
@@ -202,12 +105,32 @@ class Joint:
         return self._path
 
 
+class Toc(List):
+    """list-like.
+
+    table of contents
+
+    store :class:`Section` objects.
+    """
+    def __init__(self):
+        super().__init__()
+        self.title = 'Table of Contents'
+
+        self.ncx_depth = -1
+        self.ncx_totalPageCount = -1
+        self.ncx_maxPageNumber = -1
+
+    @abstractmethod
+    def _before_add(self, key=None, item=None):
+        pass
+
+
 class Epub:
     def __init__(self):
         self._metadata = Metadata()
         self._files = Files()
         self._spine = Spine()
-        self._toc = Toc()
+        # self._toc = Toc()
 
         self._cover_path = None
 

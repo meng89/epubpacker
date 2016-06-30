@@ -1,1 +1,1 @@
-from .epub import File, Joint, Spine, Section
+from .epub import File, Joint, Spine
