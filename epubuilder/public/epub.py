@@ -184,21 +184,6 @@ class Spine(List):
         if not isinstance(item, Joint):
             raise TypeError
 
-    def to_element(self):
-        spine = Element('spine')
-
-        for joint in self:
-            itemref = Element('itemref', attributes={(None, 'idref'): self[joint.path].identification})
-
-            if joint.linear is True:
-                itemref.attributes[(None, 'linear')] = 'yes'
-            elif joint.linear is False:
-                itemref.attributes[(None, 'linear')] = 'no'
-
-            spine.children.append(itemref)
-
-        return spine
-
 
 class Joint:
     def __init__(self, path, linear=None):
@@ -303,6 +288,21 @@ class Epub:
                 ncx_id = item.attributes[(None, 'id')]
                 break
         return ncx_id
+
+    def _get_spine_element(self):
+        spine = Element('spine')
+
+        for joint in self.spine:
+            itemref = Element('itemref', attributes={(None, 'idref'): self.files[joint.path].identification})
+
+            if joint.linear is True:
+                itemref.attributes[(None, 'linear')] = 'yes'
+            elif joint.linear is False:
+                itemref.attributes[(None, 'linear')] = 'no'
+
+            spine.children.append(itemref)
+
+        return spine
 
     @staticmethod
     def _get_container_xmlstring(opf_path):

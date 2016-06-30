@@ -203,7 +203,7 @@ class Epub3(p.Epub):
         toc_ncx_item_e_id = self._find_ncx_id(manifest.children)
 
         # spine
-        spine = self.spine.to_element()
+        spine = self._get_spine_element()
         package.children.append(spine)
         spine.attributes['toc'] = toc_ncx_item_e_id
 
