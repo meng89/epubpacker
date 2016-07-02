@@ -5,12 +5,7 @@ epub3
 
 
 .. autoclass:: Epub3
-    :member-order: metadata, files, spine, toc
-    :inherited-members: metadata, files, spine, toc
-    :members: metadata, files, spine, toc
-
-
-
+    :members: metadata, files, toc, spine, write, addons_make_user_toc_xhtml
 
 
 .. autoclass:: Section
