@@ -68,7 +68,9 @@ target/
 #Ipython Notebook
 .ipynb_checkpoints
 
-demo*
+demo.py
 .idea/
 
-_built*
+_built_book/
+
+

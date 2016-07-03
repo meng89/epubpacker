@@ -91,7 +91,7 @@ class Section:
         return nav_point
 
 
-class Epub2(p.Epub):
+class Epub(p.Epub):
     def __init__(self):
         super().__init__()
 

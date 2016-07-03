@@ -4,7 +4,7 @@ epub2
 .. automodule:: epubuilder.epub2
 
 
-.. autoclass:: Epub2
+.. autoclass:: Epub
     :members:
     :inherited-members:
 

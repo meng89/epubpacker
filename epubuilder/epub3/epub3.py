@@ -5,7 +5,7 @@ import os
 from hooky import List
 
 import epubuilder.epub2.epub2
-from epubuilder import mimes
+from epubuilder.public import mimes
 
 import epubuilder.public.epub as p
 
@@ -116,7 +116,7 @@ class Section(epubuilder.epub2.epub2.Section):
         return li
 
 
-class Epub3(p.Epub):
+class Epub(p.Epub):
     def __init__(self):
         super().__init__()
 
@@ -131,6 +131,18 @@ class Epub3(p.Epub):
         self._temp_files = Files()
 
     toc = property(lambda self: self._toc, doc=str(_Toc.__doc__ if _Toc.__doc__ else ''))
+
+    @property
+    def cover_path(self):
+        """tag your file as a cover"""
+        return self._cover_path
+
+    @cover_path.setter
+    def cover_path(self, path):
+        if path is not None and path not in self.files.keys():
+            raise ValueError()
+
+        self._cover_path = path
 
     def _get_nav_element(self):
         default_ns = 'http://www.w3.org/1999/xhtml'

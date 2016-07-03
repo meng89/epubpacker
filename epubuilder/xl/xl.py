@@ -223,14 +223,6 @@ def pretty_insert(element, start_indent=0, step=4, dont_do_when_one_child=True):
     return new_element
 
 
-IS_NAME_FIXED = 'is_name_fixed'
-ATTRIBUTES = 'attributes'
-NAME_CHECKFUNC = 'name_checkfunc'
-VALUE_CHECKFUNCS = 'value_checkfuncs'
-CHILDREN = 'children'
-DESCRIPTORS = 'descriptors'
-
-
 URI_XML = 'http://www.w3.org/XML/1998/namespace'
 
 
@@ -311,17 +303,6 @@ class Element(Node):
         self.children = Children()
 
     @property
-    def descriptor(self):
-        return self.__dict__['descriptor'] if 'descriptor' in self.__dict__.keys() else None
-
-    @descriptor.setter
-    def descriptor(self, value):
-        self.__dict__['descriptor'] = value
-        if self.descriptor:
-            self.attributes.descriptor = self.descriptor[ATTRIBUTES]
-            self.children.descriptor = self.descriptor[CHILDREN]
-
-    @property
     def name(self):
         return self.__dict__['name']
 
@@ -335,14 +316,6 @@ class Element(Node):
 
         if value[0] is not None and not isinstance(value[0], str):
             raise ValueError
-
-        # if not isinstance(value[1], str):
-        #    raise ValueError
-
-        if self.descriptor:
-            self.descriptor[NAME_CHECKFUNC](value)
-
-        # if value[0] is not None and value[0] not in self.attributes.keys():
 
         self.__dict__['name'] = value
 
@@ -508,29 +481,12 @@ class Attributes(Dict):
     def __init__(self, attributes=None):
         super().__init__()
 
-        self.descriptor = None
-
         if attributes:
             self.update(attributes)
-
-    @property
-    def descriptor(self):
-        return self.__dict__['descriptor']
-
-    @descriptor.setter
-    def descriptor(self, value):
-        self.__dict__['descriptor'] = value
-
-        for attr_name, value in self.items():
-            self[attr_name] = value
 
     def __setitem__(self, key, value):
         if not isinstance(key, tuple):
             key = (None, key)
-
-        if self.descriptor:
-            self.descriptor[NAME_CHECKFUNC](key)
-            self.descriptor[VALUE_CHECKFUNCS][key](value)
 
         if key == (None, 'xmlns'):
             raise AttributeError
@@ -539,32 +495,12 @@ class Attributes(Dict):
 
 
 class Children(List):
-    def _before_add(self, key=None, item=None):
-        if not isinstance(item, Node):
-            raise TypeError('{} is not legal'.format(item.__class__.__name__))
-
     def __init__(self):
         super().__init__()
 
-    @property
-    def descriptor(self):
-        return self.__dict__['descriptors'] if 'descriptors' in self.__dict__.keys() else None
-
-    @descriptor.setter
-    def descriptor(self, value):
-        self.__dict__['descriptors'] = value
-
-        for item in self:
-            if not isinstance(item, Text):
-                self.descriptor[NAME_CHECKFUNC](item.element_name)
-                item.descriptor = self.descriptor[DESCRIPTORS][item.element_name]
-
-    def insert(self, i, item):
-        if isinstance(item, Element) and self.descriptor:
-            self.descriptor[NAME_CHECKFUNC](item.name)
-            item.descriptor = self.descriptor[DESCRIPTORS][item.name]
-
-        super().insert(i, item)
+    def _before_add(self, key=None, item=None):
+        if not isinstance(item, Node):
+            raise TypeError('{} is not legal'.format(item.__class__.__name__))
 
 
 class Text(Node, UserString):

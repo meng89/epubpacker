@@ -1,27 +1,25 @@
-.. epubuilder documentation master file, created by
-   sphinx-quickstart on Wed Jun 15 16:14:20 2016.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
-Welcome to epubuilder's documentation!
-======================================
-
-Contents:
-
 .. toctree::
+    :hidden:
+    :titlesonly:
     :maxdepth: 2
 
+    user_guide
+    demo/index
+    api/index
 
-    epub3
-    epub2
-    public
+epubuilder is a Python 3 module help your to packaging your files to EPUB 2 or 3 document.
 
 
+Installing
+----------
 
-Indices and tables
-==================
+::
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+    pip3 install epubuilder
 
+or
+
+::
+
+    layman -a observer
+    emerge -av epubuilder

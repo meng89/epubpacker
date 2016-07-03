@@ -1,9 +1,13 @@
 from setuptools import setup
+from distutils.util import convert_path
 import os 
 
-NAME = "epubuilder_old"
+NAME = "epubuilder"
 
-VERSION = '0.5.6'
+main_ns = {}
+ver_path = convert_path('{}/version.py'.format(NAME))
+with open(ver_path) as ver_file:
+    exec(ver_file.read(), main_ns)
 
 DESCRIPTION = 'A library to write EPUB v3.'
 
@@ -21,14 +25,14 @@ CLASSIFIERS = ['Development Status :: 4 - Beta',
                'Topic :: Software Development :: Libraries :: Python Modules']
 
 setup(name=NAME,
-      version=VERSION,
+      version=main_ns['__version__'],
       description=DESCRIPTION,
       long_description=LONG_DESCRIPTION,
       author='Chen Meng',
       author_email='ObserverChan@gmail.com',
       license='MIT',
       url=URL,
-      packages=['epubuilder_old'],
+      packages=['epubuilder'],
       install_requires=[
           'lxml>=3.4.4',
           'python-magic>=0.4.3'

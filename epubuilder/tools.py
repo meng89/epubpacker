@@ -1,12 +1,13 @@
 import magic
 
-from epubuilder import mimes
+from epubuilder.public import mimes
 from epubuilder.xl import parse
 
 
 def relative_path(in_dir, to_file_path):
     """
     if you got file with path "text/cover.xhtml" and it links to "image/cover.png"
+
     :param in_dir: "text"
     :param to_file_path: "image/cover.png"
     :return: "../image/cover.png"

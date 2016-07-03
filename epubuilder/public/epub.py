@@ -7,7 +7,7 @@ from abc import abstractmethod
 from hooky import List, Dict
 
 import epubuilder.version
-from epubuilder import mimes
+from epubuilder.public import mimes
 from epubuilder.public.metas.base import Base
 from epubuilder.public.metas.dcmes import Identifier
 from epubuilder.xl import Element, Text, pretty_insert, xml_header
@@ -161,18 +161,6 @@ class Epub:
     spine = property(lambda self: self._spine, doc=str(Spine.__doc__ if Spine.__doc__ else ''))
 
     toc = property(lambda self: self._toc, doc=str(Toc.__doc__ if Toc.__doc__ else ''))
-
-    @property
-    def cover_path(self):
-        """tag your file as a cover"""
-        return self._cover_path
-
-    @cover_path.setter
-    def cover_path(self, path):
-        if path is not None and path not in self.files.keys():
-            raise ValueError()
-
-        self._cover_path = path
 
     def _get_ncx_xmlstring(self):
         def_uri = 'http://www.daisy.org/z3986/2005/ncx/'

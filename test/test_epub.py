@@ -64,9 +64,9 @@ def write_epub(book, filename):
 
 
 def test_epub3():
-    from epubuilder.epub3 import Epub3, Section
+    from epubuilder.epub3 import Epub, Section
 
-    book = make_epub(Epub3, Section)
+    book = make_epub(Epub, Section)
     book.files['cover.png'] = File(open(os.path.join(cur_path, 'cover', 'cover.png'), 'rb').read())
     book.cover_path = 'cover.png'
 
@@ -79,10 +79,10 @@ def test_epub3():
 
 
 def test_epub2():
-    from epubuilder.epub2 import Epub2, Section
+    from epubuilder.epub2 import Epub, Section
     from epubuilder.epub2.metas import Cover
 
-    book = make_epub(Epub2, Section)
+    book = make_epub(Epub, Section)
 
     cover_file = File(open(os.path.join(cur_path, 'cover', 'cover.png'), 'rb').read())
     book.files['cover.png'] = cover_file
