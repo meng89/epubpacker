@@ -51,7 +51,7 @@ and language of this book:
     book.metadata.append(Identifier('any_string_different_from_other_identifier_of_other_book'))
     book.metadata.append(Language('en'))
 
-A book have a cover is looks more professional:
+A book have a cover looks more professional:
 ::
 
     book.files['cover.png'] = File(open('cover.png', 'rb').read())

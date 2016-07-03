@@ -16,6 +16,16 @@ CONTAINER_PATH = 'META-INF' + os.sep + 'container.xml'
 ROOT_OF_OPF = 'EPUB'
 
 
+class FatherEpub:
+    @property
+    def _epub(self):
+        return self.__epub
+
+    @_epub.setter
+    def _epub(self, value):
+        self.__epub = value
+
+
 class Metadata(List):
     """list-like.
 
@@ -75,7 +85,7 @@ class File:
         return self._binary
 
 
-class Spine(List):
+class Spine(List, FatherEpub):
     """list-like.
 
     "The spine defines the default reading order"
@@ -87,37 +97,39 @@ class Spine(List):
         if not isinstance(item, Joint):
             raise TypeError
 
+    def _after_add(self, key=None, item=None):
+        setattr(self[key], '_epub', self._epub)
+
     def to_element(self):
         spine = Element('spine')
-
         for joint in self:
-            itemref = Element('itemref', attributes={(None, 'idref'): joint.file.identification})
-
-            if joint.linear is True:
-                itemref.attributes[(None, 'linear')] = 'yes'
-            elif joint.linear is False:
-                itemref.attributes[(None, 'linear')] = 'no'
-
-            spine.children.append(itemref)
-
+            spine.children.append(joint.to_element())
         return spine
 
 
-class Joint:
-    def __init__(self, file, linear=None):
+class Joint(FatherEpub):
+    def __init__(self, path, linear=None):
         """
-        :param file: file path, should in Epub.Files.keys()
-        :type file: file
+        :param path: file path, should in Epub.Files.keys()
+        :type path: str
         :param linear: I don't know what is this mean. visit http://idpf.org to figure out by yourself.
         :type linear: bool
         """
-        self._file = file
+        self._path = path
         self.linear = linear
 
     @property
-    def file(self):
+    def path(self):
         """as class parmeter"""
-        return self._file
+        return self._path
+
+    def to_element(self):
+        itemref = Element('itemref', attributes={(None, 'idref'): self._epub.files[self.path].identification})
+
+        if self.linear is True:
+            itemref.attributes[(None, 'linear')] = 'yes'
+        elif self.linear is False:
+            itemref.attributes[(None, 'linear')] = 'no'
 
 
 class Toc(List):
@@ -143,8 +155,14 @@ class Toc(List):
 class Epub:
     def __init__(self):
         self._metadata = Metadata()
+        setattr(self._metadata, '_epub', self)
+
         self._files = Files()
+        setattr(self._files, '_epub', self)
+
         self._spine = Spine()
+        setattr(self._spine, '_epub', self)
+
         # self._toc = Toc()
 
         self._cover_path = None
