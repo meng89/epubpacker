@@ -153,7 +153,7 @@ class Epub(p.Epub):
             z.writestr(p.ROOT_OF_OPF + os.sep + filename, file.binary, zipfile.ZIP_DEFLATED)
 
         # ncx
-        ncx_xmlstring = self._get_ncx_xmlstring()
+        ncx_xmlstring = self.toc.to_ncx_element()
         toc_ncx_filename = self._get_unused_filename(None, 'toc.ncx')
         self._temp_files[toc_ncx_filename] = p.File(ncx_xmlstring.encode(), mime='application/x-dtbncx+xml')
 

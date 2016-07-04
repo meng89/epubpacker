@@ -31,7 +31,7 @@ def make_epub(epub, section):
             file = File(xhtml_template.format(title=title, content=content).encode(), mime='application/xhtml+xml')
             book.files[html_path] = file
 
-            book.spine.append(Joint(file))
+            book.spine.append(Joint(html_path))
 
         sec = section(title, href=html_path)
         return sec

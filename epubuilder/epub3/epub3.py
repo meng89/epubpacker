@@ -17,34 +17,6 @@ from epubuilder.xl import Xl, Header, Element, Text, URI_XML, pretty_insert
 # 'cover-image', 'mathml', 'nav', 'remote-resources', 'scripted', 'svg', 'switch'
 
 
-class Files(p.Files):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def to_elements(self):
-        elements = []
-
-        for item in super().to_elements():
-            properties = []
-
-            if item.attributes[(None, 'media-type')] in (mimes.XHTML, mimes.HTML):
-
-                html_string = self[item.attributes[(None, 'href')]].binary.decode()
-
-                if has_element('script', html_string):
-                    properties.append('scripted')
-
-                if has_element('math', html_string):
-                    properties.append('mathml')
-
-            if properties:
-                item.attributes[(None, 'properties')] = ' '.join(properties)
-
-            elements.append(item)
-
-        return elements
-
-
 ###############################################################################
 # TOC nav
 ###############################################################################
@@ -53,6 +25,35 @@ class _Toc(epubuilder.public.epub.Toc):
 
     def __init__(self):
         super().__init__()
+
+    def _get_nav_element(self):
+        default_ns = 'http://www.w3.org/1999/xhtml'
+        epub_ns = 'http://www.idpf.org/2007/ops'
+
+        html = Element((None, 'html'), prefixes={default_ns: None, epub_ns: 'epub'})
+
+        head = Element('head')
+        html.children.append(head)
+
+        if self.title:
+            _title = Element('title')
+            head.children.append(_title)
+            _title.children.append(Text(self.title))
+
+        body = Element((None, 'body'))
+        html.children.append(body)
+
+        if self:
+            nav = Element((None, 'nav'), prefixes={epub_ns: 'epub'}, attributes={(epub_ns, 'type'): 'toc'})
+            ol = Element((None, 'ol'))
+
+            for section in self:
+                ol.children.append(section.to_nav_li_element())
+
+            nav.children.append(ol)
+            body.children.append(nav)
+
+        return html
 
     def _before_add(self, key=None, item=None):
         if not isinstance(item, Section):
@@ -122,13 +123,11 @@ class Epub(p.Epub):
 
         self._toc = _Toc
 
-        self._files = Files()
-
         # nav
         self._toc = _Toc()
 
         # for self.write()
-        self._temp_files = Files()
+        self._temp_files = p.Files()
 
     toc = property(lambda self: self._toc, doc=str(_Toc.__doc__ if _Toc.__doc__ else ''))
 
@@ -144,38 +143,31 @@ class Epub(p.Epub):
 
         self._cover_path = path
 
-    def _get_nav_element(self):
-        default_ns = 'http://www.w3.org/1999/xhtml'
-        epub_ns = 'http://www.idpf.org/2007/ops'
-
-        html = Element((None, 'html'), prefixes={default_ns: None, epub_ns: 'epub'})
-
-        head = Element('head')
-        html.children.append(head)
-
-        if self.toc.title:
-            _title = Element('title')
-            head.children.append(_title)
-            _title.children.append(Text(self.toc.title))
-
-        body = Element((None, 'body'))
-        html.children.append(body)
-
-        if self.toc:
-            nav = Element((None, 'nav'), prefixes={epub_ns: 'epub'}, attributes={(epub_ns, 'type'): 'toc'})
-            ol = Element((None, 'ol'))
-
-            for section in self.toc:
-                ol.children.append(section.to_nav_li_element())
-
-            nav.children.append(ol)
-            body.children.append(nav)
-
-        return html
-
     def _get_nav_xmlstring(self):
         html = self._get_nav_element()
         return pretty_insert(html, dont_do_when_one_child=True).string()
+
+    def _process_files_elements_properties(self, elements):
+        new_elements = []
+        for item in elements:
+            properties = []
+
+            if item.attributes[(None, 'media-type')] in (mimes.XHTML, mimes.HTML):
+
+                html_string = self.files[item.attributes[(None, 'href')]].binary.decode()
+
+                if has_element('script', html_string):
+                    properties.append('scripted')
+
+                if has_element('math', html_string):
+                    properties.append('mathml')
+
+            if properties:
+                item.attributes[(None, 'properties')] = ' '.join(properties)
+
+            new_elements.append(item)
+
+        return new_elements
 
     def _get_opf_xmlstring(self, toc_path):
 
@@ -209,9 +201,9 @@ class Epub(p.Epub):
         manifest = Element('manifest')
         package.children.append(manifest)
 
-        manifest.children.extend(self.files.to_elements())
+        manifest.children.extend(self._process_files_elements_properties(self.files.to_elements()))
 
-        for item in self._temp_files.to_elements():
+        for item in self._process_files_elements_properties(self._temp_files.to_elements()):
             if item.attributes[(None, 'href')] == toc_path:
                 item.attributes[(None, 'properties')] = 'nav'
 
@@ -248,7 +240,7 @@ class Epub(p.Epub):
         self._temp_files[toc_nav_path] = p.File(nav_xmlstring.encode(), mime='application/xhtml+xml')
 
         # ncx
-        ncx_xmlstring = self._get_ncx_xmlstring()
+        ncx_xmlstring = pretty_insert(self.toc.to_ncx_element(), dont_do_when_one_child=True).string()
         toc_ncx_filename = self._get_unused_filename(None, 'toc.ncx')
         self._temp_files[toc_ncx_filename] = p.File(ncx_xmlstring.encode(), mime='application/x-dtbncx+xml')
 
