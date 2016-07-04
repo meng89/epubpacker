@@ -28,7 +28,7 @@ or
     emerge -av epubuilder
 
 
-why epubuilder?
+Why epubuilder?
 ---------------
 * Python3,
 * Clear,
