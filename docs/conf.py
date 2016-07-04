@@ -277,3 +277,5 @@ texinfo_documents = [
 autoclass_content = 'both'
 autodoc_member_order = 'bysource'
 # autodoc_member_order = 'groupwise'
+
+autosummary_generate = True

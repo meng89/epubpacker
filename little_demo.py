@@ -1,6 +1,6 @@
 import uuid
 
-from epubuilder.epub3 import Epub, Section
+from epubuilder.epub3 import Epub3, Section
 from epubuilder.public import Joint, File
 from epubuilder.public.metas.dcmes import Title, Language, Identifier
 
@@ -10,7 +10,7 @@ html_template = """
 <body>{}</body></html>
 """
 
-book = Epub()
+book = Epub3()
 
 # metadata
 book.metadata.append(Title('EPUB Demo Book'))

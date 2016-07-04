@@ -58,14 +58,14 @@ class _Base(Base, Attrs):
 ##########################################################################
 
 class Identifier(_Base, Id, Scheme):
+    """identifier"""
     def __init__(self, text):
         super().__init__(text)
         self.id = 'id_' + uuid.uuid4().hex
 
 
 class Title(_Base, AltScript, Dir, FileAs, Id, Lang):
-    """ Title of Book
-    """
+    """title of Book"""
 
 
 class Language(_Base, Id):

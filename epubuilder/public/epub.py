@@ -27,17 +27,22 @@ class FatherEpub:
 class Metadata(List):
     """list-like.
 
-    store metadata, such as author, publisher etc."""
+    Store metadata, such as author, publisher etc.
+
+    see :module:`epubuilder.public.metas"""
     def _before_add(self, key=None, item=None):
         if not isinstance(item, Base):
             raise TypeError
 
 
+########################################################################################################################
+# Files File
+########################################################################################################################
 class Files(Dict):
     """dict-like.
 
-    store file path and :class:`File` objects from `key` and `item`,
-    every file you want to package to book, you should use this."""
+    Store file path and :class:`epubuilder.public.File` objects from `key` and `item`.
+    Any file you want to package them into the book, you have to use this."""
     def _before_add(self, key=None, item=None):
         if not isinstance(item, File):
             raise TypeError
@@ -58,8 +63,8 @@ class Files(Dict):
         return items
 
 
+########################################################################################################################
 class File:
-    """every file you want to put in book, you shoud use this."""
     def __init__(self, binary, mime=None, identification=None, fallback=None):
         """
         :param binary: binary data
@@ -83,12 +88,15 @@ class File:
         return self._binary
 
 
+########################################################################################################################
+# Spine Joint
+########################################################################################################################
 class Spine(List, FatherEpub):
     """list-like.
 
     "The spine defines the default reading order"
 
-    store :class:`Joint` objects.
+    store :class:`epubuilder.public.Joint` objects.
     """
 
     def _before_add(self, key=None, item=None):
@@ -129,7 +137,12 @@ class Joint(FatherEpub):
         elif self.linear is False:
             itemref.attributes[(None, 'linear')] = 'no'
 
+        return itemref
 
+
+########################################################################################################################
+# Epub
+########################################################################################################################
 class Epub:
     def __init__(self):
         self._metadata = Metadata()
@@ -140,24 +153,15 @@ class Epub:
 
         self._spine = Spine()
         setattr(self._spine, '_epub', self)
-        print('haha')
 
-        # self._toc = Toc()
-
-        self._cover_path = None
-
-        # for self.write()
+        # for opf etc.
         self._temp_files = Files()
-
-        self._cover_path = None
 
     metadata = property(lambda self: self._metadata, doc=str(Metadata.__doc__ if Metadata.__doc__ else ''))
 
     files = property(lambda self: self._files, doc=str(Files.__doc__ if Files.__doc__ else ''))
 
     spine = property(lambda self: self._spine, doc=str(Spine.__doc__ if Spine.__doc__ else ''))
-
-    # toc = property(lambda self: self._toc, doc=str(Toc.__doc__ if Toc.__doc__ else ''))
 
     @staticmethod
     def _find_ncx_id(items):

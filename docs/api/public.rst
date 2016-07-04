@@ -10,3 +10,11 @@ public
 
 .. autoclass:: Joint
     :members:
+
+
+meta
+----
+
+.. automodule:: epubuilder.public.metas
+    :members:
+    :imported-members: True

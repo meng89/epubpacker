@@ -6,7 +6,7 @@ from epubuilder.public import Joint, File
 
 from epubuilder.public.metas.dcmes import Title, Language, Identifier
 
-from epubuilder.epub2 import Epub, Section
+from epubuilder.epub2 import Epub2, Section
 from epubuilder.epub2.metas import Cover
 
 script_dir = cur_path = os.path.dirname(__file__)
@@ -23,7 +23,7 @@ xhtml_template = """
 """
 
 
-book = Epub()
+book = Epub2()
 
 
 # set book's metadata

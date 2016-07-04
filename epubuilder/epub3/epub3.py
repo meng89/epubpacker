@@ -14,13 +14,11 @@ from .metas.dcterms import get
 from epubuilder.tools import w3c_utc_date
 from epubuilder.xl import Xl, Header, Element, Text, URI_XML, pretty_insert
 
-# 'cover-image', 'mathml', 'nav', 'remote-resources', 'scripted', 'svg', 'switch'
 
-
-###############################################################################
-# TOC nav
-###############################################################################
-class _Toc(epubuilder.epub2.epub2.Toc):
+########################################################################################################################
+# TOC Section
+########################################################################################################################
+class Toc(epubuilder.epub2.epub2.Toc):
     __doc__ = epubuilder.epub2.epub2.Toc.__doc__
 
     def __init__(self):
@@ -61,8 +59,8 @@ class _Toc(epubuilder.epub2.epub2.Toc):
 
 
 class _SubSections(List):
-    __doc__ = _Toc.__doc__
-    _before_add = getattr(_Toc, '_before_add')
+    __doc__ = Toc.__doc__
+    _before_add = getattr(Toc, '_before_add')
 
 
 class Section(epubuilder.epub2.epub2.Section):
@@ -117,20 +115,19 @@ class Section(epubuilder.epub2.epub2.Section):
         return li
 
 
-class Epub(p.Epub):
+########################################################################################################################
+# TOC Section
+########################################################################################################################
+class Epub3(p.Epub):
     def __init__(self):
         super().__init__()
 
-        self._toc = _Toc
+        self._toc = Toc()
         setattr(self._toc, '_epub', self)
 
-        # nav
-        self._toc = _Toc()
+        self._cover_path = None
 
-        # for self.write()
-        self._temp_files = p.Files()
-
-    toc = property(lambda self: self._toc, doc=str(_Toc.__doc__ if _Toc.__doc__ else ''))
+    toc = property(lambda self: self._toc, doc=str(Toc.__doc__ if Toc.__doc__ else ''))
 
     @property
     def cover_path(self):
@@ -145,7 +142,7 @@ class Epub(p.Epub):
         self._cover_path = path
 
     def _get_nav_xmlstring(self):
-        html = self.toc.get_nav_element()
+        html = self.toc.to_nav_element()
         return pretty_insert(html, dont_do_when_one_child=True).string()
 
     def _process_files_elements_properties(self, elements):
@@ -155,7 +152,10 @@ class Epub(p.Epub):
 
             if item.attributes[(None, 'media-type')] in (mimes.XHTML, mimes.HTML):
 
-                html_string = self.files[item.attributes[(None, 'href')]].binary.decode()
+                try:
+                    html_string = self.files[item.attributes[(None, 'href')]].binary.decode()
+                except KeyError:
+                    html_string = self._temp_files[item.attributes[(None, 'href')]].binary.decode()
 
                 if has_element('script', html_string):
                     properties.append('scripted')
@@ -205,6 +205,7 @@ class Epub(p.Epub):
         manifest.children.extend(self._process_files_elements_properties(self.files.to_elements()))
 
         for item in self._process_files_elements_properties(self._temp_files.to_elements()):
+
             if item.attributes[(None, 'href')] == toc_path:
                 item.attributes[(None, 'properties')] = 'nav'
 
@@ -270,7 +271,7 @@ class Epub(p.Epub):
         :returns: xhtml., other_paths
         :rtype: str, tuple
         """
-        html = self.toc.get_nav_element()
+        html = self.toc.to_nav_element()
 
         def find_element_by_name(name):
             e = None
@@ -293,7 +294,6 @@ class Epub(p.Epub):
         self.files[css_path] = p.File(open(os.path.join(dirt(__file__), 'static', 'a.css'), 'rb').read(),
                                       mime='text/style')
 
-        # 'type': 'text/css',
         head.children.append(Element('link', attributes={'rel': 'stylesheet', 'type': 'text/css', 'href': css_path}))
 
         script_before_body_close = Element('script', attributes={'type': 'text/javascript'})

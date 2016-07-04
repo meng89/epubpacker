@@ -15,6 +15,9 @@ from epubuilder.tools import relative_path
 from epubuilder.xl import Xl, Header, Element, pretty_insert, Text
 
 
+########################################################################################################################
+# TOC Section
+########################################################################################################################
 class Toc(List, FatherEpub):
     """list-like.
 
@@ -152,17 +155,15 @@ class Section:
         return nav_point
 
 
-class Epub(p.Epub):
+########################################################################################################################
+# Epub2
+########################################################################################################################
+class Epub2(p.Epub):
     def __init__(self):
         super().__init__()
 
         self._toc = Toc()
         setattr(self._toc, '_epub', self)
-
-        self._cover_path = None
-
-        # for self.write()
-        self._temp_files = p.Files()
 
     toc = property(lambda self: self._toc, doc=str(Toc.__doc__ if Toc.__doc__ else ''))
 
