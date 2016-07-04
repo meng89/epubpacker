@@ -97,7 +97,6 @@ class Spine(List, FatherEpub):
 
     def _after_add(self, key=None, item=None):
         setattr(self[key], '_epub', self._epub)
-        print('heihei')
 
     def to_element(self):
         spine = Element('spine')
@@ -131,7 +130,7 @@ class Joint(FatherEpub):
             itemref.attributes[(None, 'linear')] = 'no'
 
 
-class EPUB:
+class Epub:
     def __init__(self):
         self._metadata = Metadata()
         setattr(self._metadata, '_epub', self)

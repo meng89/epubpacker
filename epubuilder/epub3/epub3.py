@@ -117,11 +117,12 @@ class Section(epubuilder.epub2.epub2.Section):
         return li
 
 
-class Epub(p.EPUB):
+class Epub(p.Epub):
     def __init__(self):
         super().__init__()
 
         self._toc = _Toc
+        setattr(self._toc, '_epub', self)
 
         # nav
         self._toc = _Toc()
@@ -260,7 +261,7 @@ class Epub(p.EPUB):
         self._temp_files.clear()
         z.close()
 
-    write.__doc__ = p.EPUB.write.__doc__
+    write.__doc__ = p.Epub.write.__doc__
 
     def addons_make_user_toc_xhtml(self):
         """write this function because some EPUB reader not supports nav hidden attribute,

@@ -152,7 +152,7 @@ class Section:
         return nav_point
 
 
-class Epub(p.EPUB):
+class Epub(p.Epub):
     def __init__(self):
         super().__init__()
 
@@ -235,7 +235,7 @@ class Epub(p.EPUB):
         self._temp_files.clear()
         z.close()
 
-    write.__doc__ = p.EPUB.write.__doc__
+    write.__doc__ = p.Epub.write.__doc__
 
     def make_cover_page(self, image_path, cover_page_path=None, width=None, heigth=None):
         if cover_page_path:
