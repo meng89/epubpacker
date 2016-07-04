@@ -30,6 +30,6 @@ or
 
 Why epubuilder?
 ---------------
-* Python3,
-* Clear,
+* Python3. Epubuilder supports Python3
 * Alive,
+* Clear,
