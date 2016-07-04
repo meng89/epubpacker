@@ -6,11 +6,9 @@ import random
 from abc import abstractmethod
 from hooky import List, Dict
 
-import epubuilder.version
 from epubuilder.public import mimes
 from epubuilder.public.metas.base import Base
-from epubuilder.public.metas.dcmes import Identifier
-from epubuilder.xl import Element, Text, pretty_insert, xml_header
+from epubuilder.xl import Element, pretty_insert, xml_header
 
 CONTAINER_PATH = 'META-INF' + os.sep + 'container.xml'
 ROOT_OF_OPF = 'EPUB'
@@ -99,6 +97,7 @@ class Spine(List, FatherEpub):
 
     def _after_add(self, key=None, item=None):
         setattr(self[key], '_epub', self._epub)
+        print('heihei')
 
     def to_element(self):
         spine = Element('spine')
@@ -132,72 +131,7 @@ class Joint(FatherEpub):
             itemref.attributes[(None, 'linear')] = 'no'
 
 
-class Toc(List, FatherEpub):
-    """list-like.
-
-    table of contents
-
-    store :class:`Section` objects.
-    """
-    def __init__(self):
-        super().__init__()
-        self.title = 'Table of Contents'
-
-        self.ncx_depth = -1
-        self.ncx_totalPageCount = -1
-        self.ncx_maxPageNumber = -1
-
-    def to_ncx_element(self):
-        def_uri = 'http://www.daisy.org/z3986/2005/ncx/'
-
-        ncx = Element('ncx', attributes={'version': '2005-1'}, prefixes={def_uri: None})
-        head = Element('head')
-        ncx.children.append(head)
-
-        # same as dc:Identifier
-
-        identifier_text = None
-        for m in self._epub.metadata:
-            if isinstance(m, Identifier):
-                identifier_text = m.text
-                break
-
-        head.children.append(Element('meta', attributes={'name': 'dtb:uid', 'content': identifier_text}))
-
-        head.children.append(Element('meta', attributes={'name': 'dtb:depth', 'content': self.ncx_depth}))
-
-        head.children.append(Element('meta', attributes={'name': 'dtb:totalPageCount',
-                                                         'content': self.ncx_totalPageCount}))
-
-        head.children.append(Element('meta', attributes={'name': 'dtb:maxPageNumber',
-                                                         'content': self.ncx_maxPageNumber}))
-
-        head.children.append(Element('meta', attributes={'name': 'dtb:generator',
-                                                         'content': 'epubuilder ' + epubuilder.version.__version__}))
-
-        doc_title = Element('docTitle')
-        ncx.children.append(doc_title)
-
-        text = Element('text')
-        doc_title.children.append(text)
-
-        text.children.append(Text(self.title))
-
-        nav_map = Element('navMap')
-        ncx.children.append(nav_map)
-
-        for one in self:
-            nav_map.children.append(one.to_toc_ncx_element())
-
-        return ncx
-        # return pretty_insert(ncx, dont_do_when_one_child=True).string()
-
-    @abstractmethod
-    def _before_add(self, key=None, item=None):
-        pass
-
-
-class Epub:
+class EPUB:
     def __init__(self):
         self._metadata = Metadata()
         setattr(self._metadata, '_epub', self)
@@ -207,6 +141,7 @@ class Epub:
 
         self._spine = Spine()
         setattr(self._spine, '_epub', self)
+        print('haha')
 
         # self._toc = Toc()
 
@@ -223,7 +158,7 @@ class Epub:
 
     spine = property(lambda self: self._spine, doc=str(Spine.__doc__ if Spine.__doc__ else ''))
 
-    toc = property(lambda self: self._toc, doc=str(Toc.__doc__ if Toc.__doc__ else ''))
+    # toc = property(lambda self: self._toc, doc=str(Toc.__doc__ if Toc.__doc__ else ''))
 
     @staticmethod
     def _find_ncx_id(items):

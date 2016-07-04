@@ -6,22 +6,83 @@ import os
 from PIL import Image
 from hooky import List
 
+import epubuilder.version
+
 import epubuilder.public.epub as p
-from epubuilder.public.epub import Toc
+from epubuilder.public.epub import FatherEpub
 from epubuilder.public.metas.dcmes import Identifier, URI_DC
 from epubuilder.tools import relative_path
 from epubuilder.xl import Xl, Header, Element, pretty_insert, Text
 
 
-class _Toc(Toc):
+class Toc(List, FatherEpub):
+    """list-like.
+
+    table of contents
+
+    store :class:`Section` objects.
+    """
+    def __init__(self):
+        super().__init__()
+        self.title = 'Table of Contents'
+
+        self.ncx_depth = -1
+        self.ncx_totalPageCount = -1
+        self.ncx_maxPageNumber = -1
+
+    def to_ncx_element(self):
+        def_uri = 'http://www.daisy.org/z3986/2005/ncx/'
+
+        ncx = Element('ncx', attributes={'version': '2005-1'}, prefixes={def_uri: None})
+        head = Element('head')
+        ncx.children.append(head)
+
+        # same as dc:Identifier
+
+        identifier_text = None
+        for m in self._epub.metadata:
+            if isinstance(m, Identifier):
+                identifier_text = m.text
+                break
+
+        head.children.append(Element('meta', attributes={'name': 'dtb:uid', 'content': identifier_text}))
+
+        head.children.append(Element('meta', attributes={'name': 'dtb:depth', 'content': self.ncx_depth}))
+
+        head.children.append(Element('meta', attributes={'name': 'dtb:totalPageCount',
+                                                         'content': self.ncx_totalPageCount}))
+
+        head.children.append(Element('meta', attributes={'name': 'dtb:maxPageNumber',
+                                                         'content': self.ncx_maxPageNumber}))
+
+        head.children.append(Element('meta', attributes={'name': 'dtb:generator',
+                                                         'content': 'epubuilder ' + epubuilder.version.__version__}))
+
+        doc_title = Element('docTitle')
+        ncx.children.append(doc_title)
+
+        text = Element('text')
+        doc_title.children.append(text)
+
+        text.children.append(Text(self.title))
+
+        nav_map = Element('navMap')
+        ncx.children.append(nav_map)
+
+        for one in self:
+            nav_map.children.append(one.to_toc_ncx_element())
+
+        return ncx
+        # return pretty_insert(ncx, dont_do_when_one_child=True).string()
+
     def _before_add(self, key=None, item=None):
         if not isinstance(item, Section):
             raise TypeError
 
 
-class _SubSections(List):
-    __doc__ = _Toc.__doc__
-    _before_add = getattr(_Toc, '_before_add')
+class _SubSections(List, FatherEpub):
+    __doc__ = Toc.__doc__
+    _before_add = getattr(Toc, '_before_add')
 
 
 class Section:
@@ -91,18 +152,19 @@ class Section:
         return nav_point
 
 
-class Epub(p.Epub):
+class Epub(p.EPUB):
     def __init__(self):
         super().__init__()
 
-        self._toc = _Toc()
+        self._toc = Toc()
+        setattr(self._toc, '_epub', self)
 
         self._cover_path = None
 
         # for self.write()
         self._temp_files = p.Files()
 
-    toc = property(lambda self: self._toc, doc=str(_Toc.__doc__ if _Toc.__doc__ else ''))
+    toc = property(lambda self: self._toc, doc=str(Toc.__doc__ if Toc.__doc__ else ''))
 
     def _get_opf_xmlstring(self):
 
@@ -153,7 +215,7 @@ class Epub(p.Epub):
             z.writestr(p.ROOT_OF_OPF + os.sep + filename, file.binary, zipfile.ZIP_DEFLATED)
 
         # ncx
-        ncx_xmlstring = self.toc.to_ncx_element()
+        ncx_xmlstring = pretty_insert(self.toc.to_ncx_element(), dont_do_when_one_child=True).string()
         toc_ncx_filename = self._get_unused_filename(None, 'toc.ncx')
         self._temp_files[toc_ncx_filename] = p.File(ncx_xmlstring.encode(), mime='application/x-dtbncx+xml')
 
@@ -173,7 +235,7 @@ class Epub(p.Epub):
         self._temp_files.clear()
         z.close()
 
-    write.__doc__ = p.Epub.write.__doc__
+    write.__doc__ = p.EPUB.write.__doc__
 
     def make_cover_page(self, image_path, cover_page_path=None, width=None, heigth=None):
         if cover_page_path:

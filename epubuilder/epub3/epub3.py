@@ -20,13 +20,13 @@ from epubuilder.xl import Xl, Header, Element, Text, URI_XML, pretty_insert
 ###############################################################################
 # TOC nav
 ###############################################################################
-class _Toc(epubuilder.public.epub.Toc):
-    __doc__ = epubuilder.public.epub.Toc.__doc__
+class _Toc(epubuilder.epub2.epub2.Toc):
+    __doc__ = epubuilder.epub2.epub2.Toc.__doc__
 
     def __init__(self):
         super().__init__()
 
-    def _get_nav_element(self):
+    def to_nav_element(self):
         default_ns = 'http://www.w3.org/1999/xhtml'
         epub_ns = 'http://www.idpf.org/2007/ops'
 
@@ -117,7 +117,7 @@ class Section(epubuilder.epub2.epub2.Section):
         return li
 
 
-class Epub(p.Epub):
+class Epub(p.EPUB):
     def __init__(self):
         super().__init__()
 
@@ -144,7 +144,7 @@ class Epub(p.Epub):
         self._cover_path = path
 
     def _get_nav_xmlstring(self):
-        html = self._get_nav_element()
+        html = self.toc.get_nav_element()
         return pretty_insert(html, dont_do_when_one_child=True).string()
 
     def _process_files_elements_properties(self, elements):
@@ -260,7 +260,7 @@ class Epub(p.Epub):
         self._temp_files.clear()
         z.close()
 
-    write.__doc__ = p.Epub.write.__doc__
+    write.__doc__ = p.EPUB.write.__doc__
 
     def addons_make_user_toc_xhtml(self):
         """write this function because some EPUB reader not supports nav hidden attribute,
@@ -269,7 +269,7 @@ class Epub(p.Epub):
         :returns: xhtml., other_paths
         :rtype: str, tuple
         """
-        html = self._get_nav_element()
+        html = self.toc.get_nav_element()
 
         def find_element_by_name(name):
             e = None
