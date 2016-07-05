@@ -1,6 +1,3 @@
-Epubuilder
-==========
-
 .. image:: https://readthedocs.org/projects/epubuilder/badge/?version=latest
     :target: http://epubuilder.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
