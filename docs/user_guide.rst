@@ -1,5 +1,5 @@
-Guide
-=====
+User Guide
+==========
 
 First of all, should have a book object:
 ::

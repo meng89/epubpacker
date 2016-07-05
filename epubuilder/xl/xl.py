@@ -308,8 +308,6 @@ class Element(Node):
     """
     def __init__(self, tag=None, attributes=None, prefixes=None):
         """
-
-
         :param tag:
         :type tag: tuple
         :param attributes:
@@ -532,7 +530,6 @@ class Text(Node, UserString):
     """
     def __init__(self, string):
         """
-
         :param string:
         :type string: str
         """

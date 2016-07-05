@@ -39,7 +39,7 @@ book.files[path_1] = file_1
 
 
 # add to book's spine
-book.spine.append(Joint(file_1))
+book.spine.append(Joint(path_1))
 
 
 # add to books's table of contents
@@ -51,7 +51,7 @@ book.toc.append(chapter1)
 file_1_1 = File(xhtml_template.format(title='Section 1', content='This is section 1').encode())
 path_1_1 = '1.1.xhtml'
 book.files[path_1_1] = file_1_1
-book.spine.append(Joint(file_1_1))
+book.spine.append(Joint(path_1))
 
 
 # add sub sections to chapter1

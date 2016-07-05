@@ -3,7 +3,7 @@
     :titlesonly:
     :maxdepth: 2
 
-    guide
+    user_guide
     demo/index
     api/index
 
@@ -12,24 +12,46 @@
 Epubuilder is a Python 3 module to build EPUB 2 or 3 document from web files and related information.
 
 
+Why Epubuilder?
+---------------
+* **New**. This module run under Python 3 (Actually, only Python 3 at present). It suporrts Epub 3 and Epub 2 too.
+
+
+* **Clear**. Epubuilder doesn't modify the resource you were given.
+  Files, metadata and other things are handled by different members of an Epub object.
+
+
+Quick Start
+-----------
+it's piece from `User Guide'. It's so clear, so I don't even write comment:
+::
+
+    from epubuilder.epub3 import Epub3
+    from epubuilder.public import File, Joint
+
+    book = Epub3()
+
+    page1_path = '1.html'
+
+    book.files[page1_path] = File(open('page1.html', 'rb').read())
+
+    book.spine.append(Joint(page1_path))
+
+    book.write('quick_start.epub')
+
+
 Installing
 ----------
-
 ::
 
     pip3 install epubuilder
 
 
-or
 
+or on Gentoo/Linux:
 ::
 
     layman -a observer
     emerge -av epubuilder
 
 
-Why epubuilder?
----------------
-* Python3. Epubuilder supports Python3
-* Alive,
-* Clear,
