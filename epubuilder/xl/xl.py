@@ -14,6 +14,16 @@ class HandlerError(Exception):
 
 
 def parse(xmlstr, debug=False):
+    """
+    parse xml string to Xl object
+
+    :param xmlstr:
+    :type xmlstr: str
+    :param debug:
+    :type debug: bool
+    :return:
+    :rtype: Xl
+    """
 
     xl = Xl()
 
@@ -53,7 +63,7 @@ def parse(xmlstr, debug=False):
         for _uri, _prefix in ns_list:
             prefixes[_uri] = _prefix
 
-        e = Element(name=(uri, tag), attributes=attributes, prefixes=prefixes)
+        e = Element(tag=(uri, tag), attributes=attributes, prefixes=prefixes)
 
         if elements:
             elements[-1].children.append(e)
@@ -159,7 +169,7 @@ def clear_spaces(element):
     if not isinstance(element, Element):
         raise TypeError
 
-    new_element = Element(name=copy.deepcopy(element.name),
+    new_element = Element(tag=copy.deepcopy(element.tag),
                           attributes=copy.deepcopy(element.attributes),
                           prefixes=copy.deepcopy(element.prefixes))
 
@@ -192,7 +202,7 @@ def _is_straight_line(element):
 
 def pretty_insert(element, start_indent=0, step=4, dont_do_when_one_child=True):
 
-    new_element = Element(name=copy.deepcopy(element.name),
+    new_element = Element(tag=copy.deepcopy(element.tag),
                           attributes=copy.deepcopy(element.attributes),
                           prefixes=copy.deepcopy(element.prefixes))
 
@@ -293,8 +303,21 @@ class DocType(Node):
 
 
 class Element(Node):
-    def __init__(self, name=None, attributes=None, prefixes=None):
-        self.name = name
+    """
+    XML element node.
+    """
+    def __init__(self, tag=None, attributes=None, prefixes=None):
+        """
+
+
+        :param tag:
+        :type tag: tuple
+        :param attributes:
+        :type attributes: dict
+        :param prefixes:
+        :type prefixes: dict
+        """
+        self.tag = tag
 
         self.attributes = Attributes(attributes) if attributes else Attributes()
 
@@ -303,11 +326,11 @@ class Element(Node):
         self.children = Children()
 
     @property
-    def name(self):
-        return self.__dict__['name']
+    def tag(self):
+        return self.__dict__['tag']
 
-    @name.setter
-    def name(self, value):
+    @tag.setter
+    def tag(self, value):
         if not isinstance(value, tuple):
             value = (None, value)
 
@@ -317,7 +340,7 @@ class Element(Node):
         if value[0] is not None and not isinstance(value[0], str):
             raise ValueError
 
-        self.__dict__['name'] = value
+        self.__dict__['tag'] = value
 
     @property
     def prefixes(self):
@@ -344,7 +367,7 @@ class Element(Node):
         self.__dict__['children'] = value
 
     def string(self, inherited_prefixes=None):
-        if self.name[1] is None:
+        if self.tag[1] is None:
             raise TypeError
 
         inherited_prefixes = inherited_prefixes or Prefixes()
@@ -385,18 +408,18 @@ class Element(Node):
 
         ################################################################################################################
         # processing xml tag
-        if self.name[0] is not None:
+        if self.tag[0] is not None:
             try:
-                prefix = get_prefix(self.name[0])
+                prefix = get_prefix(self.tag[0])
             except ValueError:
-                prefix = make_a_auto_prefix(self.name[0])
+                prefix = make_a_auto_prefix(self.tag[0])
 
             if prefix is not None:
-                full_name = '{}:{}'.format(prefix, self.name[1])
+                full_name = '{}:{}'.format(prefix, self.tag[1])
             else:
-                full_name = self.name[1]
+                full_name = self.tag[1]
         else:
-            full_name = self.name[1]
+            full_name = self.tag[1]
 
         s += full_name
 
@@ -504,6 +527,17 @@ class Children(List):
 
 
 class Text(Node, UserString):
+    """
+    XML text node
+    """
+    def __init__(self, string):
+        """
+
+        :param string:
+        :type string: str
+        """
+        super().__init__(string)
+
     def string(self):
         s = ''
         for char in self:

@@ -276,7 +276,7 @@ class Epub3(p.Epub):
         def find_element_by_name(name):
             e = None
             for one in html.children:
-                if one.name == (None, name):
+                if one.tag == (None, name):
                     e = one
                     break
             return e
