@@ -34,8 +34,8 @@ def identify_mime(binary):
 
     if mime == mimes.HTML:
         try:
-            root = parse(binary.decode())
-            if root.name == (None, 'html') and root.prefixs[xhtml_uri] is None:
+            root = parse(binary.decode()).root
+            if root.tag == (None, 'html') and root.prefixs[xhtml_uri] is None:
                 return mimes.XHTML
         except KeyError:
             return mimes.HTML

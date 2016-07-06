@@ -309,11 +309,11 @@ class Element(Node):
     def __init__(self, tag=None, attributes=None, prefixes=None):
         """
         :param tag:
-        :type tag: tuple
+        :type tag: tuple or str
         :param attributes:
-        :type attributes: dict
+        :type attributes: Attributes or dict
         :param prefixes:
-        :type prefixes: dict
+        :type prefixes: Prefixes or dict
         """
         self.tag = tag
 

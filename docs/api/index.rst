@@ -7,3 +7,4 @@ API Reference
     epub2
     public
     tools
+    xl
