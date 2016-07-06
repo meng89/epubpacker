@@ -275,9 +275,14 @@ class Header(Node):
         s = ''
         s += '<?xml'
 
-        s += " version='{}'".format(self.version if self.version else '1.0')
-        s += " encoding='{}'".format(self.encoding if self.encoding else 'utf-8')
-        s += " standalone='{}'".format(self.standalone if self.standalone else 'yes')
+        if self.version:
+            s += " version='{}'".format(self.version)  # 1.0
+        
+        if self.encoding:
+            s += " encoding='{}'".format(self.encoding)  # utf-8
+
+        if self.standalone is not None:
+            s += " standalone='{}'".format(self.standalone)  # yes
 
         s += '?>\n'
         return s
