@@ -8,7 +8,7 @@ from hooky import List, Dict
 
 from epubuilder.public import mimes
 from epubuilder.public.metas.base import Base
-from epubuilder.xl import Element, pretty_insert, xml_header
+from epubuilder.xl import Xl, Element, pretty_insert
 
 CONTAINER_PATH = 'META-INF' + os.sep + 'container.xml'
 ROOT_OF_OPF = 'EPUB'
@@ -190,7 +190,7 @@ class Epub:
 
         rootfile.attributes['media-type'] = 'application/oebps-package+xml'
 
-        return xml_header() + pretty_insert(e, dont_do_when_one_child=True).string()
+        return Xl(root=pretty_insert(e, dont_do_when_one_child=True)).string()
 
     def _get_unused_filename(self, dire, filename):
         dire = dire or ''

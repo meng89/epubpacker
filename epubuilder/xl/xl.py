@@ -15,13 +15,13 @@ class HandlerError(Exception):
 
 def parse(xmlstr, debug=False):
     """
-    parse xml string to Xl object
+    parse XML string to Xl object
 
     :param xmlstr:
     :type xmlstr: str
     :param debug:
     :type debug: bool
-    :return:
+    :return: object of :class:`Xl`
     :rtype: Xl
     """
 
@@ -40,7 +40,7 @@ def parse(xmlstr, debug=False):
 
         print('start_element', name) if debug else None
 
-        attributes = Attributes()
+        attributes = {}
 
         l = name.rsplit(' ', 1)
         tag = l[-1]
@@ -58,7 +58,7 @@ def parse(xmlstr, debug=False):
 
             attributes[(attr_uri, attr_name)] = value
 
-        prefixes = Prefixes()
+        prefixes = {}
 
         for _uri, _prefix in ns_list:
             prefixes[_uri] = _prefix
@@ -153,19 +153,12 @@ def _nsuri_check(uri, namespaces):
         raise Exception
 
 
-def xml_header(version=None, encoding=None, standalone=None):
-    s = ''
-    s += '<?xml'
-
-    s += " version='{}'".format(version if version else '1.0')
-    s += " encoding='{}'".format(encoding if encoding else 'utf-8')
-    s += " standalone='{}'".format(standalone if standalone else 'yes')
-
-    s += '?>\n'
-    return s
-
-
-def clear_spaces(element):
+def clean_whitespaces(element):
+    """
+    :param element:
+    :return: A copy of the element, all whitespace characters have been stripped from the beginning and the end of the
+     text node in the children and children's children and so on. delete the text node If it is empty.
+    """
     if not isinstance(element, Element):
         raise TypeError
 
@@ -181,7 +174,7 @@ def clear_spaces(element):
                 new_element.children.append(new_text)
 
         elif isinstance(child, Element):
-            new_element.children.append(clear_spaces(child))
+            new_element.children.append(clean_whitespaces(child))
 
     return new_element
 
@@ -201,6 +194,19 @@ def _is_straight_line(element):
 
 
 def pretty_insert(element, start_indent=0, step=4, dont_do_when_one_child=True):
+    """
+    Modify the copy of the element, to make it looks more clear.
+
+    :param element:
+    :type element: Element
+    :param start_indent:
+    :type start_indent: int
+    :param step:
+    :type step: int
+    :param dont_do_when_one_child:
+    :type dont_do_when_one_child: bool
+    :return: object of :class:`Element`
+    """
 
     new_element = Element(tag=copy.deepcopy(element.tag),
                           attributes=copy.deepcopy(element.attributes),
@@ -242,11 +248,18 @@ class XLError(Exception):
 
 class Xl:
     def __init__(self, header=None, doc_type=None, root=None):
-        self.header = header or Header()
-        self.doc_type = doc_type
-        self.root = root or Element()
 
-    def string(self, ):
+        self.header = header or Header()
+        """object of :class:`Header`"""
+
+        self.doc_type = doc_type
+        """object of :class:`DocType`"""
+
+        self.root = root or Element()
+        """object of :class:`Element`"""
+
+    def string(self):
+        """To xml string"""
         s = ''
 
         s += self.header.string()
@@ -259,13 +272,16 @@ class Xl:
         return s
 
 
-class Node:
+class _Node:
     @abstractmethod
     def string(self):
         pass
 
 
-class Header(Node):
+class Header(_Node):
+    """
+    Handle XML header node
+    """
     def __init__(self, version=None, encoding=None, standalone=None):
         self.version = version
         self.encoding = encoding
@@ -288,8 +304,11 @@ class Header(Node):
         return s
 
 
-class DocType(Node):
-    def __init__(self, doc_type_name=None, system_id=None, public_id=None):
+class DocType(_Node):
+    """
+    Handle XML doc type node
+    """
+    def __init__(self, doc_type_name, system_id, public_id):
         self.doc_type_name = doc_type_name
         self.system_id = system_id
         self.public_id = public_id
@@ -307,26 +326,46 @@ class DocType(Node):
         return s
 
 
-class Element(Node):
+class Element(_Node):
     """
-    XML element node.
+    Handle XML element node.
     """
     def __init__(self, tag=None, attributes=None, prefixes=None):
         """
         :param tag:
         :type tag: tuple or str
         :param attributes:
-        :type attributes: Attributes or dict
+        :type attributes: _Attributes or dict
         :param prefixes:
-        :type prefixes: Prefixes or dict
+        :type prefixes: _Prefixes or dict
         """
+
         self.tag = tag
+        """tuple object of length 2.
 
-        self.attributes = Attributes(attributes) if attributes else Attributes()
+        First in the tuple is the url of the namespaces,
+        the second is the xml element tag you know ordinarily.
+        """
 
-        self.prefixes = Prefixes(prefixes) if prefixes else Prefixes()
+        self.attributes = _Attributes(attributes) if attributes else _Attributes()
+        """dict-like.
 
-        self.children = Children()
+        Store xml attribute names and values in *keys* and *values*
+
+        """
+
+        self.prefixes = _Prefixes(prefixes) if prefixes else _Prefixes()
+        """dict-like.
+
+        Store xml namespaces urls and prefixes in *keys* and *values*
+
+        Ignore this is fine, because you will get automatic prefixes for the namespaces.
+        """
+
+        self.children = _Children()
+        """list-like.
+
+        Store children Node"""
 
     @property
     def tag(self):
@@ -370,12 +409,13 @@ class Element(Node):
         self.__dict__['children'] = value
 
     def string(self, inherited_prefixes=None):
+        """to string, you may want to see :class:`Xl.string`"""
         if self.tag[1] is None:
             raise TypeError
 
-        inherited_prefixes = inherited_prefixes or Prefixes()
+        inherited_prefixes = inherited_prefixes or _Prefixes()
 
-        auto_prefixs = Prefixes()
+        auto_prefixs = _Prefixes()
 
         def make_a_auto_prefix(_uri):
             _prefix_num = 0
@@ -489,9 +529,12 @@ class Element(Node):
         return s
 
 
-class Prefixes(Dict):
+class _Prefixes(Dict):
     def _before_add(self, key=None, item=None):
         if key == URI_XML and item != 'xml':
+            raise ValueError
+
+        if item in self.values() and (key not in self.keys() or item != self[key]):
             raise ValueError
 
     def __init__(self, prefixes=None):
@@ -503,7 +546,7 @@ class Prefixes(Dict):
             self.update(prefixes)
 
 
-class Attributes(Dict):
+class _Attributes(Dict):
     def __init__(self, attributes=None):
         super().__init__()
 
@@ -520,18 +563,18 @@ class Attributes(Dict):
         super().__setitem__(key, value)
 
 
-class Children(List):
+class _Children(List):
     def __init__(self):
         super().__init__()
 
     def _before_add(self, key=None, item=None):
-        if not isinstance(item, Node):
+        if not isinstance(item, _Node):
             raise TypeError('{} is not legal'.format(item.__class__.__name__))
 
 
-class Text(Node, UserString):
+class Text(_Node, UserString):
     """
-    XML text node
+    Handle XML text node
     """
     def __init__(self, string):
         """
