@@ -4,7 +4,6 @@
     :maxdepth: 2
 
     user_guide
-    demo/index
     api/index
 
 
