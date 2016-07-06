@@ -277,7 +277,7 @@ class Header(Node):
 
         if self.version:
             s += " version='{}'".format(self.version)  # 1.0
-        
+
         if self.encoding:
             s += " encoding='{}'".format(self.encoding)  # utf-8
 
