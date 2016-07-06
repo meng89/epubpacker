@@ -29,7 +29,7 @@ class Metadata(List):
 
     Store metadata, such as author, publisher etc.
 
-    see :module:`epubuilder.public.metas"""
+    see :mod:`epubuilder.public.metas`"""
     def _before_add(self, key=None, item=None):
         if not isinstance(item, Base):
             raise TypeError
@@ -38,7 +38,7 @@ class Metadata(List):
 ########################################################################################################################
 # Files File
 ########################################################################################################################
-class Files(Dict):
+class Files(Dict, FatherEpub):
     """dict-like.
 
     Store file path and :class:`epubuilder.public.File` objects from `key` and `item`.
@@ -46,6 +46,9 @@ class Files(Dict):
     def _before_add(self, key=None, item=None):
         if not isinstance(item, File):
             raise TypeError
+
+    def _after_add(self, key=None, item=None):
+        setattr(self[key], '_epub', self._epub)
 
     def to_elements(self):
         items = []
@@ -64,7 +67,7 @@ class Files(Dict):
 
 
 ########################################################################################################################
-class File:
+class File(FatherEpub):
     def __init__(self, binary, mime=None, identification=None, fallback=None):
         """
         :param binary: binary data

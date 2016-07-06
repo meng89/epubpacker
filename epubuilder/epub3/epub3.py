@@ -157,10 +157,10 @@ class Epub3(p.Epub):
                 except KeyError:
                     html_string = self._temp_files[item.attributes[(None, 'href')]].binary.decode()
 
-                if has_element('script', html_string):
+                if _has_element('script', html_string):
                     properties.append('scripted')
 
-                if has_element('math', html_string):
+                if _has_element('math', html_string):
                     properties.append('mathml')
 
             if properties:
@@ -285,13 +285,13 @@ class Epub3(p.Epub):
         body = find_element_by_name('body')
 
         js_path = self._get_unused_filename(None, 'epubuilder_addons_user_toc_attach.js')
-        self.files[js_path] = p.File(open(os.path.join(dirt(__file__), 'static', 'a.js'), 'rb').read(),
+        self.files[js_path] = p.File(open(os.path.join(_dirt(__file__), 'static', 'a.js'), 'rb').read(),
                                      mime='text/javascript')
 
         head.children.append(Element('script', attributes={'src': js_path}))
 
         css_path = self._get_unused_filename(None, 'epubuilder_addons_user_toc_attach.css')
-        self.files[css_path] = p.File(open(os.path.join(dirt(__file__), 'static', 'a.css'), 'rb').read(),
+        self.files[css_path] = p.File(open(os.path.join(_dirt(__file__), 'static', 'a.css'), 'rb').read(),
                                       mime='text/style')
 
         head.children.append(Element('link', attributes={'rel': 'stylesheet', 'type': 'text/css', 'href': css_path}))
@@ -306,7 +306,7 @@ class Epub3(p.Epub):
         return user_toc_path, (js_path, css_path)
 
 
-def has_element(tag, file_string):
+def _has_element(tag, file_string):
     parser = html5lib.HTMLParser(tree=html5lib.getTreeBuilder('dom'))
     minidom_docment = parser.parse(file_string)
 
@@ -316,5 +316,5 @@ def has_element(tag, file_string):
         return False
 
 
-def dirt(file):
+def _dirt(file):
     return os.path.dirname(file)
