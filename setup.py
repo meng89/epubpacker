@@ -9,7 +9,7 @@ ver_path = convert_path('{}/version.py'.format(NAME))
 with open(ver_path) as ver_file:
     exec(ver_file.read(), main_ns)
 
-DESCRIPTION = 'A library to write EPUB v3.'
+# DESCRIPTION = 'A library to write EPUB v3.'
 
 LONG_DESCRIPTION = ''
 if os.path.exists('long_description.rst'):
@@ -26,8 +26,9 @@ CLASSIFIERS = ['Development Status :: 4 - Beta',
 
 setup(name=NAME,
       version=main_ns['__version__'],
-      description=DESCRIPTION,
-      long_description=LONG_DESCRIPTION,
+      # description=DESCRIPTION,
+      # long_description=LONG_DESCRIPTION,
+      include_package_data=True,
       author='Chen Meng',
       author_email='ObserverChan@gmail.com',
       license='MIT',
