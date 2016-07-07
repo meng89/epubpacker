@@ -24,6 +24,9 @@ CLASSIFIERS = ['Development Status :: 4 - Beta',
                'Programming Language :: Python :: 3',
                'Topic :: Software Development :: Libraries :: Python Modules']
 
+with open('requirements.txt') as f:
+    requirements = f.read().splitlines()
+
 setup(name=NAME,
       version=main_ns['__version__'],
       # description=DESCRIPTION,
@@ -34,9 +37,5 @@ setup(name=NAME,
       license='MIT',
       url=URL,
       packages=['epubuilder'],
-      install_requires=[
-          'lxml>=3.4.4',
-          'python-magic>=0.4.3'
-      ],
-      classifiers=CLASSIFIERS
-)
+      install_requires=requirements,
+      classifiers=CLASSIFIERS)

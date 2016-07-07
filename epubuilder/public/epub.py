@@ -159,6 +159,7 @@ class Epub:
 
         # for opf etc.
         self._temp_files = Files()
+        setattr(self._temp_files, '_epub', self)
 
     metadata = property(lambda self: self._metadata, doc=str(Metadata.__doc__ if Metadata.__doc__ else ''))
 
