@@ -1,7 +1,6 @@
 .idea/
 
 build
-dist
 temp
 
 test.py
@@ -66,5 +65,7 @@ docs/_build/
 # PyBuilder
 target/
 
-#Ipython Notebook
-.ipynb_checkpoints
+
+demo.py
+
+_built_book/
