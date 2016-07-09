@@ -16,7 +16,7 @@ if os.path.exists('long_description.rst'):
     LONG_DESCRIPTION = open('long_description.rst').read()
 
 
-URL = 'https://github.com/meng89/{}'.format(NAME)
+URL = 'https://github.com/meng89/{}' + NAME
 
 CLASSIFIERS = ['Development Status :: 4 - Beta',
                'Intended Audience :: Developers',
