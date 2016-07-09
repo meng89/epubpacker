@@ -1,10 +1,15 @@
+from __future__ import print_function
+
 from abc import abstractmethod
 
 import copy
 
 from hooky import List, Dict
 
-from collections import UserString
+try:
+    from collections import UserString
+except ImportError:
+    from UserString import UserString
 
 import xml.parsers.expat
 
@@ -27,13 +32,13 @@ def parse(xmlstr, debug=False):
 
     xl = Xl()
 
-    element = None
+    out_element = [None]
 
     elements = []
 
     ns_list = []
 
-    s = ''
+    s = ['']
 
     def start_element(name, attrs):
         _do_string()
@@ -70,9 +75,9 @@ def parse(xmlstr, debug=False):
 
         elements.append(e)
 
-        nonlocal element
-        if not element:
-            element = e
+        # nonlocal out_element
+        if not out_element[0]:
+            out_element[0] = e
 
     def end_element(name):
         _do_string()
@@ -89,15 +94,15 @@ def parse(xmlstr, debug=False):
 
     def character_data_handler(data):
         print('Character html: "{}"'.format(data)) if debug else None
-        nonlocal s
-        s += data
+        # nonlocal s
+        s[0] += data
 
     def _do_string():
-        nonlocal s
-        if s and elements:
-            string = Text(s)
+        # nonlocal s
+        if s[0] and elements:
+            string = Text(s[0])
             elements[-1].children.append(string)
-            s = ''
+            s[0] = ''
 
     def start_doc_type_decl(doc_type_name, system_id, public_id, has_internal_subset):
         xl.doc_type = DocType(doc_type_name=doc_type_name, system_id=system_id, public_id=public_id)
@@ -129,7 +134,7 @@ def parse(xmlstr, debug=False):
 
     p.Parse(xmlstr, 1)
 
-    xl.root = element
+    xl.root = out_element[0]
 
     return xl
 
@@ -246,7 +251,7 @@ class XLError(Exception):
     pass
 
 
-class Xl:
+class Xl(object):
     def __init__(self, header=None, doc_type=None, root=None):
 
         self.header = header or Header()
@@ -538,7 +543,7 @@ class _Prefixes(Dict):
             raise ValueError
 
     def __init__(self, prefixes=None):
-        super().__init__()
+        Dict.__init__(self)
 
         self[URI_XML] = 'xml'
 
@@ -548,7 +553,7 @@ class _Prefixes(Dict):
 
 class _Attributes(Dict):
     def __init__(self, attributes=None):
-        super().__init__()
+        Dict.__init__(self)
 
         if attributes:
             self.update(attributes)
@@ -560,12 +565,12 @@ class _Attributes(Dict):
         if key == (None, 'xmlns'):
             raise AttributeError
 
-        super().__setitem__(key, value)
+        Dict.__setitem__(self, key, value)
 
 
 class _Children(List):
     def __init__(self):
-        super().__init__()
+        List.__init__(self)
 
     def _before_add(self, key=None, item=None):
         if not isinstance(item, _Node):
@@ -581,7 +586,7 @@ class Text(_Node, UserString):
         :param string:
         :type string: str
         """
-        super().__init__(string)
+        UserString.__init__(self, string)
 
     def string(self):
         s = ''

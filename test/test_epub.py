@@ -28,8 +28,8 @@ def make_epub(epub, section):
 
     def make_page(title, html_path=None, content=None):
         if html_path and content:
-            file = File(xhtml_template.format(title=title, content=content).encode(), mime='application/xhtml+xml')
-            book.files[html_path] = file
+            _file = File(xhtml_template.format(title=title, content=content).encode(), mime='application/xhtml+xml')
+            book.files[html_path] = _file
 
             book.spine.append(Joint(html_path))
 
@@ -58,8 +58,12 @@ def make_epub(epub, section):
 
 
 def write_epub(book, filename):
+
     dirt = '_built_book'
-    os.makedirs(dirt, exist_ok=True)
+
+    if not os.path.exists(dirt):
+        os.makedirs(dirt)
+
     book.write(os.path.join(dirt, filename))
 
 

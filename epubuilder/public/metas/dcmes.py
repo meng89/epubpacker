@@ -60,7 +60,7 @@ class _Base(Base, Attrs):
 class Identifier(_Base, Id, Scheme):
     """identifier"""
     def __init__(self, text):
-        super().__init__(text)
+        _Base.__init__(self, text)
         self.id = 'id_' + uuid.uuid4().hex
 
 

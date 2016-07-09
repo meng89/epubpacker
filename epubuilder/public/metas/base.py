@@ -1,7 +1,7 @@
 from abc import abstractmethod
 
 
-class Base:
+class Base(object):
     @abstractmethod
     def to_element(self):
         pass

@@ -5,9 +5,14 @@ import os
 from hooky import List
 
 import epubuilder.epub2.epub2
+
+from epubuilder.epub2.epub2 import Toc
+
 from epubuilder.public import mimes
 
 import epubuilder.public.epub as p
+
+from epubuilder.public.epub import Epub
 
 from epubuilder.public.metas.dcmes import Identifier, URI_DC
 from .metas.dcterms import get
@@ -18,11 +23,11 @@ from epubuilder.xl import Xl, Header, Element, Text, URI_XML, pretty_insert
 ########################################################################################################################
 # TOC Section
 ########################################################################################################################
-class Toc(epubuilder.epub2.epub2.Toc):
-    __doc__ = epubuilder.epub2.epub2.Toc.__doc__
+class _Toc(Toc):
+    __doc__ = Toc.__doc__
 
     def __init__(self):
-        super().__init__()
+        Toc.__init__(self)
 
     def to_nav_element(self):
         default_ns = 'http://www.w3.org/1999/xhtml'
@@ -30,11 +35,11 @@ class Toc(epubuilder.epub2.epub2.Toc):
 
         html = Element((None, 'html'), prefixes={default_ns: None, epub_ns: 'epub'})
 
-        head = Element('head')
+        head = Element((None, 'head'))
         html.children.append(head)
 
         if self.title:
-            _title = Element('title')
+            _title = Element((None, 'title'))
             head.children.append(_title)
             _title.children.append(Text(self.title))
 
@@ -59,15 +64,18 @@ class Toc(epubuilder.epub2.epub2.Toc):
 
 
 class _SubSections(List):
-    __doc__ = Toc.__doc__
-    _before_add = getattr(Toc, '_before_add')
+    __doc__ = _Toc.__doc__
+
+    def _before_add(self, key=None, item=None):
+        if not isinstance(item, Section):
+            raise TypeError
 
 
 class Section(epubuilder.epub2.epub2.Section):
     __doc__ = epubuilder.epub2.epub2.Section.__doc__
 
     def __init__(self, title, href=None):
-        super().__init__(title, href)
+        epubuilder.epub2.epub2.Section.__init__(self, title, href)
 
         self._subs = _SubSections()
         self._hidden_subs = None
@@ -118,16 +126,16 @@ class Section(epubuilder.epub2.epub2.Section):
 ########################################################################################################################
 # TOC Section
 ########################################################################################################################
-class Epub3(p.Epub):
+class Epub3(Epub):
     def __init__(self):
-        super().__init__()
+        Epub.__init__(self)
 
-        self._toc = Toc()
+        self._toc = _Toc()
         setattr(self._toc, '_epub', self)
 
         self._cover_path = None
 
-    toc = property(lambda self: self._toc, doc=str(Toc.__doc__ if Toc.__doc__ else ''))
+    toc = property(lambda self: self._toc, doc=str(_Toc.__doc__ if _Toc.__doc__ else ''))
 
     @property
     def cover_path(self):
@@ -273,16 +281,18 @@ class Epub3(p.Epub):
         """
         html = self.toc.to_nav_element()
 
-        def find_element_by_name(name):
+        raise TypeError(html.string())
+
+        def find_element_by_name(tag):
             e = None
             for one in html.children:
-                if one.tag == (None, name):
-                    e = one
-                    break
+                if one.tag == tag:
+                    return one
+
             return e
 
-        head = find_element_by_name('head')
-        body = find_element_by_name('body')
+        head = find_element_by_name((None, 'head'))
+        body = find_element_by_name((None, 'body'))
 
         js_path = self._get_unused_filename(None, 'epubuilder_addons_user_toc_attach.js')
         self.files[js_path] = p.File(open(os.path.join(_dirt(__file__), 'static', 'a.js'), 'rb').read(),

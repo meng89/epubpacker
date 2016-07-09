@@ -9,7 +9,7 @@ from hooky import List
 import epubuilder.version
 
 import epubuilder.public.epub as p
-from epubuilder.public.epub import FatherEpub
+from epubuilder.public.epub import FatherEpub, Epub
 from epubuilder.public.metas.dcmes import Identifier, URI_DC
 from epubuilder.tools import relative_path
 from epubuilder.xl import Xl, Header, Element, pretty_insert, Text
@@ -26,7 +26,8 @@ class Toc(List, FatherEpub):
     store :class:`Section` objects.
     """
     def __init__(self):
-        super().__init__()
+        List.__init__(self)
+
         self.title = 'Table of Contents'
 
         self.ncx_depth = -1
@@ -85,7 +86,10 @@ class Toc(List, FatherEpub):
 
 class _SubSections(List, FatherEpub):
     __doc__ = Toc.__doc__
-    _before_add = getattr(Toc, '_before_add')
+
+    def _before_add(self, key=None, item=None):
+        if not isinstance(item, Section):
+            raise TypeError
 
 
 class Section:
@@ -158,9 +162,9 @@ class Section:
 ########################################################################################################################
 # Epub2
 ########################################################################################################################
-class Epub2(p.Epub):
+class Epub2(Epub):
     def __init__(self):
-        super().__init__()
+        Epub.__init__(self)
 
         self._toc = Toc()
         setattr(self._toc, '_epub', self)

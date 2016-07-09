@@ -23,7 +23,7 @@ class _Meta(Base):
 
 class Meta(_Meta):
     def __init__(self, name, content):
-        super().__init__()
+        super(Meta, self).__init__()
         self._name = name
         self._content = content
 
@@ -41,7 +41,7 @@ class Meta(_Meta):
 
 class Cover(_Meta):
     def __init__(self, file):
-        super().__init__()
+        super(Cover, self).__init__()
         self._file = file
 
     @property
