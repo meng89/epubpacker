@@ -1,3 +1,5 @@
+# coding=utf-8
+
 
 class Attrs:
     def __init__(self):

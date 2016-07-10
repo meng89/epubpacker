@@ -1,3 +1,5 @@
+# coding=utf-8
+
 """
 Dublin Core Metadata Element Set, see http://dublincore.org/documents/dces/
 

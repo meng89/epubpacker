@@ -1,3 +1,5 @@
+# coding=utf-8
+
 import zipfile
 
 import html5lib
@@ -97,7 +99,7 @@ class Section(epubuilder.epub2.epub2.Section):
             self._hidden_subs = value
 
     def to_nav_li_element(self):
-        li = Element('li')
+        li = Element((None, 'li'))
 
         if self.href:
             a_or_span = Element((None, 'a'))
@@ -110,7 +112,7 @@ class Section(epubuilder.epub2.epub2.Section):
         li.children.append(a_or_span)
 
         if self.subs:
-            ol = Element('ol')
+            ol = Element((None, 'ol'))
 
             if self.hidden_subs:
                 ol.attributes[(None, 'hidden')] = ''
@@ -241,8 +243,8 @@ class Epub3(Epub):
         z.writestr('mimetype', 'application/epub+zip'.encode('ascii'), compress_type=zipfile.ZIP_STORED)
 
         # wirte custom files
-        for filename, file in self.files.items():
-            z.writestr(p.ROOT_OF_OPF + os.sep + filename, file.binary, zipfile.ZIP_DEFLATED)
+        for filename, _file in self.files.items():
+            z.writestr(p.ROOT_OF_OPF + os.sep + filename, _file.binary, zipfile.ZIP_DEFLATED)
 
         # nav
         nav_xmlstring = self._get_nav_xmlstring()
@@ -255,8 +257,8 @@ class Epub3(Epub):
         self._temp_files[toc_ncx_filename] = p.File(ncx_xmlstring.encode(), mime='application/x-dtbncx+xml')
 
         # write nav nav's js and ncx
-        for filename, file in self._temp_files.items():
-            z.writestr(p.ROOT_OF_OPF + os.sep + filename, file.binary, zipfile.ZIP_DEFLATED)
+        for filename, _file in self._temp_files.items():
+            z.writestr(p.ROOT_OF_OPF + os.sep + filename, _file.binary, zipfile.ZIP_DEFLATED)
 
         opf_filename = self._get_unused_filename(None, 'package.opf')
         z.writestr(p.ROOT_OF_OPF + '/' + opf_filename,
@@ -280,8 +282,6 @@ class Epub3(Epub):
         :rtype: str, tuple
         """
         html = self.toc.to_nav_element()
-
-        raise TypeError(html.string())
 
         def find_element_by_name(tag):
             e = None
@@ -326,5 +326,5 @@ def _has_element(tag, file_string):
         return False
 
 
-def _dirt(file):
-    return os.path.dirname(file)
+def _dirt(_file):
+    return os.path.dirname(_file)

@@ -1,3 +1,5 @@
+# coding=utf-8
+
 """Dublin Core Metadata Initiative, see http://dublincore.org/documents/dcmi-terms/"""
 
 

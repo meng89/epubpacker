@@ -1,3 +1,5 @@
+# coding=utf-8
+
 from epubuilder.xl import Element
 
 from epubuilder.public.metas.base import Base

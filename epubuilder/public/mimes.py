@@ -1,3 +1,5 @@
+# coding=utf-8
+
 # Image Types
 GIF = 'image/gif'  # ['.gif'], 'Images'],
 JPEG = 'image/jpeg'  # ['.jpg', 'jpeg'], 'Images'],

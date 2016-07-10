@@ -1,3 +1,5 @@
+# coding=utf-8
+
 from __future__ import print_function
 
 from abc import abstractmethod
@@ -49,23 +51,64 @@ def parse(xmlstr, debug=False):
 
         l = name.rsplit(' ', 1)
         tag = l[-1]
-        uri = None
+        # for the pytthon2.7
+        try:
+            if isinstance(tag, unicode):
+                tag = tag.encode()
+        except NameError:
+            pass
 
+        uri = None
         if len(l) > 1:
             uri = l[0]
 
+            # for the pytthon2.7
+            try:
+                if isinstance(uri, unicode):
+                    uri = uri.encode()
+            except NameError:
+                pass
+
         for key, value in attrs.items():
             l = key.rsplit(' ', 1)
+
             attr_name = l[-1]
+            # for the pytthon2.7
+            try:
+                if isinstance(attr_name, unicode):
+                    attr_name = attr_name.encode()
+            except NameError:
+                pass
+
             attr_uri = None
             if len(l) > 1:
                 attr_uri = l[0]
+                # for the pytthon2.7
+                try:
+                    if isinstance(attr_uri, unicode):
+                        attr_uri = attr_uri.encode()
+                except NameError:
+                    pass
 
             attributes[(attr_uri, attr_name)] = value
 
         prefixes = {}
 
         for _uri, _prefix in ns_list:
+            # for the pytthon2.7
+            try:
+                if isinstance(_uri, unicode):
+                    _uri = _uri.encode()
+            except NameError:
+                pass
+
+            # for the pytthon2.7
+            try:
+                if isinstance(_prefix, unicode):
+                    _prefix = _prefix.encode()
+            except NameError:
+                pass
+
             prefixes[_uri] = _prefix
 
         e = Element(tag=(uri, tag), attributes=attributes, prefixes=prefixes)
@@ -113,7 +156,7 @@ def parse(xmlstr, debug=False):
     def decl_handler(version, encoding, standalone):
         xl.header = Header(version=version, encoding=encoding, standalone=standalone)
 
-    p = xml.parsers.expat.ParserCreate(namespace_separator=' ')
+    p = xml.parsers.expat.ParserCreate(namespace_separator=' ', encoding='UTF=8')
 
     p.XmlDeclHandler = decl_handler
 
@@ -277,7 +320,7 @@ class Xl(object):
         return s
 
 
-class _Node:
+class _Node(object):
     @abstractmethod
     def string(self):
         pass
@@ -336,6 +379,7 @@ class Element(_Node):
     Handle XML element node.
     """
     def __init__(self, tag=None, attributes=None, prefixes=None):
+        _Node.__init__(self)
         """
         :param tag:
         :type tag: tuple or str
@@ -385,6 +429,7 @@ class Element(_Node):
             raise ValueError
 
         if value[0] is not None and not isinstance(value[0], str):
+            print(value)
             raise ValueError
 
         self.__dict__['tag'] = value

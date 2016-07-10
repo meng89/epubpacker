@@ -1,3 +1,5 @@
+# coding=utf-8
+
 import magic
 
 from epubuilder.public import mimes
