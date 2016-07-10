@@ -15,6 +15,10 @@ xhtml_template = """
 
 cur_path = os.path.dirname(__file__)
 
+BUILT_BOOK_DIR = '_test_built_book'
+if not os.path.exists(BUILT_BOOK_DIR):
+    os.makedirs(BUILT_BOOK_DIR)
+
 
 def make_epub(epub, section):
     book = epub()
@@ -57,14 +61,9 @@ def make_epub(epub, section):
     return book
 
 
-def write_epub(book, filename):
-
-    dirt = '_built_book'
-
-    if not os.path.exists(dirt):
-        os.makedirs(dirt)
-
-    book.write(os.path.join(dirt, filename))
+def check_xml(book_path):
+    # todo
+    pass
 
 
 def test_epub3():
@@ -79,7 +78,10 @@ def test_epub3():
     book.spine.insert(0, Joint(user_toc_path))
     book.toc.insert(0, Section('Table of Contents', href=user_toc_path))
 
-    write_epub(book, '3.epub')
+    book_path = os.path.join(BUILT_BOOK_DIR, '3.epub')
+    book.write(book_path)
+
+    check_xml(book_path)
 
 
 def test_epub2():
@@ -99,4 +101,7 @@ def test_epub2():
 
     book.toc.ncx_depth = 1
 
-    write_epub(book, '2.epub')
+    book_path = os.path.join(BUILT_BOOK_DIR, '2.epub')
+    book.write(book_path)
+
+    check_xml(book_path)

@@ -65,7 +65,6 @@ docs/_build/
 # PyBuilder
 target/
 
-
 demo.py
 
-_built_book/
+_test_built_book/
