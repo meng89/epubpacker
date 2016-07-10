@@ -17,6 +17,9 @@ ROOT_OF_OPF = 'EPUB'
 
 
 class FatherEpub:
+    def __init__(self):
+        pass
+
     @property
     def _epub(self):
         return self.__epub
@@ -55,13 +58,13 @@ class Files(Dict, FatherEpub):
     def to_elements(self):
         items = []
 
-        for path, file in self.items():
+        for path, file_ in self.items():
             item = Element('item', attributes={(None, 'href'): path})
 
-            if file.identification is not None:
-                item.attributes[(None, 'id')] = file.identification
+            if file_.identification is not None:
+                item.attributes[(None, 'id')] = file_.identification
 
-            item.attributes[(None, 'media-type')] = file.mime or mimes.map_from_extension[os.path.splitext(path)[1]]
+            item.attributes[(None, 'media-type')] = file_.mime or mimes.map_from_extension[os.path.splitext(path)[1]]
 
             items.append(item)
 
@@ -81,6 +84,8 @@ class File(FatherEpub):
         :param fallback:
         :type fallback: file
         """
+
+        FatherEpub.__init__(self)
 
         self._binary = binary
         self.mime = mime
@@ -126,6 +131,7 @@ class Joint(FatherEpub):
         :param linear: I don't know what is this mean. visit http://idpf.org to figure out by yourself.
         :type linear: bool
         """
+        FatherEpub.__init__(self)
         self._path = path
         self.linear = linear
 

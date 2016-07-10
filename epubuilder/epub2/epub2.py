@@ -207,9 +207,7 @@ class Epub2(Epub):
         package.children.append(spine)
         spine.attributes['toc'] = toc_ncx_item_e_id
 
-        x = Xl(header=Header(), root=pretty_insert(package, dont_do_when_one_child=True))
-        return x.string()
-        # return pretty_insert(package, dont_do_when_one_child=True).string()
+        return Xl(root=pretty_insert(package, dont_do_when_one_child=True)).string()
 
     def write(self, filename):
 
@@ -218,8 +216,8 @@ class Epub2(Epub):
         z.writestr('mimetype', 'application/epub+zip'.encode('ascii'), compress_type=zipfile.ZIP_STORED)
 
         # wirte custom files
-        for filename, file in self.files.items():
-            z.writestr(p.ROOT_OF_OPF + os.sep + filename, file.binary, zipfile.ZIP_DEFLATED)
+        for filename, fil in self.files.items():
+            z.writestr(p.ROOT_OF_OPF + os.sep + filename, fil.binary, zipfile.ZIP_DEFLATED)
 
         # ncx
         ncx_xmlstring = pretty_insert(self.toc.to_ncx_element(), dont_do_when_one_child=True).string()
@@ -227,8 +225,8 @@ class Epub2(Epub):
         self._temp_files[toc_ncx_filename] = p.File(ncx_xmlstring.encode(), mime='application/x-dtbncx+xml')
 
         # write nav nav's js and ncx
-        for filename, file in self._temp_files.items():
-            z.writestr(p.ROOT_OF_OPF + os.sep + filename, file.binary, zipfile.ZIP_DEFLATED)
+        for filename, fil in self._temp_files.items():
+            z.writestr(p.ROOT_OF_OPF + os.sep + filename, fil.binary, zipfile.ZIP_DEFLATED)
 
         opf_filename = self._get_unused_filename(None, 'package.opf')
         z.writestr(p.ROOT_OF_OPF + '/' + opf_filename,

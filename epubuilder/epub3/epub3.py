@@ -19,7 +19,7 @@ from epubuilder.public.epub import Epub
 from epubuilder.public.metas.dcmes import Identifier, URI_DC
 from .metas.dcterms import get
 from epubuilder.tools import w3c_utc_date
-from epubuilder.xl import Xl, Header, Element, Text, URI_XML, pretty_insert
+from epubuilder.xl import Xl, Element, Text, URI_XML, pretty_insert
 
 
 ########################################################################################################################
@@ -232,9 +232,7 @@ class Epub3(Epub):
         package.children.append(spine)
         spine.attributes['toc'] = toc_ncx_item_e_id
 
-        x = Xl(header=Header(), root=pretty_insert(package, dont_do_when_one_child=True))
-        return x.string()
-        # return pretty_insert(package, dont_do_when_one_child=True).string()
+        return Xl(root=pretty_insert(package, dont_do_when_one_child=True)).string()
 
     def write(self, filename):
 
