@@ -12,7 +12,7 @@ with open(ver_path) as ver_file:
 DESCRIPTION = 'A module to build EPUB 2 or 3 document.'
 
 
-URL = 'https://github.com/meng89/{}' + NAME
+URL = 'https://github.com/meng89/' + NAME
 
 CLASSIFIERS = [
     'Intended Audience :: Developers',
@@ -33,6 +33,7 @@ with open('requirements.txt') as f:
 
 setup(name=NAME,
       version=main_ns['__version__'],
+      description=DESCRIPTION,
       include_package_data=True,
       author='Chen Meng',
       author_email='ObserverChan@gmail.com',
