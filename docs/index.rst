@@ -7,7 +7,7 @@
     api/index
 
 
-Epubuilder is a Python 3 module to build EPUB 2 or 3 document from web files and related information.
+Epubuilder is a Python module to build EPUB 2 or 3 document from web files and related information.
 
 
 Quick Start
@@ -33,7 +33,7 @@ Installing
 ----------
 ::
 
-    pip3 install epubuilder
+    pip install epubuilder
 
 or on Gentoo/Linux:
 ::
@@ -44,7 +44,7 @@ or on Gentoo/Linux:
 
 Why Epubuilder?
 ---------------
-* **New**. This module run under Python 3 (Actually, only Python 3 at present). It suporrts Epub 3, and Epub 2 too.
+* **New**. This module run under Python 2 and 3. It suporrts Epub 3, and Epub 2 too.
 
 
 * **Clear**. Epubuilder doesn't modify the resource you were given.
