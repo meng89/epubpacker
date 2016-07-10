@@ -296,8 +296,16 @@ class XLError(Exception):
 
 class Xl(object):
     def __init__(self, header=None, doc_type=None, root=None):
+        """
+        :param header:
+        :type header: Header
+        :param doc_type:
+        :type doc_type: DocType
+        :param root:
+        :type root: Element
+        """
 
-        self.header = header or Header()
+        self.header = header or header
         """object of :class:`Header`"""
 
         self.doc_type = doc_type
@@ -310,12 +318,13 @@ class Xl(object):
         """To xml string"""
         s = ''
 
-        s += self.header.string()
+        if self.header:
+            s += self.header.string() + '\n'
 
         if self.doc_type:
-            s += '\n' + self.doc_type.string()
+            s += self.doc_type.string() + '\n'
 
-        s += '\n' + self.root.string()
+        s += self.root.string()
 
         return s
 
@@ -331,24 +340,29 @@ class Header(_Node):
     Handle XML header node
     """
     def __init__(self, version=None, encoding=None, standalone=None):
-        self.version = version
-        self.encoding = encoding
-        self.standalone = standalone
+        self.version = version or '1.0'
+        self.encoding = encoding or 'utf-8'
+        self.standalone = standalone or 'yes'
 
     def string(self):
+        if not (self.version or self.encoding or self. standalone):
+            return ''
+
         s = ''
+
         s += '<?xml'
 
         if self.version:
-            s += " version='{}'".format(self.version)  # 1.0
+            s += ' version="{}"'.format(self.version)
 
         if self.encoding:
-            s += " encoding='{}'".format(self.encoding)  # utf-8
+            s += ' encoding="{}"'.format(self.encoding)
 
         if self.standalone is not None:
-            s += " standalone='{}'".format(self.standalone)  # yes
+            s += ' standalone="{}"'.format(self.standalone)
 
-        s += '?>\n'
+        s += ' ?>'
+
         return s
 
 
