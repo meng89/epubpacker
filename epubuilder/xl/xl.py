@@ -154,7 +154,16 @@ def parse(xmlstr, debug=False):
             raise HandlerError('Has internal subset, cannot handler it!')
 
     def decl_handler(version, encoding, standalone):
-        xl.header = Header(version=version, encoding=encoding, standalone=standalone)
+        standalone_ = None
+
+        if standalone == 1:
+            standalone_ = True
+        elif standalone == 0:
+            standalone_ = False
+        elif standalone == -1:
+            standalone_ = None
+
+        xl.header = Header(version=version, encoding=encoding, standalone=standalone_)
 
     p = xml.parsers.expat.ParserCreate(namespace_separator=' ', encoding='UTF=8')
 
@@ -340,12 +349,21 @@ class Header(_Node):
     Handle XML header node
     """
     def __init__(self, version=None, encoding=None, standalone=None):
+        """
+
+        :param version:
+        :type version: str
+        :param encoding:
+        :type encoding: str
+        :param standalone:
+        :type standalone: bool
+        """
         self.version = version or '1.0'
         self.encoding = encoding or 'utf-8'
-        self.standalone = standalone or 'yes'
+        self.standalone = standalone
 
     def string(self):
-        if not (self.version or self.encoding or self. standalone):
+        if not (self.version or self.encoding or self.standalone):
             return ''
 
         s = ''
@@ -359,7 +377,7 @@ class Header(_Node):
             s += ' encoding="{}"'.format(self.encoding)
 
         if self.standalone is not None:
-            s += ' standalone="{}"'.format(self.standalone)
+            s += ' standalone="{}"'.format('yes' if self.standalone else 'no')
 
         s += ' ?>'
 
