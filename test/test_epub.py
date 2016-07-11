@@ -1,11 +1,14 @@
 import uuid
 import os
 
+import zipfile
+from xml.etree import ElementTree as ET
+
 from epubuilder.public import Joint, File
 
 from epubuilder.public.metas.dcmes import Title, Language, Identifier
 
-xhtml_template = """
+XHTML_TEMPLATE = """
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <title>{title}</title>
@@ -32,7 +35,7 @@ def make_epub(epub, section):
 
     def make_page(title, html_path=None, content=None):
         if html_path and content:
-            _file = File(xhtml_template.format(title=title, content=content).encode(), mime='application/xhtml+xml')
+            _file = File(XHTML_TEMPLATE.format(title=title, content=content).encode(), mime='application/xhtml+xml')
             book.files[html_path] = _file
 
             book.spine.append(Joint(html_path))
@@ -62,8 +65,11 @@ def make_epub(epub, section):
 
 
 def check_xml(book_path):
-    # todo
-    pass
+    z = zipfile.ZipFile(book_path, 'r')
+    container = ET.fromstring(z.read('META-INF/container.xml').decode())
+    for rootfile in container[0]:
+        if rootfile.attrib['media-type'] == 'application/oebps-package+xml':
+            ET.fromstring(z.read(rootfile.attrib['full-path']))
 
 
 def test_epub3():
