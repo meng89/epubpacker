@@ -195,9 +195,9 @@ class Epub2(Epub):
         manifest = Element('manifest')
         package.children.append(manifest)
 
-        manifest.children.extend(self.files.to_elements())
+        manifest.children.extend(self.files.to_item_elements())
 
-        manifest.children.extend(self._temp_files.to_elements())
+        manifest.children.extend(self._temp_files.to_item_elements())
 
         # find ncx id for spine
         toc_ncx_item_e_id = self._find_ncx_id(manifest.children)

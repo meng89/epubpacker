@@ -212,9 +212,9 @@ class Epub3(Epub):
         manifest = Element('manifest')
         package.children.append(manifest)
 
-        manifest.children.extend(self._process_files_elements_properties(self.files.to_elements()))
+        manifest.children.extend(self._process_files_elements_properties(self.files.to_item_elements()))
 
-        for item in self._process_files_elements_properties(self._temp_files.to_elements()):
+        for item in self._process_files_elements_properties(self._temp_files.to_item_elements()):
 
             if item.attributes[(None, 'href')] == toc_path:
                 item.attributes[(None, 'properties')] = 'nav'

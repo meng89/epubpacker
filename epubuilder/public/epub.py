@@ -55,41 +55,23 @@ class Files(Dict, FatherEpub):
     def _after_add(self, key=None, item=None):
         setattr(self[key], '_epub', self._epub)
 
-    def to_elements(self):
-        items = []
-
-        for path, file_ in self.items():
-            item = Element('item', attributes={(None, 'href'): path})
-
-            if file_.identification is not None:
-                item.attributes[(None, 'id')] = file_.identification
-
-            item.attributes[(None, 'media-type')] = file_.mime or mimes.map_from_extension[os.path.splitext(path)[1]]
-
-            items.append(item)
-
-        return items
-
-
 ########################################################################################################################
 class File(FatherEpub):
-    def __init__(self, binary, mime=None, identification=None, fallback=None):
+    def __init__(self, binary, mime=None, fallback=None):
         """
         :param binary: binary data
         :type binary: bytes
         :param mime: mime
         :type mime: str
-        :param identification: xml attribute: `id`
-        :type identification: str
         :param fallback:
-        :type fallback: file
+        :type fallback: File
         """
 
         FatherEpub.__init__(self)
 
         self._binary = binary
         self.mime = mime
-        self.identification = identification or 'id_' + uuid.uuid4().hex
+        # self.identification = identification or 'id_' + uuid.uuid4().hex
         self.fallback = fallback
 
     @property
@@ -169,11 +151,51 @@ class Epub:
         self._temp_files = Files()
         setattr(self._temp_files, '_epub', self)
 
+        self._opf_e_ids = []
+
     metadata = property(lambda self: self._metadata, doc=str(Metadata.__doc__ if Metadata.__doc__ else ''))
 
     files = property(lambda self: self._files, doc=str(Files.__doc__ if Files.__doc__ else ''))
 
     spine = property(lambda self: self._spine, doc=str(Spine.__doc__ if Spine.__doc__ else ''))
+
+    def _files_to_manifest(self, files):
+        """
+
+        :param files:
+         :type files: Files
+        :return:
+        """
+
+        items = []
+
+        for path, file_ in files:
+            item = Element('item', attributes={(None, 'href'): path})
+
+            item.attributes[(None, 'media-type')] = file_.mime or mimes.map_from_extension[
+                os.path.splitext(path)[1]]
+
+            identification = xml_identify(path)
+            new_id = identification
+            i = 1
+            while identification in self._opf_e_ids:
+                new_id = identification + '_' + str(i)
+
+            item.attributes[(None, 'id')] = new_id
+
+            items.append(item)
+
+        return items
+
+    def _make_item_ids(self, manifest):
+        """
+
+        :param manifest:
+         :type manifest: Element
+        :return:
+        """
+
+        for item in manifest.children
 
     @staticmethod
     def _find_ncx_id(items):
@@ -227,3 +249,25 @@ class Epub:
         :param filename: file name.
         :type filename: str
         """
+
+
+def xml_identify(s):
+    """
+    :param s:
+    :type s: str
+    :return:
+    :rtype: str
+    """
+    new_string = ''
+
+    for char in s:
+        if char.isalpha() or char.isdigit() or char in (':', '.', '_', '-'):
+            new_string += char
+
+        else:
+            new_string += ':'
+
+    if not new_string[0].isalpha():
+        new_string = 'P_' + new_string
+
+    return new_string
