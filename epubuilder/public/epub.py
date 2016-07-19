@@ -63,8 +63,8 @@ class File(FatherEpub):
         :type binary: bytes
         :param mime: mime
         :type mime: str
-        :param fallback:
-        :type fallback: File
+        :param fallback: file path
+        :type fallback: str
         """
 
         FatherEpub.__init__(self)
@@ -169,7 +169,12 @@ class Epub:
 
         items = []
 
-        for path, file_ in files:
+        item_dict = {}
+
+
+        pathes = list(self.files.keys())
+
+        def to_item(path, file_):
             item = Element('item', attributes={(None, 'href'): path})
 
             item.attributes[(None, 'media-type')] = file_.mime or mimes.map_from_extension[
@@ -184,6 +189,20 @@ class Epub:
             item.attributes[(None, 'id')] = new_id
 
             items.append(item)
+            return item
+
+
+        while pathes:
+            for _path in pathes:
+                if self.files[_path].fallback is not None:
+                    if self.files[_path].fallback in item_dict.keys():
+                        _item = to_item(_path, self.files[_path])
+                        _item.attributes[(None, 'fallback')] = item_dict[_path].attributes[(None, 'id')]
+                        item_dict[_path] = _item
+                        pathes.remove(_path)
+                else:
+                    _item = to_item(_path, self.files[_path])
+                    item_dict[_path] = _item
 
         return items
 
