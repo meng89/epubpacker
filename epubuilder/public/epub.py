@@ -171,7 +171,6 @@ class Epub:
 
         item_dict = {}
 
-
         pathes = list(self.files.keys())
 
         def to_item(path, file_):
@@ -203,6 +202,7 @@ class Epub:
                 else:
                     _item = to_item(_path, self.files[_path])
                     item_dict[_path] = _item
+                    pathes.remove(_path)
 
         return items
 
