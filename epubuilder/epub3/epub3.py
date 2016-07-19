@@ -154,9 +154,8 @@ class Epub3(Epub):
         html = self.toc.to_nav_element()
         return pretty_insert(html, dont_do_when_one_child=True).string()
 
-    def _process_files_elements_properties(self, elements):
-        new_elements = []
-        for item in elements:
+    def _process_files_elements_properties(self, manifest):
+        for item in manifest.children:
             properties = []
 
             if item.attributes[(None, 'media-type')] in (mimes.XHTML, mimes.HTML):
@@ -175,10 +174,6 @@ class Epub3(Epub):
             if properties:
                 item.attributes[(None, 'properties')] = ' '.join(properties)
 
-            new_elements.append(item)
-
-        return new_elements
-
     def _get_opf_xmlstring(self, toc_path):
 
         def_ns = 'http://www.idpf.org/2007/opf'
@@ -187,38 +182,29 @@ class Epub3(Epub):
 
         package.attributes[(URI_XML, 'lang')] = 'en'
 
-        for m in self.metadata:
-            if isinstance(m, Identifier):
-                package.attributes['unique-identifier'] = m.to_element().attributes[(None, 'id')]
-
         # unique - identifier = "pub-id"
-        # metadata
-        metadata_e = Element('metadata', prefixes={URI_DC: 'dc'})
-        package.children.append(metadata_e)
-        for m in self.metadata:
-            metadata_e.children.append(m.to_element())
+        if self._find_unique_id():
+            package.attributes['unique-identifier'] = self._find_unique_id()
+
+        # Metadata
+        package.children.append(self._make_metadata_element())
 
         # manifest
-        manifest = Element('manifest')
+        manifest = self._make_manifest_element()
         package.children.append(manifest)
-
-        manifest.children.extend(self._process_files_elements_properties(self.files.to_item_elements()))
-
-        for item in self._process_files_elements_properties(self._temp_files.to_item_elements()):
-
+        self._process_files_elements_properties(manifest)
+        for item in manifest.children:
             if item.attributes[(None, 'href')] == toc_path:
                 item.attributes[(None, 'properties')] = 'nav'
 
             if item.attributes[(None, 'href')] == self.cover_path:
                 item.attributes[(None, 'properties')] = 'cover-image'
 
-            manifest.children.append(item)
-
-        # find ncx id for spine
+        # Find ncx id for spine
         toc_ncx_item_e_id = self._find_ncx_id(manifest.children)
 
-        # spine
-        spine = self.spine.to_element()
+        # Spine
+        spine = self._make_spine_element()
         package.children.append(spine)
         spine.attributes['toc'] = toc_ncx_item_e_id
 
