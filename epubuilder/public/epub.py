@@ -1,7 +1,6 @@
 # coding=utf-8
 
 import string
-import uuid
 
 import os
 import random
@@ -10,6 +9,7 @@ from hooky import List, Dict
 
 from epubuilder.public import mimes
 from epubuilder.public.metas.base import Base
+from epubuilder.public.metas.dcmes import Identifier, URI_DC
 from epubuilder.xl import Xl, Element, pretty_insert
 
 CONTAINER_PATH = 'META-INF' + os.sep + 'container.xml'
@@ -43,7 +43,7 @@ class Metadata(List):
 ########################################################################################################################
 # Files File
 ########################################################################################################################
-class Files(Dict, FatherEpub):
+class Files(Dict):
     """dict-like.
 
     Store file path and :class:`epubuilder.public.File` objects from `key` and `item`.
@@ -52,11 +52,9 @@ class Files(Dict, FatherEpub):
         if not isinstance(item, File):
             raise TypeError
 
-    def _after_add(self, key=None, item=None):
-        setattr(self[key], '_epub', self._epub)
 
 ########################################################################################################################
-class File(FatherEpub):
+class File:
     def __init__(self, binary, mime=None, fallback=None):
         """
         :param binary: binary data
@@ -66,8 +64,6 @@ class File(FatherEpub):
         :param fallback: file path
         :type fallback: str
         """
-
-        FatherEpub.__init__(self)
 
         self._binary = binary
         self.mime = mime
@@ -83,7 +79,7 @@ class File(FatherEpub):
 ########################################################################################################################
 # Spine Joint
 ########################################################################################################################
-class Spine(List, FatherEpub):
+class Spine(List):
     """list-like.
 
     "The spine defines the default reading order"
@@ -95,17 +91,8 @@ class Spine(List, FatherEpub):
         if not isinstance(item, Joint):
             raise TypeError
 
-    def _after_add(self, key=None, item=None):
-        setattr(self[key], '_epub', self._epub)
 
-    def to_element(self):
-        spine = Element('spine')
-        for joint in self:
-            spine.children.append(joint.to_element())
-        return spine
-
-
-class Joint(FatherEpub):
+class Joint:
     def __init__(self, path, linear=None):
         """
         :param path: file path, in Epub.Files.keys()
@@ -113,7 +100,6 @@ class Joint(FatherEpub):
         :param linear: I don't know what is this mean. visit http://idpf.org to figure out by yourself.
         :type linear: bool
         """
-        FatherEpub.__init__(self)
         self._path = path
         self.linear = linear
 
@@ -121,16 +107,6 @@ class Joint(FatherEpub):
     def path(self):
         """as class parmeter"""
         return self._path
-
-    def to_element(self):
-        itemref = Element('itemref', attributes={(None, 'idref'): self._epub.files[self.path].identification})
-
-        if self.linear is True:
-            itemref.attributes[(None, 'linear')] = 'yes'
-        elif self.linear is False:
-            itemref.attributes[(None, 'linear')] = 'no'
-
-        return itemref
 
 
 ########################################################################################################################
@@ -151,70 +127,11 @@ class Epub:
         self._temp_files = Files()
         setattr(self._temp_files, '_epub', self)
 
-        self._opf_e_ids = []
-
     metadata = property(lambda self: self._metadata, doc=str(Metadata.__doc__ if Metadata.__doc__ else ''))
 
     files = property(lambda self: self._files, doc=str(Files.__doc__ if Files.__doc__ else ''))
 
     spine = property(lambda self: self._spine, doc=str(Spine.__doc__ if Spine.__doc__ else ''))
-
-    def _files_to_manifest(self, files):
-        """
-
-        :param files:
-         :type files: Files
-        :return:
-        """
-
-        items = []
-
-        item_dict = {}
-
-        pathes = list(self.files.keys())
-
-        def to_item(path, file_):
-            item = Element('item', attributes={(None, 'href'): path})
-
-            item.attributes[(None, 'media-type')] = file_.mime or mimes.map_from_extension[
-                os.path.splitext(path)[1]]
-
-            identification = xml_identify(path)
-            new_id = identification
-            i = 1
-            while identification in self._opf_e_ids:
-                new_id = identification + '_' + str(i)
-
-            item.attributes[(None, 'id')] = new_id
-
-            items.append(item)
-            return item
-
-
-        while pathes:
-            for _path in pathes:
-                if self.files[_path].fallback is not None:
-                    if self.files[_path].fallback in item_dict.keys():
-                        _item = to_item(_path, self.files[_path])
-                        _item.attributes[(None, 'fallback')] = item_dict[_path].attributes[(None, 'id')]
-                        item_dict[_path] = _item
-                        pathes.remove(_path)
-                else:
-                    _item = to_item(_path, self.files[_path])
-                    item_dict[_path] = _item
-                    pathes.remove(_path)
-
-        return items
-
-    def _make_item_ids(self, manifest):
-        """
-
-        :param manifest:
-         :type manifest: Element
-        :return:
-        """
-
-        for item in manifest.children
 
     @staticmethod
     def _find_ncx_id(items):
@@ -224,6 +141,96 @@ class Epub:
                 ncx_id = item.attributes[(None, 'id')]
                 break
         return ncx_id
+
+    def _find_unique_id(self):
+        """
+        :return:
+         :rtype: str or none
+        """
+        for m in self.metadata:
+            if isinstance(m, Identifier):
+                return m.to_element().attributes[(None, 'id')]
+        return None
+
+    def _make_metadata_element(self):
+        """
+        :return: Metadata Element
+        :rtype: Element
+        """
+
+        metadata_e = Element('metadata', prefixes={URI_DC: 'dc'})
+        for m in self.metadata:
+            metadata_e.children.append(m.to_element())
+
+    def _make_manifest_element(self):
+        """
+        :return: Manifest Element
+         :rtype: Element
+        """
+        manifest = Element('manifest')
+
+        ids = []
+
+        items = []
+
+        item_dict = {}
+
+        pathes = list(self.files.keys())
+
+        def make_item(path, file_):
+            item = Element('item', attributes={(None, 'href'): path})
+
+            item.attributes[(None, 'media-type')] = file_.mime or mimes.map_from_extension[
+                os.path.splitext(path)[1]]
+
+            identification = xml_identify(path)
+            new_id = identification
+            i = 1
+            while new_id in ids:
+                new_id = identification + '_' + str(i)
+
+            item.attributes[(None, 'id')] = new_id
+            ids.append(new_id)
+
+            items.append(item)
+            return item
+
+        while pathes:
+            for _path in pathes:
+                if self.files[_path].fallback is not None:
+                    if self.files[_path].fallback in item_dict.keys():
+                        _item = make_item(_path, self.files[_path])
+                        _item.attributes[(None, 'fallback')] = item_dict[_path].attributes[(None, 'id')]
+                        item_dict[_path] = _item
+                        pathes.remove(_path)
+                else:
+                    _item = make_item(_path, self.files[_path])
+                    item_dict[_path] = _item
+                    pathes.remove(_path)
+
+        for _path, _file in self._temp_files.items():
+            _item = make_item(_path, _file)
+            items.append(_item)
+
+        manifest.children.extend(items)
+
+        return manifest
+
+    def _make_spine_element(self):
+        spine = Element('spine')
+
+        for joint in self.spine:
+
+            itemref = Element('itemref', attributes={(None, 'idref'): self.files[joint.path].identification})
+
+            if joint.linear is True:
+                itemref.attributes[(None, 'linear')] = 'yes'
+            elif joint.linear is False:
+                itemref.attributes[(None, 'linear')] = 'no'
+
+            spine.children.append(itemref)
+
+        return spine
 
     @staticmethod
     def _get_container_xmlstring(opf_path):
@@ -290,3 +297,6 @@ def xml_identify(s):
         new_string = 'P_' + new_string
 
     return new_string
+
+
+OPF_NS = 'http://www.idpf.org/2007/opf'

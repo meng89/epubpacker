@@ -1,5 +1,5 @@
 pillow
 nose
-python-magic>=0.4.3
+python-magic
 html5lib
 hooky

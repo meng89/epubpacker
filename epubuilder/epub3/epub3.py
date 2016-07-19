@@ -17,8 +17,7 @@ import epubuilder.public.epub as p
 from epubuilder.public.epub import Epub
 
 from epubuilder.public.metas.dcmes import Identifier, URI_DC
-from .metas.dcterms import get
-from epubuilder.tools import w3c_utc_date
+
 from epubuilder.xl import Xl, Element, Text, URI_XML, pretty_insert
 
 
@@ -183,7 +182,6 @@ class Epub3(Epub):
     def _get_opf_xmlstring(self, toc_path):
 
         def_ns = 'http://www.idpf.org/2007/opf'
-        # dcterms_ns = 'http://purl.org/metadata/terms/'
 
         package = Element('package', prefixes={def_ns: None}, attributes={'version': '3.0'})
 
@@ -199,14 +197,6 @@ class Epub3(Epub):
         package.children.append(metadata_e)
         for m in self.metadata:
             metadata_e.children.append(m.to_element())
-
-        modified = None
-        for m in self.metadata:
-            if isinstance(m, get('modified')):
-                modified = m
-
-        if not modified:
-            metadata_e.children.append(get('modified')(w3c_utc_date()).to_element())
 
         # manifest
         manifest = Element('manifest')

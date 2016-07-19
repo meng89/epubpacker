@@ -12,9 +12,9 @@ import epubuilder.version
 
 import epubuilder.public.epub as p
 from epubuilder.public.epub import FatherEpub, Epub
-from epubuilder.public.metas.dcmes import Identifier, URI_DC
+from epubuilder.public.metas.dcmes import Identifier
 from epubuilder.tools import relative_path
-from epubuilder.xl import Xl, Header, Element, pretty_insert, Text
+from epubuilder.xl import Xl, Element, pretty_insert, Text
 
 
 ########################################################################################################################
@@ -176,34 +176,25 @@ class Epub2(Epub):
     def _get_opf_xmlstring(self):
 
         def_ns = 'http://www.idpf.org/2007/opf'
-        # dcterms_ns = 'http://purl.org/metadata/terms/'
 
         package = Element('package', prefixes={def_ns: None}, attributes={'version': '2.0'})
 
         # unique - identifier = "pub-id"
-        for m in self.metadata:
-            if isinstance(m, Identifier):
-                package.attributes['unique-identifier'] = m.to_element().attributes[(None, 'id')]
+        if self._find_unique_id():
+            package.attributes['unique-identifier'] = self._find_unique_id()
 
-        # metadata
-        metadata_e = Element('metadata', prefixes={URI_DC: 'dc'})
-        package.children.append(metadata_e)
-        for m in self.metadata:
-            metadata_e.children.append(m.to_element())
+        # Metadata
+        package.children.append(self._make_metadata_element())
 
-        # manifest
-        manifest = Element('manifest')
+        # Manifest
+        manifest = self._make_manifest_element()
         package.children.append(manifest)
 
-        manifest.children.extend(self.files.to_item_elements())
-
-        manifest.children.extend(self._temp_files.to_item_elements())
-
-        # find ncx id for spine
+        # Find ncx id for spine
         toc_ncx_item_e_id = self._find_ncx_id(manifest.children)
 
-        # spine
-        spine = self.spine.to_element()
+        # Spine
+        spine = self._make_spine_element()
         package.children.append(spine)
         spine.attributes['toc'] = toc_ncx_item_e_id
 
