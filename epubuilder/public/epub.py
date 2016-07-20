@@ -151,7 +151,9 @@ class Epub:
         return None
 
     def _find_id(self, filepath):
+        print('filepath:', filepath)
         for item in self._make_manifest_element().children:
+            print(item.attributes[(None, 'href')])
             if item.attributes[(None, 'href')] == filepath:
                 return item.attributes[(None, 'id')]
         return None

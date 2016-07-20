@@ -162,7 +162,10 @@ class Epub3(Epub):
         return html
         # return pretty_insert(html, dont_do_when_one_child=True).string()
 
-    def _process_files_elements_properties(self, manifest):
+    def _make_ncx_element(self):
+        pass
+
+    def _process_items_properties(self, manifest):
         for item in manifest.children:
             properties = []
 
@@ -200,7 +203,7 @@ class Epub3(Epub):
         # manifest
         manifest = self._make_manifest_element()
         package.children.append(manifest)
-        self._process_files_elements_properties(manifest)
+        self._process_items_properties(manifest)
 
         for item in manifest.children:
             if item.attributes[(None, 'href')] == toc_path:

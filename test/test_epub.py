@@ -98,9 +98,10 @@ def test_epub2():
 
     book = make_epub(Epub2, Section)
 
-    cover_file = File(open(os.path.join(cur_path, 'cover', 'cover.png'), 'rb').read())
-    book.files['cover.png'] = cover_file
-    book.metadata.append(Cover(cover_file))
+    cover_img_file = File(open(os.path.join(cur_path, 'cover', 'cover.png'), 'rb').read())
+    cover_img_path = 'cover.png'
+    book.files['cover.png'] = cover_img_file
+    book.metadata.append(Cover(cover_img_path))
 
     cover_page_path = 'cover.xhtml'
     cover_page = book.addons_make_cover_page(image_path='cover.png', cover_page_path=cover_page_path)
