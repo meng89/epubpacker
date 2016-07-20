@@ -30,35 +30,6 @@ class _Toc(Toc):
     def __init__(self):
         Toc.__init__(self)
 
-    def to_nav_element(self):
-        default_ns = 'http://www.w3.org/1999/xhtml'
-        epub_ns = 'http://www.idpf.org/2007/ops'
-
-        html = Element((None, 'html'), prefixes={default_ns: None, epub_ns: 'epub'})
-
-        head = Element((None, 'head'))
-        html.children.append(head)
-
-        if self.title:
-            _title = Element((None, 'title'))
-            head.children.append(_title)
-            _title.children.append(Text(self.title))
-
-        body = Element((None, 'body'))
-        html.children.append(body)
-
-        if self:
-            nav = Element((None, 'nav'), prefixes={epub_ns: 'epub'}, attributes={(epub_ns, 'type'): 'toc'})
-            ol = Element((None, 'ol'))
-
-            for section in self:
-                ol.children.append(section.to_nav_li_element())
-
-            nav.children.append(ol)
-            body.children.append(nav)
-
-        return html
-
     def _before_add(self, key=None, item=None):
         if not isinstance(item, Section):
             raise TypeError
@@ -150,8 +121,33 @@ class Epub3(Epub):
 
         self._cover_path = path
 
-    def _get_nav_xmlstring(self):
-        html = self.toc.to_nav_element()
+    def _make_nav_element(self):
+        default_ns = 'http://www.w3.org/1999/xhtml'
+        epub_ns = 'http://www.idpf.org/2007/ops'
+
+        html = Element((None, 'html'), prefixes={default_ns: None, epub_ns: 'epub'})
+
+        head = Element((None, 'head'))
+        html.children.append(head)
+
+        if self.toc.title:
+            _title = Element((None, 'title'))
+            head.children.append(_title)
+            _title.children.append(Text(self.toc.title))
+
+        body = Element((None, 'body'))
+        html.children.append(body)
+
+        if self.toc:
+            nav = Element((None, 'nav'), prefixes={epub_ns: 'epub'}, attributes={(epub_ns, 'type'): 'toc'})
+            ol = Element((None, 'ol'))
+
+            for section in self.toc:
+                ol.children.append(section.to_nav_li_element())
+
+            nav.children.append(ol)
+            body.children.append(nav)
+
         return pretty_insert(html, dont_do_when_one_child=True).string()
 
     def _process_files_elements_properties(self, manifest):
@@ -221,7 +217,7 @@ class Epub3(Epub):
             z.writestr(p.ROOT_OF_OPF + os.sep + filename, _file.binary, zipfile.ZIP_DEFLATED)
 
         # nav
-        nav_xmlstring = self._get_nav_xmlstring()
+        nav_xmlstring = self._make_nav_element()
         toc_nav_path = self._get_unused_filename(None, 'nav.xhtml')
         self._temp_files[toc_nav_path] = p.File(nav_xmlstring.encode(), mime='application/xhtml+xml')
 
