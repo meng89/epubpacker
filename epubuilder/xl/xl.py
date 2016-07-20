@@ -650,7 +650,7 @@ class _Children(List):
         List.__init__(self)
 
     def _before_add(self, key=None, item=None):
-        if not isinstance(item, _Node):
+        if not isinstance(item, (_Node, str)):
             raise TypeError('{} is not legal'.format(item.__class__.__name__))
 
 

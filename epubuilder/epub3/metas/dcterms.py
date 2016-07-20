@@ -5,8 +5,6 @@
 
 from epubuilder.xl import Element, Text, URI_XML
 
-from epubuilder.public.metas.base import Base
-
 from epubuilder.public.metas.attrs import Attrs, AltScript, Dir, FileAs, Id, Role, Lang
 
 
@@ -70,10 +68,9 @@ namespace_map = {
 }
 
 
-class _Base(Base, Attrs):
+class _Base(Attrs):
     def __init__(self, text):
         check_funcs[self.__class__.__name__](text)
-        Base.__init__(self)
         Attrs.__init__(self)
 
         self._text = text

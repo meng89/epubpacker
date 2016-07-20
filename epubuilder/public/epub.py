@@ -8,8 +8,7 @@ from abc import abstractmethod
 from hooky import List, Dict
 
 from epubuilder.public import mimes
-from epubuilder.public.metas.base import Base
-from epubuilder.public.metas.dcmes import Identifier, URI_DC
+from epubuilder.public.metas import Identifier
 from epubuilder.xl import Xl, Element, pretty_insert
 
 CONTAINER_PATH = 'META-INF' + os.sep + 'container.xml'
@@ -35,9 +34,8 @@ class Metadata(List):
     Store metadata, such as author, publisher etc.
 
     see :mod:`epubuilder.public.metas`"""
-    def _before_add(self, key=None, item=None):
-        if not isinstance(item, Base):
-            raise TypeError
+
+    pass
 
 
 ########################################################################################################################
@@ -152,15 +150,11 @@ class Epub:
                 return m.to_element().attributes[(None, 'id')]
         return None
 
-    def _make_metadata_element(self):
-        """
-        :return: Metadata Element
-        :rtype: Element
-        """
-
-        metadata_e = Element('metadata', prefixes={URI_DC: 'dc'})
-        for m in self.metadata:
-            metadata_e.children.append(m.to_element())
+    def _find_id(self, filepath):
+        for item in self._make_manifest_element().children:
+            if item.attributes[(None, 'href')] == filepath:
+                return item.attributes[(None, 'id')]
+        return None
 
     def _make_manifest_element(self):
         """
@@ -221,7 +215,7 @@ class Epub:
 
         for joint in self.spine:
 
-            itemref = Element('itemref', attributes={(None, 'idref'): self.files[joint.path].identification})
+            itemref = Element('itemref', attributes={(None, 'idref'): self._find_id(joint.path)})
 
             if joint.linear is True:
                 itemref.attributes[(None, 'linear')] = 'yes'

@@ -1,7 +1,7 @@
 # coding=utf-8
 
 
-class Attrs:
+class Attrs(object):
     def __init__(self):
         self._attrs = {}
 

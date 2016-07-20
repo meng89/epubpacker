@@ -12,7 +12,8 @@ import epubuilder.version
 
 import epubuilder.public.epub as p
 from epubuilder.public.epub import FatherEpub, Epub
-from epubuilder.public.metas.dcmes import Identifier
+from epubuilder.public.metas.dcmes import Identifier, URI_DC
+from epubuilder.epub2.metas import Cover
 from epubuilder.tools import relative_path
 from epubuilder.xl import Xl, Element, pretty_insert, Text
 
@@ -173,6 +174,22 @@ class Epub2(Epub):
 
     toc = property(lambda self: self._toc, doc=str(Toc.__doc__ if Toc.__doc__ else ''))
 
+    def _make_metadata_element(self):
+        """
+        :return: Metadata Element
+        :rtype: Element
+        """
+        metadata = Element('metadata', prefixes={URI_DC: 'dc'})
+
+        for m in self.metadata:
+            if isinstance(m, Cover):
+                cover = Element('meta', attributes={'name': 'cover', 'content': self._find_id(m.filepath)})
+                metadata.children.append(cover)
+            else:
+                metadata.children.append(m.to_element())
+
+        return metadata
+
     def _get_opf_xmlstring(self):
 
         def_ns = 'http://www.idpf.org/2007/opf'
@@ -233,7 +250,17 @@ class Epub2(Epub):
 
     write.__doc__ = p.Epub.write.__doc__
 
-    def make_cover_page(self, image_path, cover_page_path=None, width=None, heigth=None):
+    ####################################################################################################################
+    # Add-ons
+    def addons_make_cover_page(self, image_path, cover_page_path=None, width=None, heigth=None):
+        """
+        :param image_path:
+        :param cover_page_path:
+        :param width:
+        :param heigth:
+        :return:
+        :rtype: bytes
+        """
         if cover_page_path:
             if cover_page_path in self.files.keys():
                 raise FileExistsError
@@ -247,7 +274,6 @@ class Epub2(Epub):
         relative = relative_path(os.path.split(cover_page_path)[0], image_path)
 
         xhtml_string = open(os.path.join(os.path.dirname(__file__), 'static', 'cover.xhtml')).read()
-        page_string = xhtml_string.format(title='Cover', width=width, height=height, image_href=relative)
-        self.files[cover_page_path] = p.File(page_string.encode())
+        cover_page = xhtml_string.format(title='Cover', width=width, height=height, image_href=relative).encode()
 
-        return cover_page_path
+        return cover_page

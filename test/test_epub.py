@@ -80,7 +80,9 @@ def test_epub3():
     book.cover_path = 'cover.png'
 
     # make user toc
-    user_toc_path, other_paths = book.addons_make_user_toc_xhtml()
+    user_toc_page = book.addons_make_user_toc_page()
+    user_toc_path = 'user_toc.xhtml'
+    book.files[user_toc_path] = File(user_toc_page)
     book.spine.insert(0, Joint(user_toc_path))
     book.toc.insert(0, Section('Table of Contents', href=user_toc_path))
 
@@ -101,8 +103,8 @@ def test_epub2():
     book.metadata.append(Cover(cover_file))
 
     cover_page_path = 'cover.xhtml'
-    book.make_cover_page(image_path='cover.png', cover_page_path=cover_page_path)
-
+    cover_page = book.addons_make_cover_page(image_path='cover.png', cover_page_path=cover_page_path)
+    book.files[cover_page_path] = File(cover_page)
     book.spine.insert(0, Joint(cover_page_path))
 
     book.toc.ncx_depth = 1

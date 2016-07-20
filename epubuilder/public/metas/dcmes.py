@@ -11,7 +11,6 @@ import uuid
 from epubuilder.xl import Element, Text, URI_XML
 
 from .attrs import Id, Scheme, AltScript, Dir, FileAs, Role, Lang, Authority, Attrs
-from .base import Base
 
 URI_DC = 'http://purl.org/dc/elements/1.1/'
 URI_OPF = 'http://www.idpf.org/2007/opf'
@@ -22,10 +21,9 @@ namespace_map = {
 }
 
 
-class _Base(Base, Attrs):
+class _Base(Attrs):
     """the name"""
     def __init__(self, text):
-        Base.__init__(self)
         Attrs.__init__(self)
 
         self._text = text

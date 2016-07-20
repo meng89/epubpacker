@@ -16,7 +16,7 @@ import epubuilder.public.epub as p
 
 from epubuilder.public.epub import Epub
 
-from epubuilder.public.metas.dcmes import Identifier, URI_DC
+from epubuilder.public.metas.dcmes import URI_DC
 
 from epubuilder.xl import Xl, Element, Text, URI_XML, pretty_insert
 
@@ -121,6 +121,17 @@ class Epub3(Epub):
 
         self._cover_path = path
 
+    def _make_metadata_element(self):
+        """
+        :return: Metadata Element
+        :rtype: Element
+        """
+        metadata = Element('metadata', prefixes={URI_DC: 'dc'})
+        for m in self.metadata:
+            metadata.children.append(m.to_element())
+
+        return metadata
+
     def _make_nav_element(self):
         default_ns = 'http://www.w3.org/1999/xhtml'
         epub_ns = 'http://www.idpf.org/2007/ops'
@@ -148,7 +159,8 @@ class Epub3(Epub):
             nav.children.append(ol)
             body.children.append(nav)
 
-        return pretty_insert(html, dont_do_when_one_child=True).string()
+        return html
+        # return pretty_insert(html, dont_do_when_one_child=True).string()
 
     def _process_files_elements_properties(self, manifest):
         for item in manifest.children:
@@ -189,6 +201,7 @@ class Epub3(Epub):
         manifest = self._make_manifest_element()
         package.children.append(manifest)
         self._process_files_elements_properties(manifest)
+
         for item in manifest.children:
             if item.attributes[(None, 'href')] == toc_path:
                 item.attributes[(None, 'properties')] = 'nav'
@@ -217,7 +230,7 @@ class Epub3(Epub):
             z.writestr(p.ROOT_OF_OPF + os.sep + filename, _file.binary, zipfile.ZIP_DEFLATED)
 
         # nav
-        nav_xmlstring = self._make_nav_element()
+        nav_xmlstring = pretty_insert(self._make_nav_element(), dont_do_when_one_child=True).string()
         toc_nav_path = self._get_unused_filename(None, 'nav.xhtml')
         self._temp_files[toc_nav_path] = p.File(nav_xmlstring.encode(), mime='application/xhtml+xml')
 
@@ -244,14 +257,16 @@ class Epub3(Epub):
 
     write.__doc__ = p.Epub.write.__doc__
 
-    def addons_make_user_toc_xhtml(self):
+    ####################################################################################################################
+    # Add-ons
+    def addons_make_user_toc_page(self):
         """write this function because some EPUB reader not supports nav hidden attribute,
          they just ignor sub section, but not fold
 
-        :returns:
+        :returns: xhtml page
         :rtype: bytes
         """
-        html = self.toc.to_nav_element()
+        html = self._make_nav_element()
 
         def find_element_by_name(tag):
             e = None
@@ -264,15 +279,15 @@ class Epub3(Epub):
         head = find_element_by_name((None, 'head'))
         body = find_element_by_name((None, 'body'))
 
-        js_string = open(os.path.join(_dirt(__file__), 'static', 'a.js')).read()
-        script = Element('script')
-        script.children.append(Text(js_string))
-        head.children.append(script)
-
         css_string = open(os.path.join(_dirt(__file__), 'static', 'a.css')).read()
         css = Element('link', attributes={'rel': 'stylesheet', 'type': 'text/css'})
-        css.children.append(Text(css_string))
+        css.children.append(css_string)
         head.children.append(css)
+
+        js_string = open(os.path.join(_dirt(__file__), 'static', 'a.js')).read()
+        script = Element('script')
+        script.children.append(js_string)
+        head.children.append(script)
 
         script_before_body_close = Element('script', attributes={'type': 'text/javascript'})
         script_before_body_close.children.append(Text('set_button();'))
