@@ -230,7 +230,7 @@ class Epub3(Epub):
         toc_ncx_filename = self._get_unused_filename(None, 'toc.ncx')
         self._temp_files[toc_ncx_filename] = p.File(ncx_xmlstring.encode(), mime='application/x-dtbncx+xml')
 
-        # write nav nav's js and ncx
+        # write nav and ncx
         for filename, _file in self._temp_files.items():
             z.writestr(p.ROOT_OF_OPF + os.sep + filename, _file.binary, zipfile.ZIP_DEFLATED)
 
@@ -252,8 +252,8 @@ class Epub3(Epub):
         """write this function because some EPUB reader not supports nav hidden attribute,
          they just ignor sub section, but not fold
 
-        :returns: xhtml., other_paths
-        :rtype: str, tuple
+        :returns:
+        :rtype: bytes
         """
         html = self.toc.to_nav_element()
 
@@ -268,26 +268,21 @@ class Epub3(Epub):
         head = find_element_by_name((None, 'head'))
         body = find_element_by_name((None, 'body'))
 
-        js_path = self._get_unused_filename(None, 'epubuilder_addons_user_toc_attach.js')
-        self.files[js_path] = p.File(open(os.path.join(_dirt(__file__), 'static', 'a.js'), 'rb').read(),
-                                     mime='text/javascript')
+        js_string = open(os.path.join(_dirt(__file__), 'static', 'a.js')).read()
+        script = Element('script')
+        script.children.append(Text(js_string))
+        head.children.append(script)
 
-        head.children.append(Element('script', attributes={'src': js_path}))
-
-        css_path = self._get_unused_filename(None, 'epubuilder_addons_user_toc_attach.css')
-        self.files[css_path] = p.File(open(os.path.join(_dirt(__file__), 'static', 'a.css'), 'rb').read(),
-                                      mime='text/style')
-
-        head.children.append(Element('link', attributes={'rel': 'stylesheet', 'type': 'text/css', 'href': css_path}))
+        css_string = open(os.path.join(_dirt(__file__), 'static', 'a.css')).read()
+        css = Element('link', attributes={'rel': 'stylesheet', 'type': 'text/css'})
+        css.children.append(Text(css_string))
+        head.children.append(css)
 
         script_before_body_close = Element('script', attributes={'type': 'text/javascript'})
         script_before_body_close.children.append(Text('set_button();'))
         body.children.append(script_before_body_close)
 
-        user_toc_path = self._get_unused_filename(None, 'epubuilder_addons_user_toc.xhtml')
-        self.files[user_toc_path] = p.File(pretty_insert(html).string().encode(), mime='application/xhtml+xml')
-
-        return user_toc_path, (js_path, css_path)
+        return pretty_insert(html).string().encode()
 
 
 def _has_element(tag, file_string):
