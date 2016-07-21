@@ -8,7 +8,7 @@ All classes in this module
 
 import uuid
 
-from epubuilder.xl import Element, Text, URI_XML
+from epubuilder.xl import Element, URI_XML
 
 from .attrs import Id, Scheme, AltScript, Dir, FileAs, Role, Lang, Authority, Attrs
 
@@ -50,7 +50,7 @@ class _Base(Attrs):
 
                 e.attributes[(None, attr)] = value
 
-        e.children.append(Text(self._text))
+        e.children.append(self._text)
 
         return e
 

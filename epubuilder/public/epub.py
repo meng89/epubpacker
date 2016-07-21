@@ -151,9 +151,7 @@ class Epub:
         return None
 
     def _find_id(self, filepath):
-        print('filepath:', filepath)
         for item in self._make_manifest_element().children:
-            print(item.attributes[(None, 'href')])
             if item.attributes[(None, 'href')] == filepath:
                 return item.attributes[(None, 'id')]
         return None
@@ -166,8 +164,6 @@ class Epub:
         manifest = Element('manifest')
 
         ids = []
-
-        items = []
 
         item_dict = {}
 
@@ -188,7 +184,6 @@ class Epub:
             item.attributes[(None, 'id')] = new_id
             ids.append(new_id)
 
-            items.append(item)
             return item
 
         while pathes:
@@ -198,17 +193,18 @@ class Epub:
                         _item = make_item(_path, self.files[_path])
                         _item.attributes[(None, 'fallback')] = item_dict[_path].attributes[(None, 'id')]
                         item_dict[_path] = _item
+
+                        manifest.children.append(_item)
                         pathes.remove(_path)
                 else:
                     _item = make_item(_path, self.files[_path])
                     item_dict[_path] = _item
+
+                    manifest.children.append(_item)
                     pathes.remove(_path)
 
         for _path, _file in self._temp_files.items():
-            _item = make_item(_path, _file)
-            items.append(_item)
-
-        manifest.children.extend(items)
+            manifest.children.append(make_item(_path, _file))
 
         return manifest
 

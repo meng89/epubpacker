@@ -15,7 +15,7 @@ from epubuilder.public.epub import FatherEpub, Epub
 from epubuilder.public.metas.dcmes import Identifier, URI_DC
 from epubuilder.epub2.metas import Cover
 from epubuilder.tools import relative_path
-from epubuilder.xl import Xl, Element, pretty_insert, Text
+from epubuilder.xl import Xl, Element, pretty_insert
 
 
 ########################################################################################################################
@@ -71,7 +71,7 @@ class Toc(List, FatherEpub):
         text = Element('text')
         doc_title.children.append(text)
 
-        text.children.append(Text(self.title))
+        text.children.append(self.title)
 
         nav_map = Element('navMap')
         ncx.children.append(nav_map)
@@ -141,7 +141,7 @@ class Section:
         text = Element('text')
         nav_label.children.append(text)
 
-        text.children.append(Text(self.title))
+        text.children.append(self.title)
 
         content = Element('content')
         nav_point.children.append(content)

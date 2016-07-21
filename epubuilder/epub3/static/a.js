@@ -36,7 +36,7 @@ function set_button() {
 
     var ols = master_ol.getElementsByTagName('ol');
 
-    for (var i=0; i<ols.length; i++) {
+    for (var i = 0; i < ols.length; i++) {
 
         var span_button = document.createElement('span');
         span_button.setAttribute('style', 'cursor:pointer');

@@ -143,7 +143,7 @@ def parse(xmlstr, debug=False):
     def _do_string():
         # nonlocal s
         if s[0] and elements:
-            string = Text(s[0])
+            string = s[0]
             elements[-1].children.append(string)
             s[0] = ''
 
@@ -224,8 +224,8 @@ def clean_whitespaces(element):
                           prefixes=copy.deepcopy(element.prefixes))
 
     for child in element.children:
-        if isinstance(child, Text):
-            new_text = Text(child.strip())
+        if isinstance(child, str):
+            new_text = child.strip()
 
             if new_text:
                 new_element.children.append(new_text)
@@ -269,7 +269,7 @@ def pretty_insert(element, start_indent=0, step=4, dont_do_when_one_child=True):
                           attributes=copy.deepcopy(element.attributes),
                           prefixes=copy.deepcopy(element.prefixes))
 
-    _indent_text = Text('\n' + ' ' * (start_indent + step))
+    _indent_text = '\n' + ' ' * (start_indent + step)
 
     if _is_straight_line(element) and dont_do_when_one_child:
         new_element.children = copy.deepcopy(element.children)
@@ -277,8 +277,8 @@ def pretty_insert(element, start_indent=0, step=4, dont_do_when_one_child=True):
     elif element.children:
         for child in element.children:
 
-            if isinstance(child, Text):
-                new_text = _indent_text + copy.deepcopy(child)
+            if isinstance(child, str):
+                new_text = _indent_text + child
 
                 new_element.children.append(new_text)
 
@@ -291,7 +291,7 @@ def pretty_insert(element, start_indent=0, step=4, dont_do_when_one_child=True):
                                                           dont_do_when_one_child=dont_do_when_one_child,
                                                           ))
 
-        new_element.children.append(Text('\n' + ' ' * start_indent))
+        new_element.children.append('\n' + ' ' * start_indent)
 
     return new_element
 
@@ -421,6 +421,8 @@ class Element(_Node):
         :type prefixes: _Prefixes or dict
         """
 
+        self._tag = None
+
         self.tag = tag
         """tuple object of length 2.
 
@@ -428,14 +430,14 @@ class Element(_Node):
         the second is the xml element tag you know ordinarily.
         """
 
-        self.attributes = _Attributes(attributes) if attributes else _Attributes()
+        self._attributes = _Attributes(attributes) if attributes else _Attributes()
         """dict-like.
 
         Store xml attribute names and values in *keys* and *values*
 
         """
 
-        self.prefixes = _Prefixes(prefixes) if prefixes else _Prefixes()
+        self._prefixes = _Prefixes(prefixes) if prefixes else _Prefixes()
         """dict-like.
 
         Store xml namespaces urls and prefixes in *keys* and *values*
@@ -443,14 +445,14 @@ class Element(_Node):
         Ignore this is fine, because you will get automatic prefixes for the namespaces.
         """
 
-        self.children = _Children()
+        self._children = _Children()
         """list-like.
 
         Store children Node"""
 
     @property
     def tag(self):
-        return self.__dict__['tag']
+        return self._tag
 
     @tag.setter
     def tag(self, value):
@@ -464,30 +466,31 @@ class Element(_Node):
             print(value)
             raise ValueError
 
-        self.__dict__['tag'] = value
+        self._tag = value
 
     @property
     def prefixes(self):
-        return self.__dict__['prefixes']
+        return self._prefixes
 
     @prefixes.setter
     def prefixes(self, value):
-        self.__dict__['prefixes'] = value
+        self._prefixes = value
 
     @property
     def attributes(self):
-        return self.__dict__['attributes']
+        return self._attributes
 
     @attributes.setter
     def attributes(self, value):
-        self.__dict__['attributes'] = value
+        self._attributes = value
 
     @property
     def children(self):
-        return self.__dict__['children']
+        return self._children
 
     @children.setter
     def children(self, value):
+        self._children = value
         self.__dict__['children'] = value
 
     def string(self, inherited_prefixes=None):
@@ -600,8 +603,11 @@ class Element(_Node):
                 if isinstance(child, Element):
                     s += child.string(inherited_prefixes=prefixes_for_subs)
 
-                elif isinstance(child, Text):
-                    s += child.string()
+                # elif isinstance(child, Text):
+                #    s += child.string()
+
+                elif isinstance(child, str):
+                    s += _escape(child)
 
             s += '</{}>'.format(full_name)
 
@@ -654,30 +660,26 @@ class _Children(List):
             raise TypeError('{} is not legal'.format(item.__class__.__name__))
 
 
-class Text(_Node, UserString):
+def _escape(string):
     """
-    Handle XML text node
-    """
-    def __init__(self, string):
-        """
-        :param string:
-        :type string: str
-        """
-        UserString.__init__(self, string)
 
-    def string(self):
-        s = ''
-        for char in self:
-            if char == '&':
-                s += '&amp;'
-            elif char == '<':
-                s += '&lt;'
-            elif char == '>':
-                s += '&gt;'
-            elif char == '"':
-                s += '&quot;'
-            elif char == "'":
-                s += '&apos;'
-            else:
-                s += str(char)
-        return s
+    :param string:
+     :type string: str
+    :return:
+     :rtype: str
+    """
+    s = ''
+    for char in string:
+        if char == '&':
+            s += '&amp;'
+        elif char == '<':
+            s += '&lt;'
+        elif char == '>':
+            s += '&gt;'
+        # elif char == '"':
+        #    s += '&quot;'
+        # elif char == "'":
+        #   s += '&apos;'
+        else:
+            s += str(char)
+    return s

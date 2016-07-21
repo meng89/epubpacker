@@ -18,7 +18,7 @@ from epubuilder.public.epub import Epub
 
 from epubuilder.public.metas.dcmes import URI_DC
 
-from epubuilder.xl import Xl, Element, Text, URI_XML, pretty_insert
+from epubuilder.xl import Xl, Element, URI_XML, pretty_insert
 
 
 ########################################################################################################################
@@ -77,7 +77,7 @@ class Section(epubuilder.epub2.epub2.Section):
         else:
             a_or_span = Element((None, 'span'))
 
-        a_or_span.children.append(Text(self.title))
+        a_or_span.children.append(self.title)
 
         li.children.append(a_or_span)
 
@@ -96,8 +96,13 @@ class Section(epubuilder.epub2.epub2.Section):
 
 
 ########################################################################################################################
-# TOC Section
+# Epub3
 ########################################################################################################################
+
+XML_URI = 'http://www.w3.org/1999/xhtml'
+OPS_URI = 'http://www.idpf.org/2007/ops'
+
+
 class Epub3(Epub):
     def __init__(self):
         Epub.__init__(self)
@@ -133,10 +138,8 @@ class Epub3(Epub):
         return metadata
 
     def _make_nav_element(self):
-        default_ns = 'http://www.w3.org/1999/xhtml'
-        epub_ns = 'http://www.idpf.org/2007/ops'
 
-        html = Element((None, 'html'), prefixes={default_ns: None, epub_ns: 'epub'})
+        html = Element((None, 'html'), prefixes={XML_URI: None, OPS_URI: 'epub'})
 
         head = Element((None, 'head'))
         html.children.append(head)
@@ -144,13 +147,13 @@ class Epub3(Epub):
         if self.toc.title:
             _title = Element((None, 'title'))
             head.children.append(_title)
-            _title.children.append(Text(self.toc.title))
+            _title.children.append(self.toc.title)
 
         body = Element((None, 'body'))
         html.children.append(body)
 
         if self.toc:
-            nav = Element((None, 'nav'), prefixes={epub_ns: 'epub'}, attributes={(epub_ns, 'type'): 'toc'})
+            nav = Element((None, 'nav'), prefixes={OPS_URI: 'epub'}, attributes={(OPS_URI, 'type'): 'toc'})
             ol = Element((None, 'ol'))
 
             for section in self.toc:
@@ -271,6 +274,9 @@ class Epub3(Epub):
         """
         html = self._make_nav_element()
 
+        # html.prefixes.pop(XML_URI)
+        # html.prefixes.pop(OPS_URI)
+
         def find_element_by_name(tag):
             e = None
             for one in html.children:
@@ -283,17 +289,19 @@ class Epub3(Epub):
         body = find_element_by_name((None, 'body'))
 
         css_string = open(os.path.join(_dirt(__file__), 'static', 'a.css')).read()
-        css = Element('link', attributes={'rel': 'stylesheet', 'type': 'text/css'})
+        css = Element('style', attributes={'type': 'text/css'})
         css.children.append(css_string)
+
         head.children.append(css)
 
         js_string = open(os.path.join(_dirt(__file__), 'static', 'a.js')).read()
         script = Element('script')
         script.children.append(js_string)
+
         head.children.append(script)
 
         script_before_body_close = Element('script', attributes={'type': 'text/javascript'})
-        script_before_body_close.children.append(Text('set_button();'))
+        script_before_body_close.children.append('set_button();')
         body.children.append(script_before_body_close)
 
         return pretty_insert(html).string().encode()

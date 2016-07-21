@@ -3,7 +3,7 @@
 """Dublin Core Metadata Initiative, see http://dublincore.org/documents/dcmi-terms/"""
 
 
-from epubuilder.xl import Element, Text, URI_XML
+from epubuilder.xl import Element, URI_XML
 
 from epubuilder.public.metas.attrs import Attrs, AltScript, Dir, FileAs, Id, Role, Lang
 
@@ -97,7 +97,7 @@ class _Base(Attrs):
 
             e.attributes[(uri, attr)] = value
 
-        e.children.append(Text(self.text))
+        e.children.append(self.text)
 
         return e
 

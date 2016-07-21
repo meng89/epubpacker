@@ -31,8 +31,6 @@ def make_epub(epub, section):
     book.metadata.append(Language('en'))
     book.metadata.append(Identifier('identifier_' + uuid.uuid4().hex))
 
-    # book.metadata.append(get('modified')(w3c_utc_date()))
-
     def make_page(title, html_path=None, content=None):
         if html_path and content:
             _file = File(XHTML_TEMPLATE.format(title=title, content=content).encode(), mime='application/xhtml+xml')
@@ -74,8 +72,13 @@ def check_xml(book_path):
 
 def test_epub3():
     from epubuilder.epub3 import Epub3, Section
+    from epubuilder.epub3.metas import dcterms
+    from epubuilder.tools import w3c_utc_date
 
     book = make_epub(Epub3, Section)
+
+    book.metadata.append(dcterms.get('modified')(w3c_utc_date()))
+
     book.files['cover.png'] = File(open(os.path.join(cur_path, 'cover', 'cover.png'), 'rb').read())
     book.cover_path = 'cover.png'
 
