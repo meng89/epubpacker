@@ -294,7 +294,8 @@ class Epub3(Epub):
 
         head.children.append(css)
 
-        js_string = open(os.path.join(_dirt(__file__), 'static', 'a.js')).read()
+        import codecs
+        js_string = codecs.open(os.path.join(_dirt(__file__), 'static', 'a.js'), encoding='utf-8').read()
         script = Element('script')
         script.children.append(js_string)
 

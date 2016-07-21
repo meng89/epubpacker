@@ -51,63 +51,25 @@ def parse(xmlstr, debug=False):
 
         l = name.rsplit(' ', 1)
         tag = l[-1]
-        # for the pytthon2.7
-        try:
-            if isinstance(tag, unicode):
-                tag = tag.encode()
-        except NameError:
-            pass
 
         uri = None
         if len(l) > 1:
             uri = l[0]
 
-            # for the pytthon2.7
-            try:
-                if isinstance(uri, unicode):
-                    uri = uri.encode()
-            except NameError:
-                pass
-
         for key, value in attrs.items():
             l = key.rsplit(' ', 1)
 
             attr_name = l[-1]
-            # for the pytthon2.7
-            try:
-                if isinstance(attr_name, unicode):
-                    attr_name = attr_name.encode()
-            except NameError:
-                pass
 
             attr_uri = None
             if len(l) > 1:
                 attr_uri = l[0]
-                # for the pytthon2.7
-                try:
-                    if isinstance(attr_uri, unicode):
-                        attr_uri = attr_uri.encode()
-                except NameError:
-                    pass
 
             attributes[(attr_uri, attr_name)] = value
 
         prefixes = {}
 
         for _uri, _prefix in ns_list:
-            # for the pytthon2.7
-            try:
-                if isinstance(_uri, unicode):
-                    _uri = _uri.encode()
-            except NameError:
-                pass
-
-            # for the pytthon2.7
-            try:
-                if isinstance(_prefix, unicode):
-                    _prefix = _prefix.encode()
-            except NameError:
-                pass
 
             prefixes[_uri] = _prefix
 
@@ -462,9 +424,15 @@ class Element(_Node):
         if len(value) != 2:
             raise ValueError
 
-        if value[0] is not None and not isinstance(value[0], str):
-            print(value)
-            raise ValueError
+        if value[0] is not None:
+            if isinstance(value[0], str):
+                pass
+
+            elif isinstance(value[0], unicode):
+                pass
+
+            else:
+                raise ValueError
 
         self._tag = value
 
@@ -656,7 +624,13 @@ class _Children(List):
         List.__init__(self)
 
     def _before_add(self, key=None, item=None):
-        if not isinstance(item, (_Node, str)):
+        if isinstance(item, (_Node, str)):
+            pass
+
+        elif isinstance(item, unicode):
+            pass
+
+        else:
             raise TypeError('{} is not legal'.format(item.__class__.__name__))
 
 
