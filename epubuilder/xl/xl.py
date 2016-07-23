@@ -8,11 +8,6 @@ import copy
 
 from hooky import List, Dict
 
-try:
-    from collections import UserString
-except ImportError:
-    from UserString import UserString
-
 import xml.parsers.expat
 
 
@@ -650,10 +645,6 @@ def _escape(string):
             s += '&lt;'
         elif char == '>':
             s += '&gt;'
-        # elif char == '"':
-        #    s += '&quot;'
-        # elif char == "'":
-        #   s += '&apos;'
         else:
             s += str(char)
     return s
