@@ -1,9 +1,12 @@
 # coding=utf-8
+from __future__ import unicode_literals
 
 import zipfile
 
 import html5lib
 import os
+import io
+
 from hooky import List
 
 import epubuilder.epub2.epub2
@@ -299,8 +302,7 @@ class Epub3(Epub):
 
         head.children.append(css)
 
-        import codecs
-        js_string = codecs.open(os.path.join(_dirt(__file__), 'static', 'a.js'), encoding='utf-8').read()
+        js_string = io.open(os.path.join(_dirt(__file__), 'static', 'a.js'), encoding='utf-8').read()
         script = Element('script')
         script.children.append(js_string)
 
