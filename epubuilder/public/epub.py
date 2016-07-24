@@ -11,6 +11,12 @@ from epubuilder.public import mimes
 from epubuilder.public.metas import Identifier
 from epubuilder.xl import Xl, Element, pretty_insert
 
+
+from PIL import Image
+from epubuilder.tools import relative_path
+import io
+
+
 CONTAINER_PATH = 'META-INF' + os.sep + 'container.xml'
 ROOT_OF_OPF = 'EPUB'
 
@@ -262,11 +268,37 @@ class Epub:
 
     @abstractmethod
     def write(self, filename):
-        """write to file.
+        """Write to file.
 
         :param filename: file name.
         :type filename: str
         """
+
+    ####################################################################################################################
+    # Add-ons
+    def addons_make_image_page(self, image_path, cover_page_path=None, width=None, heigth=None):
+        """Make xhtml cover page contain the image you given.
+
+        You must put the returned file to :class:`Epub2.files` by yourself
+
+        :param image_path: Image path in your Epub2.files
+        :param cover_page_path: Use this to get relative path to the image path
+        :param width: Image width, automatic recognition if None
+        :param heigth: Image heigth, automatic recognition if None
+        :return: Cover xhtml page file.
+        :rtype: File
+        """
+
+        img = Image.open(io.BytesIO(self.files[image_path].binary))
+        width = width or img.size[0]
+        height = heigth or img.size[1]
+
+        relative = relative_path(os.path.split(cover_page_path or '')[0], image_path)
+
+        xhtml_string = open(os.path.join(os.path.dirname(__file__), 'static', 'cover.xhtml')).read()
+        cover_page = xhtml_string.format(title='Cover', width=width, height=height, image_href=relative).encode()
+
+        return File(cover_page)
 
 
 def xml_identify(s):

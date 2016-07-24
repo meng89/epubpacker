@@ -209,7 +209,7 @@ def _is_straight_line(element):
 
 def pretty_insert(element, start_indent=0, step=4, dont_do_when_one_child=True):
     """
-    Modify the copy of the element, to make it looks more clear.
+    Modify the copy of the element, to make it looks more pretty and clear.
 
     :param element:
     :type element: Element

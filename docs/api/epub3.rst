@@ -5,8 +5,10 @@ epub3
 
 
 .. autoclass:: Epub3
-    :members: metadata, files, toc, spine, write, addons_make_user_toc_xhtml
+    :members:
+    :inherited-members:
 
 
 .. autoclass:: Section
-    :members: title, href, subs, hidden_subs
+    :members:
+    :inherited-members:

@@ -2,10 +2,8 @@
 
 import uuid
 import zipfile
-import io
 import os
 
-from PIL import Image
 from hooky import List
 
 import epubuilder.version
@@ -13,8 +11,10 @@ import epubuilder.version
 import epubuilder.public.epub as p
 from epubuilder.public.epub import FatherEpub, Epub
 from epubuilder.public.metas.dcmes import Identifier, URI_DC
+
 from epubuilder.epub2.metas import Cover
-from epubuilder.tools import relative_path
+
+
 from epubuilder.xl import Xl, Element, pretty_insert
 
 
@@ -88,8 +88,6 @@ class Toc(List, FatherEpub):
 
 
 class _SubSections(List, FatherEpub):
-    __doc__ = Toc.__doc__
-
     def _before_add(self, key=None, item=None):
         if not isinstance(item, Section):
             raise TypeError
@@ -97,7 +95,7 @@ class _SubSections(List, FatherEpub):
 
 class Section:
     """
-    store title, href and sub :class:`Section` objects.
+    Store title, href and sub :class:`Section` objects.
     """
     def __init__(self, title, href=None):
         """
@@ -121,7 +119,7 @@ class Section:
 
     @property
     def href(self):
-        """ as class parmeter"""
+        """as class parmeter"""
         return self._href
 
     @href.setter
@@ -130,6 +128,7 @@ class Section:
 
     @property
     def subs(self):
+        """list-like, store sub :class:`Section` objects."""
         return self._subs
 
     def to_toc_ncx_element(self):
@@ -249,31 +248,3 @@ class Epub2(Epub):
         z.close()
 
     write.__doc__ = p.Epub.write.__doc__
-
-    ####################################################################################################################
-    # Add-ons
-    def addons_make_cover_page(self, image_path, cover_page_path=None, width=None, heigth=None):
-        """
-        :param image_path:
-        :param cover_page_path:
-        :param width:
-        :param heigth:
-        :return:
-        :rtype: bytes
-        """
-        if cover_page_path:
-            if cover_page_path in self.files.keys():
-                raise FileExistsError
-        else:
-            cover_page_path or self._get_unused_filename(None, 'cover.xhtml')
-
-        img = Image.open(io.BytesIO(self.files[image_path].binary))
-        width = width or img.size[0]
-        height = heigth or img.size[1]
-
-        relative = relative_path(os.path.split(cover_page_path)[0], image_path)
-
-        xhtml_string = open(os.path.join(os.path.dirname(__file__), 'static', 'cover.xhtml')).read()
-        cover_page = xhtml_string.format(title='Cover', width=width, height=height, image_href=relative).encode()
-
-        return cover_page

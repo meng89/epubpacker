@@ -10,7 +10,7 @@ import epubuilder.epub2.epub2
 
 from epubuilder.epub2.epub2 import Toc
 
-from epubuilder.public import mimes
+from epubuilder.public import mimes, File
 
 import epubuilder.public.epub as p
 
@@ -104,31 +104,32 @@ OPS_URI = 'http://www.idpf.org/2007/ops'
 
 
 class Epub3(Epub):
+
     def __init__(self):
         Epub.__init__(self)
 
         self._toc = _Toc()
         setattr(self._toc, '_epub', self)
 
-        self._cover_path = None
+        self._cover_image = None
 
     toc = property(lambda self: self._toc, doc=str(_Toc.__doc__ if _Toc.__doc__ else ''))
 
     @property
-    def cover_path(self):
-        """tag your file as a cover"""
-        return self._cover_path
+    def cover_image(self):
+        """Tag your cover image path as a cover"""
+        return self._cover_image
 
-    @cover_path.setter
-    def cover_path(self, path):
+    @cover_image.setter
+    def cover_image(self, path):
         if path is not None and path not in self.files.keys():
             raise ValueError()
 
-        self._cover_path = path
+        self._cover_image = path
 
     def _make_metadata_element(self):
         """
-        :return: Metadata Element
+        :return: Metadata element
         :rtype: Element
         """
         metadata = Element('metadata', prefixes={URI_DC: 'dc'})
@@ -138,6 +139,10 @@ class Epub3(Epub):
         return metadata
 
     def _make_nav_element(self):
+        """
+        :return: Nav html element
+        :rtype: Element
+        """
 
         html = Element((None, 'html'), prefixes={XML_URI: None, OPS_URI: 'epub'})
 
@@ -212,7 +217,7 @@ class Epub3(Epub):
             if item.attributes[(None, 'href')] == toc_path:
                 item.attributes[(None, 'properties')] = 'nav'
 
-            if item.attributes[(None, 'href')] == self.cover_path:
+            if item.attributes[(None, 'href')] == self.cover_image:
                 item.attributes[(None, 'properties')] = 'cover-image'
 
         # Find ncx id for spine
@@ -265,17 +270,17 @@ class Epub3(Epub):
 
     ####################################################################################################################
     # Add-ons
-    def addons_make_user_toc_page(self):
-        """write this function because some EPUB reader not supports nav hidden attribute,
-         they just ignor sub section, but not fold
+    def addons_make_toc_page(self):
+        """Some EPUB reader not supports nav hidden attribute, they just ignor sub section, not fold.
+        So, this member function can make a toc page, with it's little JS code, it can fold and unfold sections.
 
-        :returns: xhtml page
-        :rtype: bytes
+        You must put the returned file to Epub3.files by yourself.
+
+        :returns: xhtml page file
+        :rtype: File
         """
-        html = self._make_nav_element()
 
-        # html.prefixes.pop(XML_URI)
-        # html.prefixes.pop(OPS_URI)
+        html = self._make_nav_element()
 
         def find_element_by_name(tag):
             e = None
@@ -305,7 +310,8 @@ class Epub3(Epub):
         script_before_body_close.children.append('set_button();')
         body.children.append(script_before_body_close)
 
-        return pretty_insert(html).string().encode()
+        toc_page = pretty_insert(html).string().encode()
+        return File(toc_page)
 
 
 def _has_element(tag, file_string):

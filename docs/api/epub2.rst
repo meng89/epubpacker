@@ -12,4 +12,3 @@ epub2
 
 .. autoclass:: Section
     :members: title, href, subs
-
