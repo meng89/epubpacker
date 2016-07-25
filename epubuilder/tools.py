@@ -2,7 +2,6 @@
 
 import magic
 
-from epubuilder.public import mimes
 from epubuilder.xl import parse
 
 
@@ -34,13 +33,13 @@ def identify_mime(binary):
 
     xhtml_uri = 'http://www.w3.org/1999/xhtml'
 
-    if mime == mimes.HTML:
+    if mime == mime.HTML:
         try:
             root = parse(binary.decode()).root
             if root.tag == (None, 'html') and root.prefixs[xhtml_uri] is None:
-                return mimes.XHTML
+                return mime.XHTML
         except KeyError:
-            return mimes.HTML
+            return mime.HTML
 
     return mime
 
