@@ -13,7 +13,9 @@ import epubuilder.epub2.epub2
 
 from epubuilder.epub2.epub2 import Toc
 
-from epubuilder.public import mimes, File
+from epubuilder.public import File
+
+import epubuilder.public.mimes as mimes
 
 import epubuilder.public.epub as p
 

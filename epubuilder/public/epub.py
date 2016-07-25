@@ -8,6 +8,7 @@ from abc import abstractmethod
 from hooky import List, Dict
 
 from epubuilder.public import mimes
+
 from epubuilder.public.metas import Identifier
 from epubuilder.xl import Xl, Element, pretty_insert
 
@@ -311,11 +312,11 @@ def xml_identify(s):
     new_string = ''
 
     for char in s:
-        if char.isalpha() or char.isdigit() or char in (':', '.', '_', '-'):
+        if char.isalpha() or char.isdigit() or char in ('.', '_', '-'):
             new_string += char
 
         else:
-            new_string += ':'
+            new_string += '__'
 
     if not new_string[0].isalpha():
         new_string = 'P_' + new_string
