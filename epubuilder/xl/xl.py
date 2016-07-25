@@ -277,7 +277,7 @@ class Xl(object):
         self.doc_type = doc_type
         """object of :class:`DocType`"""
 
-        self.root = root or Element()
+        self.root = root
         """object of :class:`Element`"""
 
     def string(self):
@@ -422,12 +422,17 @@ class Element(_Node):
         if value[0] is not None:
             if isinstance(value[0], str):
                 pass
-
             elif isinstance(value[0], unicode):
                 pass
-
             else:
                 raise ValueError
+
+        if isinstance(value[1], str):
+            pass
+        elif isinstance(value[1], unicode):
+            pass
+        else:
+            raise ValueError
 
         self._tag = value
 
@@ -607,6 +612,25 @@ class _Attributes(Dict):
     def __setitem__(self, key, value):
         if not isinstance(key, tuple):
             key = (None, key)
+
+        if key[0] is not None:
+            if isinstance(key[0], str):
+                pass
+
+            elif isinstance(key[0], unicode):
+                pass
+
+            else:
+                raise KeyError
+
+        if isinstance(key[1], str):
+            pass
+
+        elif isinstance(key[1], unicode):
+            pass
+
+        else:
+            raise KeyError
 
         if key == (None, 'xmlns'):
             raise AttributeError
