@@ -18,6 +18,11 @@ from epubuilder.tools import relative_path
 import io
 
 
+import uuid
+
+import epubuilder.version
+
+
 CONTAINER_PATH = 'META-INF' + os.sep + 'container.xml'
 ROOT_OF_OPF = 'EPUB'
 
@@ -112,6 +117,151 @@ class Joint:
     def path(self):
         """as class parmeter"""
         return self._path
+
+
+########################################################################################################################
+# TOC Section
+########################################################################################################################
+class Toc(List, FatherEpub):
+    """list-like.
+
+    table of contents
+
+    store :class:`Section` objects.
+    """
+
+    def __init__(self):
+        List.__init__(self)
+
+        self.title = 'Table of Contents'
+
+        self.ncx_depth = -1
+        self.ncx_totalPageCount = -1
+        self.ncx_maxPageNumber = -1
+
+    def to_ncx_element(self):
+        def_uri = 'http://www.daisy.org/z3986/2005/ncx/'
+
+        ncx = Element('ncx', attributes={'version': '2005-1'}, prefixes={def_uri: None})
+        head = Element('head')
+        ncx.children.append(head)
+
+        # same as dc:Identifier
+
+        identifier_text = None
+        for m in self._epub.metadata:
+            if isinstance(m, Identifier):
+                identifier_text = m.text
+                break
+
+        head.children.append(Element('meta', attributes={'name': 'dtb:uid', 'content': identifier_text}))
+
+        head.children.append(Element('meta', attributes={'name': 'dtb:depth', 'content': self.ncx_depth}))
+
+        head.children.append(Element('meta', attributes={'name': 'dtb:totalPageCount',
+                                                         'content': self.ncx_totalPageCount}))
+
+        head.children.append(Element('meta', attributes={'name': 'dtb:maxPageNumber',
+                                                         'content': self.ncx_maxPageNumber}))
+
+        head.children.append(Element('meta', attributes={'name': 'dtb:generator',
+                                                         'content': 'epubuilder ' + epubuilder.version.__version__}))
+
+        doc_title = Element('docTitle')
+        ncx.children.append(doc_title)
+
+        text = Element('text')
+        doc_title.children.append(text)
+
+        text.children.append(self.title)
+
+        nav_map = Element('navMap')
+        ncx.children.append(nav_map)
+
+        for one in self:
+            nav_map.children.append(one.to_toc_ncx_element())
+
+        return ncx
+        # return pretty_insert(ncx, dont_do_when_one_child=True).string()
+
+    def _before_add(self, key=None, item=None):
+        if not isinstance(item, Section):
+            raise TypeError
+
+
+class _SubSections(List, FatherEpub):
+    def _before_add(self, key=None, item=None):
+        if not isinstance(item, Section):
+            raise TypeError
+
+
+class Section:
+    """
+    Store title, href and sub :class:`Section` objects.
+    """
+
+    def __init__(self, title, href=None):
+        """
+        :param title: title of content.
+        :type title: str
+        :param href: html link to a file path in :class:`Epub.files`, can have a bookmark. example: `text/a.html#hello`
+        :type href: str
+        """
+        self._title = title
+        self._href = href
+        self._subs = _SubSections()
+
+    @property
+    def title(self):
+        """as class parameter"""
+        return self._title
+
+    @title.setter
+    def title(self, value):
+        self._title = value
+
+    @property
+    def href(self):
+        """as class parmeter"""
+        return self._href
+
+    @href.setter
+    def href(self, value):
+        self._href = value
+
+    @property
+    def subs(self):
+        """list-like, store sub :class:`Section` objects."""
+        return self._subs
+
+    def to_toc_ncx_element(self):
+        nav_point = Element('navPoint', attributes={'id': 'id_' + uuid.uuid4().hex})
+
+        nav_label = Element('navLabel')
+        nav_point.children.append(nav_label)
+
+        text = Element('text')
+        nav_label.children.append(text)
+
+        text.children.append(self.title)
+
+        content = Element('content')
+        nav_point.children.append(content)
+
+        first_sub = None
+        for subsection in self.subs:
+            sub = subsection.to_toc_ncx_element()
+            nav_point.children.append(sub)
+
+            first_sub = first_sub or sub
+
+        if self.href:
+            content.attributes[(None, 'src')] = self.href
+
+        elif first_sub:
+            content.attributes[(None, 'src')] = first_sub.children[1].attributes[(None, 'src')]
+
+        return nav_point
 
 
 ########################################################################################################################

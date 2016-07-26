@@ -9,9 +9,8 @@ import io
 
 from hooky import List
 
-import epubuilder.epub2.epub2
-
-from epubuilder.epub2.epub2 import Toc
+from epubuilder.public.epub import Toc
+from epubuilder.public.epub import Section as Section_
 
 from epubuilder.public import File
 
@@ -48,11 +47,11 @@ class _SubSections(List):
             raise TypeError
 
 
-class Section(epubuilder.epub2.epub2.Section):
-    __doc__ = epubuilder.epub2.epub2.Section.__doc__
+class Section(Section_):
+    __doc__ = Section_.__doc__
 
     def __init__(self, title, href=None):
-        epubuilder.epub2.epub2.Section.__init__(self, title, href)
+        Section_.__init__(self, title, href)
 
         self._subs = _SubSections()
         self._hidden_subs = None
@@ -237,14 +236,6 @@ class Epub3(Epub):
 
     def write(self, filename):
 
-        z = zipfile.ZipFile(filename, 'w', compression=zipfile.ZIP_DEFLATED)
-
-        z.writestr('mimetype', 'application/epub+zip'.encode('ascii'), compress_type=zipfile.ZIP_STORED)
-
-        # wirte custom files
-        for filename, _file in self.files.items():
-            z.writestr(p.ROOT_OF_OPF + os.sep + filename, _file.binary, zipfile.ZIP_DEFLATED)
-
         # nav
         nav_xmlstring = pretty_insert(self._make_nav_element(), dont_do_when_one_child=True).string()
         toc_nav_path = self._get_unused_filename(None, 'nav.xhtml')
@@ -255,15 +246,26 @@ class Epub3(Epub):
         toc_ncx_filename = self._get_unused_filename(None, 'toc.ncx')
         self._temp_files[toc_ncx_filename] = p.File(ncx_xmlstring.encode(), mime='application/x-dtbncx+xml')
 
-        # write nav and ncx
+        # make zipfile
+        z = zipfile.ZipFile(filename, 'w', compression=zipfile.ZIP_DEFLATED)
+
+        # mime
+        z.writestr('mimetype', 'application/epub+zip'.encode('ascii'), compress_type=zipfile.ZIP_STORED)
+
+        # wirte files
+        for filename, _file in self.files.items():
+            z.writestr(p.ROOT_OF_OPF + os.sep + filename, _file.binary, zipfile.ZIP_DEFLATED)
+
+        # write _temp files: nav and ncx
         for filename, _file in self._temp_files.items():
             z.writestr(p.ROOT_OF_OPF + os.sep + filename, _file.binary, zipfile.ZIP_DEFLATED)
 
+        # opf
+        opf_data = self._get_opf_xmlstring(toc_nav_path).encode()
         opf_filename = self._get_unused_filename(None, 'package.opf')
-        z.writestr(p.ROOT_OF_OPF + '/' + opf_filename,
-                   self._get_opf_xmlstring(toc_nav_path).encode(),
-                   zipfile.ZIP_DEFLATED)
+        z.writestr(p.ROOT_OF_OPF + '/' + opf_filename, opf_data, zipfile.ZIP_DEFLATED)
 
+        # write container
         z.writestr(p.CONTAINER_PATH,
                    self._get_container_xmlstring(p.ROOT_OF_OPF + '/' + opf_filename).encode(),
                    zipfile.ZIP_DEFLATED)
