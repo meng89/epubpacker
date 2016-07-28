@@ -27,17 +27,7 @@ CONTAINER_PATH = 'META-INF' + os.sep + 'container.xml'
 ROOT_OF_OPF = 'EPUB'
 
 
-class FatherEpub:
-    def __init__(self):
-        pass
-
-    @property
-    def _epub(self):
-        return self.__epub
-
-    @_epub.setter
-    def _epub(self, value):
-        self.__epub = value
+OPF_NS = 'http://www.idpf.org/2007/opf'
 
 
 class Metadata(List):
@@ -64,7 +54,7 @@ class Files(Dict):
 
 
 ########################################################################################################################
-class File:
+class File(object):
     def __init__(self, binary, mime=None, fallback=None):
         """
         :param binary: binary data
@@ -122,7 +112,7 @@ class Joint:
 ########################################################################################################################
 # TOC Section
 ########################################################################################################################
-class Toc(List, FatherEpub):
+class Toc(List):
     """list-like.
 
     table of contents
@@ -139,63 +129,18 @@ class Toc(List, FatherEpub):
         self.ncx_totalPageCount = -1
         self.ncx_maxPageNumber = -1
 
-    def to_ncx_element(self):
-        def_uri = 'http://www.daisy.org/z3986/2005/ncx/'
-
-        ncx = Element('ncx', attributes={'version': '2005-1'}, prefixes={def_uri: None})
-        head = Element('head')
-        ncx.children.append(head)
-
-        # same as dc:Identifier
-
-        identifier_text = None
-        for m in self._epub.metadata:
-            if isinstance(m, Identifier):
-                identifier_text = m.text
-                break
-
-        head.children.append(Element('meta', attributes={'name': 'dtb:uid', 'content': identifier_text}))
-
-        head.children.append(Element('meta', attributes={'name': 'dtb:depth', 'content': self.ncx_depth}))
-
-        head.children.append(Element('meta', attributes={'name': 'dtb:totalPageCount',
-                                                         'content': self.ncx_totalPageCount}))
-
-        head.children.append(Element('meta', attributes={'name': 'dtb:maxPageNumber',
-                                                         'content': self.ncx_maxPageNumber}))
-
-        head.children.append(Element('meta', attributes={'name': 'dtb:generator',
-                                                         'content': 'epubuilder ' + epubuilder.version.__version__}))
-
-        doc_title = Element('docTitle')
-        ncx.children.append(doc_title)
-
-        text = Element('text')
-        doc_title.children.append(text)
-
-        text.children.append(self.title)
-
-        nav_map = Element('navMap')
-        ncx.children.append(nav_map)
-
-        for one in self:
-            nav_map.children.append(one.to_toc_ncx_element())
-
-        return ncx
-        # return pretty_insert(ncx, dont_do_when_one_child=True).string()
-
     def _before_add(self, key=None, item=None):
         if not isinstance(item, Section):
             raise TypeError
 
 
-class _SubSections(List, FatherEpub):
+class _SubSections(List):
     def _before_add(self, key=None, item=None):
         if not isinstance(item, Section):
             raise TypeError
 
 
-class Section:
+class Section(object):
     """
     Store title, href and sub :class:`Section` objects.
     """
@@ -234,40 +179,11 @@ class Section:
         """list-like, store sub :class:`Section` objects."""
         return self._subs
 
-    def to_toc_ncx_element(self):
-        nav_point = Element('navPoint', attributes={'id': 'id_' + uuid.uuid4().hex})
-
-        nav_label = Element('navLabel')
-        nav_point.children.append(nav_label)
-
-        text = Element('text')
-        nav_label.children.append(text)
-
-        text.children.append(self.title)
-
-        content = Element('content')
-        nav_point.children.append(content)
-
-        first_sub = None
-        for subsection in self.subs:
-            sub = subsection.to_toc_ncx_element()
-            nav_point.children.append(sub)
-
-            first_sub = first_sub or sub
-
-        if self.href:
-            content.attributes[(None, 'src')] = self.href
-
-        elif first_sub:
-            content.attributes[(None, 'src')] = first_sub.children[1].attributes[(None, 'src')]
-
-        return nav_point
-
 
 ########################################################################################################################
 # Epub
 ########################################################################################################################
-class Epub:
+class Epub(object):
     def __init__(self):
         self._metadata = Metadata()
         setattr(self._metadata, '_epub', self)
@@ -282,11 +198,15 @@ class Epub:
         self._temp_files = Files()
         setattr(self._temp_files, '_epub', self)
 
+        self._toc = Toc()
+
     metadata = property(lambda self: self._metadata, doc=str(Metadata.__doc__ if Metadata.__doc__ else ''))
 
     files = property(lambda self: self._files, doc=str(Files.__doc__ if Files.__doc__ else ''))
 
     spine = property(lambda self: self._spine, doc=str(Spine.__doc__ if Spine.__doc__ else ''))
+
+    toc = property(lambda self: self._toc, doc=str(Toc.__doc__ if Toc.__doc__ else ''))
 
     @staticmethod
     def _find_ncx_id(items):
@@ -312,6 +232,82 @@ class Epub:
             if item.attributes[(None, 'href')] == filepath:
                 return item.attributes[(None, 'id')]
         return None
+
+    def _make_ncx_element(self):
+
+        ncx = Element('ncx',
+                      attributes={'version': '2005-1'},
+                      prefixes={'http://www.daisy.org/z3986/2005/ncx/': None})
+        head = Element('head')
+        ncx.children.append(head)
+
+        # same as dc:Identifier
+
+        identifier_text = None
+        for m in self.metadata:
+            if isinstance(m, Identifier):
+                identifier_text = m.text
+                break
+
+        head.children.append(Element('meta', attributes={'name': 'dtb:uid', 'content': identifier_text}))
+
+        head.children.append(Element('meta', attributes={'name': 'dtb:depth', 'content': self.toc.ncx_depth}))
+
+        head.children.append(Element('meta', attributes={'name': 'dtb:totalPageCount',
+                                                         'content': self.toc.ncx_totalPageCount}))
+
+        head.children.append(Element('meta', attributes={'name': 'dtb:maxPageNumber',
+                                                         'content': self.toc.ncx_maxPageNumber}))
+
+        head.children.append(Element('meta', attributes={'name': 'dtb:generator',
+                                                         'content': 'epubuilder ' + epubuilder.version.__version__}))
+
+        doc_title = Element('docTitle')
+        ncx.children.append(doc_title)
+
+        text = Element('text')
+        doc_title.children.append(text)
+
+        text.children.append(self.toc.title)
+
+        nav_map = Element('navMap')
+        ncx.children.append(nav_map)
+
+        def make_nav_point(sec):
+            nav_point = Element('navPoint', attributes={'id': 'id_' + uuid.uuid4().hex})
+
+            nav_label = Element('navLabel')
+            nav_point.children.append(nav_label)
+
+            text_ = Element('text')
+            nav_label.children.append(text_)
+
+            text_.children.append(sec.title)
+
+            content = Element('content')
+            nav_point.children.append(content)
+
+            first_sub = None
+            for subsection in sec.subs:
+                sub = make_nav_point(subsection)
+                nav_point.children.append(sub)
+
+                first_sub = first_sub or sub
+
+            if sec.href:
+                content.attributes[(None, 'src')] = sec.href
+
+            elif first_sub:
+                content.attributes[(None, 'src')] = first_sub.children[1].attributes[(None, 'src')]
+
+                #
+            return nav_point
+
+        for _sec in self.toc:
+            nav_map.children.append(make_nav_point(_sec))
+
+        return ncx
+        # return pretty_insert(ncx, dont_do_when_one_child=True).string()
 
     def _make_manifest_element(self):
         """
@@ -472,6 +468,3 @@ def xml_identify(s):
         new_string = 'P_' + new_string
 
     return new_string
-
-
-OPF_NS = 'http://www.idpf.org/2007/opf'

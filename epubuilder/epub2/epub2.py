@@ -43,9 +43,7 @@ class Epub2(Epub):
 
     def _get_opf_xmlstring(self):
 
-        def_ns = 'http://www.idpf.org/2007/opf'
-
-        package = Element('package', prefixes={def_ns: None}, attributes={'version': '2.0'})
+        package = Element('package', prefixes={p.OPF_NS: None}, attributes={'version': '2.0'})
 
         # unique - identifier = "pub-id"
         if self._find_unique_id():
@@ -70,33 +68,40 @@ class Epub2(Epub):
 
     def write(self, filename):
 
+        # put ncx to temp files
+        ncx_xmlstring = pretty_insert(self._make_ncx_element(), dont_do_when_one_child=True).string()
+        toc_ncx_filename = self._get_unused_filename(None, 'toc.ncx')
+        self._temp_files[toc_ncx_filename] = p.File(ncx_xmlstring.encode(), mime='application/x-dtbncx+xml')
+
+        # get opf name & data
+        opf_data = self._get_opf_xmlstring().encode()
+        opf_filename = self._get_unused_filename(None, 'package.opf')
+
+        # get container data
+        container_data = self._get_container_xmlstring(p.ROOT_OF_OPF + '/' + opf_filename).encode()
+
+        # make zip file
         z = zipfile.ZipFile(filename, 'w', compression=zipfile.ZIP_DEFLATED)
 
+        # write mimetype as first file in zip
         z.writestr('mimetype', 'application/epub+zip'.encode('ascii'), compress_type=zipfile.ZIP_STORED)
 
         # wirte custom files
         for filename, fil in self.files.items():
             z.writestr(p.ROOT_OF_OPF + os.sep + filename, fil.binary, zipfile.ZIP_DEFLATED)
 
-        # ncx
-        ncx_xmlstring = pretty_insert(self.toc.to_ncx_element(), dont_do_when_one_child=True).string()
-        toc_ncx_filename = self._get_unused_filename(None, 'toc.ncx')
-        self._temp_files[toc_ncx_filename] = p.File(ncx_xmlstring.encode(), mime='application/x-dtbncx+xml')
-
-        # write nav nav's js and ncx
+        # write temp files
         for filename, fil in self._temp_files.items():
             z.writestr(p.ROOT_OF_OPF + os.sep + filename, fil.binary, zipfile.ZIP_DEFLATED)
 
-        opf_filename = self._get_unused_filename(None, 'package.opf')
-        z.writestr(p.ROOT_OF_OPF + '/' + opf_filename,
-                   self._get_opf_xmlstring().encode(),
-                   zipfile.ZIP_DEFLATED)
+        # write opf data
+        z.writestr(p.ROOT_OF_OPF + '/' + opf_filename, opf_data, zipfile.ZIP_DEFLATED)
 
-        z.writestr(p.CONTAINER_PATH,
-                   self._get_container_xmlstring(p.ROOT_OF_OPF + '/' + opf_filename).encode(),
-                   zipfile.ZIP_DEFLATED)
+        # write container
+        z.writestr(p.CONTAINER_PATH, container_data, zipfile.ZIP_DEFLATED)
+
+        z.close()
 
         self._temp_files.clear()
-        z.close()
 
     write.__doc__ = p.Epub.write.__doc__

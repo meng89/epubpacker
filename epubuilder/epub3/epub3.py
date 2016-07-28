@@ -10,7 +10,6 @@ import io
 from hooky import List
 
 from epubuilder.public.epub import Toc
-from epubuilder.public.epub import Section as Section_
 
 from epubuilder.public import File
 
@@ -32,10 +31,10 @@ class _Toc(Toc):
     __doc__ = Toc.__doc__
 
     def __init__(self):
-        Toc.__init__(self)
+        super(_Toc, self).__init__()
 
     def _before_add(self, key=None, item=None):
-        if not isinstance(item, Section):
+        if not isinstance(item, p.Section):
             raise TypeError
 
 
@@ -43,15 +42,15 @@ class _SubSections(List):
     __doc__ = _Toc.__doc__
 
     def _before_add(self, key=None, item=None):
-        if not isinstance(item, Section):
+        if not isinstance(item, p.Section):
             raise TypeError
 
 
-class Section(Section_):
-    __doc__ = Section_.__doc__
+class Section(p.Section):
+    __doc__ = p.Section.__doc__
 
     def __init__(self, title, href=None):
-        Section_.__init__(self, title, href)
+        super(Section, self).__init__(title, href)
 
         self._subs = _SubSections()
         self._hidden_subs = None
@@ -174,9 +173,6 @@ class Epub3(Epub):
         return html
         # return pretty_insert(html, dont_do_when_one_child=True).string()
 
-    def _make_ncx_element(self):
-        pass
-
     def _process_items_properties(self, manifest):
         for item in manifest.children:
             properties = []
@@ -199,9 +195,7 @@ class Epub3(Epub):
 
     def _get_opf_xmlstring(self, toc_path):
 
-        def_ns = 'http://www.idpf.org/2007/opf'
-
-        package = Element('package', prefixes={def_ns: None}, attributes={'version': '3.0'})
+        package = Element('package', prefixes={p.OPF_NS: None}, attributes={'version': '3.0'})
 
         package.attributes[(URI_XML, 'lang')] = 'en'
 
@@ -236,42 +230,46 @@ class Epub3(Epub):
 
     def write(self, filename):
 
-        # nav
+        # put nav to temp files
         nav_xmlstring = pretty_insert(self._make_nav_element(), dont_do_when_one_child=True).string()
         toc_nav_path = self._get_unused_filename(None, 'nav.xhtml')
         self._temp_files[toc_nav_path] = p.File(nav_xmlstring.encode(), mime='application/xhtml+xml')
 
-        # ncx
-        ncx_xmlstring = pretty_insert(self.toc.to_ncx_element(), dont_do_when_one_child=True).string()
+        # put ncx to temp files
+        ncx_xmlstring = pretty_insert(self._make_ncx_element(), dont_do_when_one_child=True).string()
         toc_ncx_filename = self._get_unused_filename(None, 'toc.ncx')
         self._temp_files[toc_ncx_filename] = p.File(ncx_xmlstring.encode(), mime='application/x-dtbncx+xml')
+
+        # get opf name & data
+        opf_data = self._get_opf_xmlstring(toc_nav_path).encode()
+        opf_filename = self._get_unused_filename(None, 'package.opf')
+
+        # get container data
+        container_data = self._get_container_xmlstring(p.ROOT_OF_OPF + '/' + opf_filename).encode()
 
         # make zipfile
         z = zipfile.ZipFile(filename, 'w', compression=zipfile.ZIP_DEFLATED)
 
-        # mime
+        # write mimetype as first file in zip
         z.writestr('mimetype', 'application/epub+zip'.encode('ascii'), compress_type=zipfile.ZIP_STORED)
 
         # wirte files
         for filename, _file in self.files.items():
             z.writestr(p.ROOT_OF_OPF + os.sep + filename, _file.binary, zipfile.ZIP_DEFLATED)
 
-        # write _temp files: nav and ncx
+        # write temp files
         for filename, _file in self._temp_files.items():
             z.writestr(p.ROOT_OF_OPF + os.sep + filename, _file.binary, zipfile.ZIP_DEFLATED)
 
-        # opf
-        opf_data = self._get_opf_xmlstring(toc_nav_path).encode()
-        opf_filename = self._get_unused_filename(None, 'package.opf')
+        # write opf data
         z.writestr(p.ROOT_OF_OPF + '/' + opf_filename, opf_data, zipfile.ZIP_DEFLATED)
 
         # write container
-        z.writestr(p.CONTAINER_PATH,
-                   self._get_container_xmlstring(p.ROOT_OF_OPF + '/' + opf_filename).encode(),
-                   zipfile.ZIP_DEFLATED)
+        z.writestr(p.CONTAINER_PATH, container_data, zipfile.ZIP_DEFLATED)
+
+        z.close()
 
         self._temp_files.clear()
-        z.close()
 
     write.__doc__ = p.Epub.write.__doc__
 
