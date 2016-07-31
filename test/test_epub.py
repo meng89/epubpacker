@@ -1,12 +1,12 @@
 import uuid
+import zipfile
+from xml.etree import ElementTree as Et
+
 import os
 
-import zipfile
-from xml.etree import ElementTree as ET
+from epubuilder.metas import Title, Language, Identifier
 
-from epubuilder.public import Joint, File
-
-from epubuilder.public.metas.dcmes import Title, Language, Identifier
+from epubuilder import Joint, File, Section
 
 XHTML_TEMPLATE = """
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -64,20 +64,20 @@ def make_epub(epub, section):
 
 def check_xml(book_path):
     z = zipfile.ZipFile(book_path, 'r')
-    container = ET.fromstring(z.read('META-INF/container.xml').decode())
+    container = Et.fromstring(z.read('META-INF/container.xml').decode())
     for rootfile in container[0]:
         if rootfile.attrib['media-type'] == 'application/oebps-package+xml':
-            ET.fromstring(z.read(rootfile.attrib['full-path']))
+            Et.fromstring(z.read(rootfile.attrib['full-path']))
 
 
 def test_epub3():
-    from epubuilder.epub3 import Epub3, Section
-    from epubuilder.epub3.metas import dcterms
+    from epubuilder import Epub3
+    from epubuilder.metas import get_dcterm
     from epubuilder.tools import w3c_utc_date
 
     book = make_epub(Epub3, Section)
 
-    book.metadata.append(dcterms.get('modified')(w3c_utc_date()))
+    book.metadata.append(get_dcterm('modified')(w3c_utc_date()))
 
     book.files['cover.png'] = File(open(os.path.join(cur_path, 'cover', 'cover.png'), 'rb').read())
     book.cover_image = 'cover.png'
@@ -96,8 +96,8 @@ def test_epub3():
 
 
 def test_epub2():
-    from epubuilder.epub2 import Epub2, Section
-    from epubuilder.epub2.metas import Cover
+    from epubuilder import Epub2
+    from epubuilder.metas import Cover
 
     book = make_epub(Epub2, Section)
 

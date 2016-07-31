@@ -3,9 +3,10 @@
 from epubuilder.xl import Element
 
 
-class Meta(object):
+class Meta2(object):
+    """meta for Epub2.metadata"""
     def __init__(self, name, content):
-        super(Meta, self).__init__()
+        super(Meta2, self).__init__()
         self._name = name
         self._content = content
 
@@ -22,5 +23,6 @@ class Meta(object):
 
 
 class Cover(object):
+    """cover for Epub2.metadata"""
     def __init__(self, filepath):
         self.filepath = filepath

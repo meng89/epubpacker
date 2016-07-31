@@ -1,31 +1,25 @@
 # coding=utf-8
 
 import string
+import uuid
 
+import io
 import os
 import random
+from PIL import Image
 from abc import abstractmethod
 from hooky import List, Dict
 
-from epubuilder.public import mimes
-
-from epubuilder.public.metas import Identifier
-from epubuilder.xl import Xl, Element, pretty_insert
-
-
-from PIL import Image
-from epubuilder.tools import relative_path
-import io
-
-
-import uuid
 
 import epubuilder.version
+from epubuilder import mimes
+from epubuilder.metas import Identifier
+from epubuilder.tools import relative_path
+from epubuilder.xl import Xl, Element, pretty_insert
 
 
 CONTAINER_PATH = 'META-INF' + os.sep + 'container.xml'
 ROOT_OF_OPF = 'EPUB'
-
 
 OPF_NS = 'http://www.idpf.org/2007/opf'
 
@@ -35,7 +29,7 @@ class Metadata(List):
 
     Store metadata, such as author, publisher etc.
 
-    see :mod:`epubuilder.public.metas`"""
+    see :mod:`epubuilder.metas`"""
 
     pass
 
@@ -46,14 +40,13 @@ class Metadata(List):
 class Files(Dict):
     """dict-like.
 
-    Store file path and :class:`epubuilder.public.File` objects from `key` and `item`.
+    Store file path and :class:`File` objects from `key` and `item`.
     Any file you want to package them into the book, you have to use this."""
     def _before_add(self, key=None, item=None):
         if not isinstance(item, File):
             raise TypeError
 
 
-########################################################################################################################
 class File(object):
     def __init__(self, binary, mime=None, fallback=None):
         """
@@ -84,7 +77,7 @@ class Spine(List):
 
     "The spine defines the default reading order"
 
-    store :class:`epubuilder.public.Joint` objects.
+    store :class:`Joint` objects.
     """
 
     def _before_add(self, key=None, item=None):
@@ -155,6 +148,7 @@ class Section(object):
         self._title = title
         self._href = href
         self._subs = _SubSections()
+        self._hidden_subs = None
 
     @property
     def title(self):
@@ -178,6 +172,24 @@ class Section(object):
     def subs(self):
         """list-like, store sub :class:`Section` objects."""
         return self._subs
+
+    @property
+    def hidden_subs(self):
+        """bool: True for fold sub sections, False unfold.
+
+        some reader just don't show sub sections when this is True,
+
+        but I think it's mean FOLD sub sections and you can unfold it to show subs.
+
+        this i for epub3 nav only."""
+        return self._hidden_subs
+
+    @hidden_subs.setter
+    def hidden_subs(self, value):
+        if value not in (True, False):
+            raise ValueError
+        else:
+            self._hidden_subs = value
 
 
 ########################################################################################################################
@@ -442,7 +454,7 @@ class Epub(object):
 
         relative = relative_path(os.path.split(cover_page_path or '')[0], image_path)
 
-        xhtml_string = open(os.path.join(os.path.dirname(__file__), 'static', 'cover.xhtml')).read()
+        xhtml_string = open(os.path.join(os.path.dirname(__file__), 'static', 'image_page.xhtml')).read()
         cover_page = xhtml_string.format(title='Cover', width=width, height=height, image_href=relative).encode()
 
         return File(cover_page)

@@ -2,10 +2,8 @@
 
 """Dublin Core Metadata Initiative, see http://dublincore.org/documents/dcmi-terms/"""
 
-
+from epubuilder.metas.attrs import Attrs, AltScript, Dir, FileAs, Id, Role, Lang
 from epubuilder.xl import Element, URI_XML
-
-from epubuilder.public.metas.attrs import Attrs, AltScript, Dir, FileAs, Id, Role, Lang
 
 
 def always_true(*args, **kwargs):
@@ -109,10 +107,7 @@ for k, v in check_funcs.items():
     _classes[k] = type(k, (_Base, AltScript, Dir, FileAs, Id, Role, Lang), {})
 
 
-def get(name):
+def get_dcterm(name):
     """get a term class by term name"""
     return _classes[name]
 
-
-class Demo(_Base, AltScript, Dir, FileAs, Id, Role, Lang):
-    """this is just a demo class to show members, do not use this class in your codes!"""

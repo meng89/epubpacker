@@ -8,10 +8,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(dir_, "..")))
 
 intersphinx_mapping = {'python': ('https://docs.python.org/3', None)}
 
-import epubuilder.epub3
-import epubuilder.epub2
 import epubuilder.version
-import epubuilder.public
+import epubuilder
 
 
 extensions = ['sphinx.ext.autodoc']

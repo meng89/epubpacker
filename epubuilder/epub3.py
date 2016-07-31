@@ -1,122 +1,32 @@
 # coding=utf-8
+
 from __future__ import unicode_literals
 
 import zipfile
 
 import html5lib
-import os
 import io
+import os
 
-from hooky import List
 
-from epubuilder.public.epub import Toc
+from epubuilder.epub import Epub, File, OPF_NS, ROOT_OF_OPF, CONTAINER_PATH
 
-from epubuilder.public import File
-
-import epubuilder.public.mimes as mimes
-
-import epubuilder.public.epub as p
-
-from epubuilder.public.epub import Epub
-
-from epubuilder.public.metas.dcmes import URI_DC
+from epubuilder.metas.dcmes import URI_DC
 
 from epubuilder.xl import Xl, Element, URI_XML, pretty_insert
 
+from epubuilder import mimes
 
-########################################################################################################################
-# TOC Section
-########################################################################################################################
-class _Toc(Toc):
-    __doc__ = Toc.__doc__
-
-    def __init__(self):
-        super(_Toc, self).__init__()
-
-    def _before_add(self, key=None, item=None):
-        if not isinstance(item, p.Section):
-            raise TypeError
-
-
-class _SubSections(List):
-    __doc__ = _Toc.__doc__
-
-    def _before_add(self, key=None, item=None):
-        if not isinstance(item, p.Section):
-            raise TypeError
-
-
-class Section(p.Section):
-    __doc__ = p.Section.__doc__
-
-    def __init__(self, title, href=None):
-        super(Section, self).__init__(title, href)
-
-        self._subs = _SubSections()
-        self._hidden_subs = None
-
-    @property
-    def hidden_subs(self):
-        """bool: True for fold sub sections, False unfold.
-
-        some reader just don't show sub sections when this is True,
-
-        but I think it's mean FOLD sub sections and you can unfold it to show subs"""
-        return self._hidden_subs
-
-    @hidden_subs.setter
-    def hidden_subs(self, value):
-        if value not in (True, False):
-            raise ValueError
-        else:
-            self._hidden_subs = value
-
-    def to_nav_li_element(self):
-        li = Element((None, 'li'))
-
-        if self.href:
-            a_or_span = Element((None, 'a'))
-            a_or_span.attributes[(None, 'href')] = self.href
-        else:
-            a_or_span = Element((None, 'span'))
-
-        a_or_span.children.append(self.title)
-
-        li.children.append(a_or_span)
-
-        if self.subs:
-            ol = Element((None, 'ol'))
-
-            if self.hidden_subs:
-                ol.attributes[(None, 'hidden')] = ''
-
-            for one in self.subs:
-                ol.children.append(one.to_nav_li_element())
-
-            li.children.append(ol)
-
-        return li
-
-
-########################################################################################################################
-# Epub3
-########################################################################################################################
 
 XML_URI = 'http://www.w3.org/1999/xhtml'
 OPS_URI = 'http://www.idpf.org/2007/ops'
 
 
 class Epub3(Epub):
-
     def __init__(self):
         Epub.__init__(self)
 
-        self._toc = _Toc()
-        setattr(self._toc, '_epub', self)
-
         self._cover_image = None
-
-    toc = property(lambda self: self._toc, doc=str(_Toc.__doc__ if _Toc.__doc__ else ''))
 
     @property
     def cover_image(self):
@@ -160,18 +70,43 @@ class Epub3(Epub):
         body = Element((None, 'body'))
         html.children.append(body)
 
+        def to_nav_li_element(sec):
+            li = Element((None, 'li'))
+
+            if sec.href:
+                a_or_span = Element((None, 'a'))
+                a_or_span.attributes[(None, 'href')] = sec.href
+            else:
+                a_or_span = Element((None, 'span'))
+
+            a_or_span.children.append(sec.title)
+
+            li.children.append(a_or_span)
+
+            if sec.subs:
+                _ol = Element((None, 'ol'))
+
+                if sec.hidden_subs:
+                    _ol.attributes[(None, 'hidden')] = ''
+
+                for one in sec.subs:
+                    _ol.children.append(to_nav_li_element(one))
+
+                li.children.append(_ol)
+
+            return li
+
         if self.toc:
             nav = Element((None, 'nav'), prefixes={OPS_URI: 'epub'}, attributes={(OPS_URI, 'type'): 'toc'})
             ol = Element((None, 'ol'))
 
             for section in self.toc:
-                ol.children.append(section.to_nav_li_element())
+                ol.children.append(to_nav_li_element(section))
 
             nav.children.append(ol)
             body.children.append(nav)
 
         return html
-        # return pretty_insert(html, dont_do_when_one_child=True).string()
 
     def _process_items_properties(self, manifest):
         for item in manifest.children:
@@ -195,7 +130,7 @@ class Epub3(Epub):
 
     def _get_opf_xmlstring(self, toc_path):
 
-        package = Element('package', prefixes={p.OPF_NS: None}, attributes={'version': '3.0'})
+        package = Element('package', prefixes={OPF_NS: None}, attributes={'version': '3.0'})
 
         package.attributes[(URI_XML, 'lang')] = 'en'
 
@@ -233,19 +168,19 @@ class Epub3(Epub):
         # put nav to temp files
         nav_xmlstring = pretty_insert(self._make_nav_element(), dont_do_when_one_child=True).string()
         toc_nav_path = self._get_unused_filename(None, 'nav.xhtml')
-        self._temp_files[toc_nav_path] = p.File(nav_xmlstring.encode(), mime='application/xhtml+xml')
+        self._temp_files[toc_nav_path] = File(nav_xmlstring.encode(), mime='application/xhtml+xml')
 
         # put ncx to temp files
         ncx_xmlstring = pretty_insert(self._make_ncx_element(), dont_do_when_one_child=True).string()
         toc_ncx_filename = self._get_unused_filename(None, 'toc.ncx')
-        self._temp_files[toc_ncx_filename] = p.File(ncx_xmlstring.encode(), mime='application/x-dtbncx+xml')
+        self._temp_files[toc_ncx_filename] = File(ncx_xmlstring.encode(), mime='application/x-dtbncx+xml')
 
         # get opf name & data
         opf_data = self._get_opf_xmlstring(toc_nav_path).encode()
         opf_filename = self._get_unused_filename(None, 'package.opf')
 
         # get container data
-        container_data = self._get_container_xmlstring(p.ROOT_OF_OPF + '/' + opf_filename).encode()
+        container_data = self._get_container_xmlstring(ROOT_OF_OPF + '/' + opf_filename).encode()
 
         # make zipfile
         z = zipfile.ZipFile(filename, 'w', compression=zipfile.ZIP_DEFLATED)
@@ -255,23 +190,23 @@ class Epub3(Epub):
 
         # wirte files
         for filename, _file in self.files.items():
-            z.writestr(p.ROOT_OF_OPF + os.sep + filename, _file.binary, zipfile.ZIP_DEFLATED)
+            z.writestr(ROOT_OF_OPF + os.sep + filename, _file.binary, zipfile.ZIP_DEFLATED)
 
         # write temp files
         for filename, _file in self._temp_files.items():
-            z.writestr(p.ROOT_OF_OPF + os.sep + filename, _file.binary, zipfile.ZIP_DEFLATED)
+            z.writestr(ROOT_OF_OPF + os.sep + filename, _file.binary, zipfile.ZIP_DEFLATED)
 
         # write opf data
-        z.writestr(p.ROOT_OF_OPF + '/' + opf_filename, opf_data, zipfile.ZIP_DEFLATED)
+        z.writestr(ROOT_OF_OPF + '/' + opf_filename, opf_data, zipfile.ZIP_DEFLATED)
 
         # write container
-        z.writestr(p.CONTAINER_PATH, container_data, zipfile.ZIP_DEFLATED)
+        z.writestr(CONTAINER_PATH, container_data, zipfile.ZIP_DEFLATED)
 
         z.close()
 
         self._temp_files.clear()
 
-    write.__doc__ = p.Epub.write.__doc__
+    write.__doc__ = Epub.write.__doc__
 
     ####################################################################################################################
     # Add-ons
@@ -298,13 +233,13 @@ class Epub3(Epub):
         head = find_element_by_name((None, 'head'))
         body = find_element_by_name((None, 'body'))
 
-        css_string = open(os.path.join(_dirt(__file__), 'static', 'a.css')).read()
+        css_string = open(os.path.join(_dirt(__file__), 'static', 'user_toc_nav.css')).read()
         css = Element('style', attributes={'type': 'text/css'})
         css.children.append(css_string)
 
         head.children.append(css)
 
-        js_string = io.open(os.path.join(_dirt(__file__), 'static', 'a.js'), encoding='utf-8').read()
+        js_string = io.open(os.path.join(_dirt(__file__), 'static', 'user_toc_nav_fold.js'), encoding='utf-8').read()
         script = Element('script')
         script.children.append(js_string)
 
