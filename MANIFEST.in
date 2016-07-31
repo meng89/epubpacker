@@ -1,2 +1,2 @@
 include requirements.txt
-recursive-include epubuilder/html *.html *.css *.js
+include epubuilder/static/*

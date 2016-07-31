@@ -39,6 +39,10 @@ setup(name=NAME,
       author_email='ObserverChan@gmail.com',
       license='MIT',
       url=URL,
-      packages=['epubuilder'],
+      packages=[
+          'epubuilder',
+          'epubuilder.metas',
+          'epubuilder.xl'
+      ],
       install_requires=requirements,
       classifiers=CLASSIFIERS)
