@@ -15,6 +15,7 @@ epub2:
 ::
 
     from epubuilder.epub2 import Epub2
+
     book = Epub2()
 
 
@@ -24,7 +25,7 @@ Then, put a page into the book:
 
 ::
 
-    from epubuilder.public import File
+    from epubuilder import File
 
     page1_path = 'p1.xhtml'
     book.files[page1_path] = File(open('page1.xhtml', 'rb').read())
@@ -38,7 +39,7 @@ Lot media is only be a part of a page, not show up direct.
 So you have to let the book reader software knows what pages your want to show, and the show-pages order:
 ::
 
-    from epubuilder.public import Joint
+    from epubuilder import Joint
 
     book.spine.append(Joint(page1_path))
 
@@ -50,7 +51,7 @@ That's it! That's minimum requirements of a useful book.
 You may notise that we can't locating that page cause we didn't make table of contents like a print book, do this to fix:
 ::
 
-    from epubuilder.epub3 import Section
+    from epubuilder import Section
 
     book.toc.append(Seciton('Chapter I', page1_path))
 
@@ -62,7 +63,7 @@ Now, we want reader know what's the title of this book, the identifier of this b
 and language of this book:
 ::
 
-    from epubuilder.public.metas.dcmes import Creator, Title, Identifier, Language
+    from epubuilder.metas import Title, Identifier, Language
 
     book.metadata.append(Title('simple epub book'))
     book.metadata.append(Language('en'))
@@ -72,9 +73,9 @@ epub3 need modified date:
 ::
 
     from epubuilder.tools import w3c_utc_date
-    from epubuilder.epub3.metas import dcterms
+    from epubuilder.metas import get_dcterm
 
-    book.metadata.append(dcterms.get('modified')(w3c_utc_date()))
+    book.metadata.append(get_dcterm('modified')(w3c_utc_date()))
 
 Cover
 -----
@@ -95,7 +96,7 @@ epub3:
 epub2:
 ::
 
-    from epubuilder.epub2.metas import Cover
+    from epubuilder.metas import Cover
     book.metadata.append(Cover('cover.png'))
 
 
@@ -103,10 +104,9 @@ If the reader or bookshelf didn't show the cover,
 you may want to make a xhtml page from cover image, and put it to the first of the book:
 ::
 
-    cover_page_file = book.addons_make_cover_page(image_path='cover.png')
+    cover_page_file = book.addons_make_image_page(image_path='cover.png')
     book.files['cover.xhtml'] = cover_page_file
     book.spine.insert(0, Joint('cover.xhtml'))
-
 
 
 Write to a file

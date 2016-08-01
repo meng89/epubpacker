@@ -8,7 +8,7 @@ from epubuilder.epub import Epub, File, OPF_NS, ROOT_OF_OPF, CONTAINER_PATH
 
 from epubuilder.metas.dcmes import URI_DC
 
-from epubuilder.metas.epub2_only import Cover
+from epubuilder.metas.epub2_meta import Cover
 
 from epubuilder.xl import Xl, Element, pretty_insert
 

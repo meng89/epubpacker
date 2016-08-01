@@ -15,8 +15,7 @@ Quick Start
 it's a piece from User Guide:
 ::
 
-    from epubuilder.epub3 import Epub3
-    from epubuilder.public import File, Joint
+    from epubuilder import Epub3, File, Joint
 
     book = Epub3()
 
