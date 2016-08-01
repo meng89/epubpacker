@@ -1,2 +1,13 @@
 include requirements.txt
-include epubuilder/static/*
+include LICENSE
+include tox.ini
+
+recursive-include epubuilder/static *
+
+recursive-include docs *
+prune docs/_build
+
+recursive-include test *.py *.xml
+recursive-include test/cover *
+
+prune *.pyc
