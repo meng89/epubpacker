@@ -8,7 +8,7 @@ All classes in this module
 
 import uuid
 
-from epubuilder.xl import Element, URI_XML
+from epubaker.xl import Element, URI_XML
 
 from .attrs import Id, Scheme, AltScript, Dir, FileAs, Role, Lang, Authority, Attrs
 

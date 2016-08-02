@@ -15,7 +15,7 @@ Why I am coding this?
 
 
 
-.. automodule:: epubuilder.xl
+.. automodule:: epubaker.xl
     :members: parse, clean_whitespaces, pretty_insert
 
 .. autoclass:: Xl

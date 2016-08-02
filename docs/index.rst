@@ -7,7 +7,7 @@
     api/index
 
 
-Epubuilder is a Python module to build EPUB 2 or 3 document from web files and related information.
+Epubaker is a Python module to build EPUB 2 or 3 document from web files and related information.
 
 
 Quick Start
@@ -15,7 +15,7 @@ Quick Start
 it's a piece from User Guide:
 ::
 
-    from epubuilder import Epub3, File, Joint
+    from epubaker import Epub3, File, Joint
 
     book = Epub3()
 
@@ -32,20 +32,19 @@ Installing
 ----------
 ::
 
-    pip install epubuilder
+    pip install epubaker
 
 or on Gentoo/Linux:
 ::
 
     layman -a observer
-    emerge -av epubuilder
+    emerge -av epubaker
 
 
-Why Epubuilder?
----------------
+Why Epubaker?
+-------------
 * **New**. This module run under Python 2 and 3. It suporrts Epub 3, and Epub 2 too.
 
 
-* **Clear**. Epubuilder doesn't modify the resource you were given.
+* **Clear**. epubaker doesn't modify the resource you were given.
   Files, metadata and other things are handled by different members of an Epub object.
-

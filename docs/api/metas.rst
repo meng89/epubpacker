@@ -1,7 +1,7 @@
 Metas
 =====
 
-.. automodule:: epubuilder.metas
+.. automodule:: epubaker.metas
 
 
 

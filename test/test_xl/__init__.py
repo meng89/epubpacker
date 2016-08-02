@@ -4,7 +4,7 @@ from __future__ import print_function
 
 from xml.etree import ElementTree as Et
 
-from epubuilder.xl import parse, clean_whitespaces, pretty_insert
+from epubaker.xl import parse, clean_whitespaces, pretty_insert
 
 import os
 

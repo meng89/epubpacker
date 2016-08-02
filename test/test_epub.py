@@ -4,9 +4,9 @@ from xml.etree import ElementTree as Et
 
 import os
 
-from epubuilder.metas import Title, Language, Identifier
+from epubaker.metas import Title, Language, Identifier
 
-from epubuilder import Joint, File, Section
+from epubaker import Joint, File, Section
 
 XHTML_TEMPLATE = """
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -71,9 +71,9 @@ def check_xml(book_path):
 
 
 def test_epub3():
-    from epubuilder import Epub3
-    from epubuilder.metas import get_dcterm
-    from epubuilder.tools import w3c_utc_date
+    from epubaker import Epub3
+    from epubaker.metas import get_dcterm
+    from epubaker.tools import w3c_utc_date
 
     book = make_epub(Epub3, Section)
 
@@ -96,8 +96,8 @@ def test_epub3():
 
 
 def test_epub2():
-    from epubuilder import Epub2
-    from epubuilder.metas import Cover
+    from epubaker import Epub2
+    from epubaker.metas import Cover
 
     book = make_epub(Epub2, Section)
 

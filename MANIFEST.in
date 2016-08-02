@@ -2,7 +2,7 @@ include requirements.txt
 include LICENSE
 include tox.ini
 
-recursive-include epubuilder/static *
+recursive-include epubaker/static *
 
 recursive-include docs *
 prune docs/_build

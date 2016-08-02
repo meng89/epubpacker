@@ -2,7 +2,7 @@
 
 import magic
 
-from epubuilder.xl import parse
+from epubaker.xl import parse
 
 
 def relative_path(in_dir, to_file_path):

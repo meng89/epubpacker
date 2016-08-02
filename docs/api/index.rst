@@ -1,7 +1,7 @@
 API Reference
 =============
 
-.. automodule:: epubuilder
+.. automodule:: epubaker
 
 .. autoclass:: Epub3
     :members:

@@ -2,8 +2,8 @@
 
 """Dublin Core Metadata Initiative, see http://dublincore.org/documents/dcmi-terms/"""
 
-from epubuilder.metas.attrs import Attrs, AltScript, Dir, FileAs, Id, Role, Lang
-from epubuilder.xl import Element, URI_XML
+from epubaker.metas.attrs import Attrs, AltScript, Dir, FileAs, Id, Role, Lang
+from epubaker.xl import Element, URI_XML
 
 
 def always_true(*args, **kwargs):

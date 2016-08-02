@@ -3,4 +3,4 @@
 from .epub3 import Epub3
 from .epub2 import Epub2
 
-from epubuilder.epub import File, Section, Joint
+from epubaker.epub import File, Section, Joint
