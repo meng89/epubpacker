@@ -4,13 +4,13 @@ import os
 import zipfile
 
 
-from epubuilder.epub import Epub, File, OPF_NS, ROOT_OF_OPF, CONTAINER_PATH
+from epubaker.epub import Epub, File, OPF_NS, ROOT_OF_OPF, CONTAINER_PATH
 
-from epubuilder.metas.dcmes import URI_DC
+from epubaker.metas.dcmes import URI_DC
 
-from epubuilder.metas.epub2_meta import Cover
+from epubaker.metas.epub2_meta import Cover
 
-from epubuilder.xl import Xl, Element, pretty_insert
+from epubaker.xl import Xl, Element, pretty_insert
 
 
 class Epub2(Epub):

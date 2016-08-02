@@ -1,5 +1,5 @@
 tools
 =====
 
-.. automodule:: epubuilder.tools
+.. automodule:: epubaker.tools
     :members:

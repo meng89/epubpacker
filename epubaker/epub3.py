@@ -9,13 +9,13 @@ import io
 import os
 
 
-from epubuilder.epub import Epub, File, OPF_NS, ROOT_OF_OPF, CONTAINER_PATH
+from epubaker.epub import Epub, File, OPF_NS, ROOT_OF_OPF, CONTAINER_PATH
 
-from epubuilder.metas.dcmes import URI_DC
+from epubaker.metas.dcmes import URI_DC
 
-from epubuilder.xl import Xl, Element, URI_XML, pretty_insert
+from epubaker.xl import Xl, Element, URI_XML, pretty_insert
 
-from epubuilder import mimes
+from epubaker import mimes
 
 
 XML_URI = 'http://www.w3.org/1999/xhtml'

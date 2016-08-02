@@ -11,11 +11,11 @@ from abc import abstractmethod
 from hooky import List, Dict
 
 
-import epubuilder.version
-from epubuilder import mimes
-from epubuilder.metas import Identifier
-from epubuilder.tools import relative_path
-from epubuilder.xl import Xl, Element, pretty_insert
+import epubaker.version
+from epubaker import mimes
+from epubaker.metas import Identifier
+from epubaker.tools import relative_path
+from epubaker.xl import Xl, Element, pretty_insert
 
 
 CONTAINER_PATH = 'META-INF' + os.sep + 'container.xml'
@@ -29,7 +29,7 @@ class Metadata(List):
 
     Store metadata, such as author, publisher etc.
 
-    see :mod:`epubuilder.metas`"""
+    see :mod:`epubaker.metas`"""
 
     pass
 
@@ -272,7 +272,7 @@ class Epub(object):
                                                          'content': self.toc.ncx_maxPageNumber}))
 
         head.children.append(Element('meta', attributes={'name': 'dtb:generator',
-                                                         'content': 'epubuilder ' + epubuilder.version.__version__}))
+                                                         'content': 'epubaker ' + epubaker.version.__version__}))
 
         doc_title = Element('docTitle')
         ncx.children.append(doc_title)

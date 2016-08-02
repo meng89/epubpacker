@@ -6,7 +6,7 @@ User Guide
 epub3:
 ::
 
-    from epubuilder.epub3 import Epub3
+    from epubaker import Epub3
 
     book = Epub3()
 
@@ -14,7 +14,7 @@ epub3:
 epub2:
 ::
 
-    from epubuilder.epub2 import Epub2
+    from epubaker import Epub2
 
     book = Epub2()
 
@@ -25,7 +25,7 @@ Then, put a page into the book:
 
 ::
 
-    from epubuilder import File
+    from epubaker import File
 
     page1_path = 'p1.xhtml'
     book.files[page1_path] = File(open('page1.xhtml', 'rb').read())
@@ -34,24 +34,22 @@ Then, put a page into the book:
 Spine
 -----
 In print book, pages is just papers, when you open a book, you can see the pages.
-But epub book can stone rich media, like audio, picture and other things.
-Lot media is only be a part of a page, not show up direct.
+But epub book can stone lot of type of media, like audio, picture, fonts, and other things.
+Lot media is only be a part of a page, it not show up direct.
 So you have to let the book reader software knows what pages your want to show, and the show-pages order:
 ::
 
-    from epubuilder import Joint
+    from epubaker import Joint
 
     book.spine.append(Joint(page1_path))
-
 
 That's it! That's minimum requirements of a useful book.
 
 
-
-You may notise that we can't locating that page cause we didn't make table of contents like a print book, do this to fix:
+You may notise that we can't locating that page because we didn't make table of contents like a print book, do this to fix:
 ::
 
-    from epubuilder import Section
+    from epubaker import Section
 
     book.toc.append(Seciton('Chapter I', page1_path))
 
@@ -63,7 +61,7 @@ Now, we want reader know what's the title of this book, the identifier of this b
 and language of this book:
 ::
 
-    from epubuilder.metas import Title, Identifier, Language
+    from epubaker.metas import Title, Identifier, Language
 
     book.metadata.append(Title('simple epub book'))
     book.metadata.append(Language('en'))
@@ -72,14 +70,15 @@ and language of this book:
 epub3 need modified date:
 ::
 
-    from epubuilder.tools import w3c_utc_date
-    from epubuilder.metas import get_dcterm
+    from epubaker.tools import w3c_utc_date
+    from epubaker.metas import get_dcterm
 
     book.metadata.append(get_dcterm('modified')(w3c_utc_date()))
 
+
 Cover
 -----
-Add a image:
+Add a image first:
 ::
 
     book.files['cover.png'] = File(open('cover.png', 'rb').read())
@@ -96,12 +95,12 @@ epub3:
 epub2:
 ::
 
-    from epubuilder.metas import Cover
+    from epubaker.metas import Cover
     book.metadata.append(Cover('cover.png'))
 
 
 If the reader or bookshelf didn't show the cover,
-you may want to make a xhtml page from cover image, and put it to the first of the book:
+you may want to make a xhtml page from the cover image, and put it as the first of the book pages:
 ::
 
     cover_page_file = book.addons_make_image_page(image_path='cover.png')
@@ -109,8 +108,8 @@ you may want to make a xhtml page from cover image, and put it to the first of t
     book.spine.insert(0, Joint('cover.xhtml'))
 
 
-Write to a file
----------------
+Write it!
+---------
 ::
 
     book.write('simple_book.epub')

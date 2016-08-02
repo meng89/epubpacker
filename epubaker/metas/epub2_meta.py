@@ -1,6 +1,6 @@
 # coding=utf-8
 
-from epubuilder.xl import Element
+from epubaker.xl import Element
 
 
 class Meta2(object):

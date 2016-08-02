@@ -2,7 +2,7 @@ from setuptools import setup
 from distutils.util import convert_path
 
 
-NAME = "epubuilder"
+NAME = "epubaker"
 
 main_ns = {}
 ver_path = convert_path('{}/version.py'.format(NAME))
@@ -40,9 +40,9 @@ setup(name=NAME,
       license='MIT',
       url=URL,
       packages=[
-          'epubuilder',
-          'epubuilder.metas',
-          'epubuilder.xl'
+          'epubaker',
+          'epubaker.metas',
+          'epubaker.xl'
       ],
       install_requires=requirements,
       classifiers=CLASSIFIERS)
