@@ -1,5 +1,1 @@
-pillow
-nose
-python-magic
-html5lib
-hooky
+git+git://github.com/meng89/xl@202204#egg=xl
