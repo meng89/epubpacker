@@ -1,1 +1,1 @@
-git+https://github.com/meng89/xl@de8c7ee
+xl @ git+https://github.com/meng89/xl@1515784
