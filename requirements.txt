@@ -1,1 +1,1 @@
-git+git://github.com/meng89/xl@0.0.1#egg=xl
+git+https://github.com/meng89/xl@de8c7ee
