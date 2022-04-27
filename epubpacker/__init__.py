@@ -69,7 +69,7 @@ class Epub(object):
             toc_xhtml = "real" + str(i) + name
             i += 1
 
-        z.writestr(posixpath.join(ROOT_OF_OPF, toc_xhtml), xl.Xl(root=nav_html).to_str(do_pretty=True))
+        z.writestr(posixpath.join(ROOT_OF_OPF, toc_xhtml), xl.Xml(root=nav_html).to_str(do_pretty=True))
 
 
 ########################################################################################################################
@@ -133,7 +133,7 @@ class Epub(object):
             package_opf_path = "real" + str(i) + name
             i += 1
 
-        z.writestr(package_opf_path, xl.Xl(root=_package).to_str(do_pretty=True))
+        z.writestr(package_opf_path, xl.Xml(root=_package).to_str(do_pretty=True))
 
 
 ########################################################################################################################
@@ -148,7 +148,7 @@ class Epub(object):
         _rootfiles = xl.sub(_container, "rootfiles")
         _rootfile = xl.sub(_rootfiles, "rootfile", {"media-type": "application/oebps-package+xml",
                                                     "full-path": posixpath.join(ROOT_OF_OPF, "package.opf")})
-        z.writestr("META-INF/container.xml", xl.Xl(root=_container).to_str(do_pretty=True))
+        z.writestr("META-INF/container.xml", xl.Xml(root=_container).to_str(do_pretty=True))
 
 
 class Meta(object):
