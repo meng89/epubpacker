@@ -69,7 +69,8 @@ class Epub(object):
             toc_xhtml = "real" + str(i) + name
             i += 1
 
-        z.writestr(posixpath.join(ROOT_OF_OPF, toc_xhtml), xl.Xml(root=nav_html).to_str(do_pretty=True))
+        z.writestr(posixpath.join(ROOT_OF_OPF, toc_xhtml),
+                   xl.Xml(root=nav_html).to_str(do_pretty=True, dont_do_tags=["a"]))
 
 
 ########################################################################################################################
