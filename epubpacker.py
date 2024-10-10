@@ -4,10 +4,7 @@ import datetime
 
 import xl
 
-
-# EPUB 不是我的坑，够用就行。仅为 Nikaya 服务
-# EPUB 不是我的坑，够用就行。仅为 Nikaya 服务
-# EPUB 不是我的坑，够用就行。仅为 Nikaya 服务
+__version__ = '2.0.2'
 
 
 def _path2id(s):
@@ -34,11 +31,8 @@ class Epub(object):
         self.userfiles = {}
         self.toc_title = None
         self.root_toc = []
-        self._spine = []
+        self.spine = []
 
-    @property
-    def spine(self):
-        return self._spine
 
     def write(self, filename):
         if not self.userfiles:
@@ -52,13 +46,13 @@ class Epub(object):
                                        "xmlns": "http://www.w3.org/1999/xhtml",
                                        "xml:lang": self.meta.languages[0]
                                        })
-        head = xl.sub(nav_html, "head")
+        head = nav_html.ekid("head")
         title_text = self.toc_title or "Table of contents"
-        _title = xl.sub(head, "title", kids=[title_text])
-        body = xl.sub(nav_html, "body")
-        nav = xl.sub(body, "nav", {"epub:type": "toc"})
-        _h1 = xl.sub(nav, "h1", kids=[title_text])
-        ol = xl.sub(nav, "ol")
+        _title = head.ekid("title", kids=[title_text])
+        body = nav_html.ekid("body")
+        nav = body.ekid("nav", {"epub:type": "toc"})
+        _h1 = nav.ekid("h1", kids=[title_text])
+        ol = nav.ekid("ol")
         for toc in self.root_toc:
             toc.to_et(ol)
 
@@ -83,9 +77,9 @@ class Epub(object):
 
         self.meta.to_et(_package, dc_id_id)
 
-        manifest = xl.sub(_package, "manifest")
+        manifest = _package.ekid("manifest")
 
-        _toc_item = xl.sub(manifest, "item", {"media-type": "application/xhtml+xml",
+        _toc_item = manifest.ekid("item", {"media-type": "application/xhtml+xml",
                                               "href": toc_xhtml,
                                               "id": _path2id(toc_xhtml),
                                               "properties": "nav"
@@ -97,7 +91,7 @@ class Epub(object):
                 media_type = "application/xhtml+xml"
 
                 xml = xl.parse(self.userfiles[filename])
-                if xml.root.find_all("script"):
+                if xml.root.find_kids("script"):
                     attrib["properties"] = "scripted"
             elif ext.lower() == ".css":
                 media_type = "text/css"
@@ -121,11 +115,11 @@ class Epub(object):
                 else:
                     attrib["properties"] = "cover-image"
 
-            _item = xl.sub(manifest, "item", attrib)
+            _item = manifest.ekid("item", attrib)
 
-        spine = xl.sub(_package, "spine")
+        spine = _package.ekid("spine")
         for one in self.spine:
-            xl.sub(spine, "itemref", {"idref": _path2id(one)})
+            spine.ekid("itemref", {"idref": _path2id(one)})
 
         name = "package.opf"
         i = 1
@@ -146,8 +140,8 @@ class Epub(object):
 
         _container = xl.Element("container", {"version": "1.0",
                                               "xmlns": "urn:oasis:names:tc:opendocument:xmlns:container"})
-        _rootfiles = xl.sub(_container, "rootfiles")
-        _rootfile = xl.sub(_rootfiles, "rootfile", {"media-type": "application/oebps-package+xml",
+        _rootfiles = _container.ekid("rootfiles")
+        _rootfile = _rootfiles.ekid("rootfile", {"media-type": "application/oebps-package+xml",
                                                     "full-path": posixpath.join(ROOT_OF_OPF, "package.opf")})
         z.writestr("META-INF/container.xml", xl.Xml(root=_container).to_str(do_pretty=True))
 
@@ -161,22 +155,22 @@ class Meta(object):
         self.date = ""
         self.others = []
 
-    def to_et(self, parent, dc_id_id):
-        metadata = xl.sub(parent, "metadata", {"xmlns:dc": "http://purl.org/dc/elements/1.1/"})
-        _meta = xl.sub(metadata,
+    def to_et(self, parent: xl.Element, dc_id_id):
+        metadata = parent.ekid("metadata", {"xmlns:dc": "http://purl.org/dc/elements/1.1/"})
+        _meta = metadata.ekid(
                        "meta",
                        {"property": "dcterms:modified"},
                        [datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")])
         if self.identifier:
-            _dc_id = xl.sub(metadata, "dc:identifier", {"id": dc_id_id}, [self.identifier])
+            _dc_id = metadata.ekid("dc:identifier", {"id": dc_id_id}, [self.identifier])
         for title in self.titles:
-            _title = xl.sub(metadata, "dc:title", kids=[title])
+            _title = metadata.ekid("dc:title", kids=[title])
         for lang in self.languages:
-            _lang = xl.sub(metadata, "dc:language", kids=[lang])
+            _lang = metadata.ekid("dc:language", kids=[lang])
         for creator in self.creators:
-            _creator = xl.sub(metadata, "dc:creator", kids=[creator])
+            _creator = metadata.ekid("dc:creator", kids=[creator])
         if self.date:
-            _date = xl.sub(metadata, "dc:date", kids=[self.date])
+            _date = metadata.ekid("dc:date", kids=[self.date])
 
         for other in self.others:
             if not isinstance(other, xl.Element):
@@ -191,13 +185,13 @@ class Toc(object):
         self.kids = []
 
     def to_et(self, parent):
-        li = xl.sub(parent, "li")
+        li = parent.ekid("li")
         try:
-            xl.sub(li, "a", {"href": posixpath.normpath(posixpath.join(USER_DIR, self.href))}, [self.title])
+            li.ekid("a", {"href": posixpath.normpath(posixpath.join(USER_DIR, self.href))}, [self.title])
         except TypeError:
             raise TypeError(self.title, self.href)
         if self.kids:
-            ol = xl.sub(li, "ol")
+            ol = li.ekid("ol")
             for kid in self.kids:
                 kid.to_et(ol)
 
