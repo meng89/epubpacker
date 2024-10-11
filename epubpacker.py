@@ -30,7 +30,7 @@ class Epub(object):
         self.meta = Meta()
         self.userfiles = {}
         self.toc_title = None
-        self.root_toc = []
+        self.marks = []
         self.spine = []
 
 
@@ -53,7 +53,7 @@ class Epub(object):
         nav = body.ekid("nav", {"epub:type": "toc"})
         _h1 = nav.ekid("h1", kids=[title_text])
         ol = nav.ekid("ol")
-        for toc in self.root_toc:
+        for toc in self.marks:
             toc.to_et(ol)
 
         name = "toc.xhtml"
@@ -178,7 +178,8 @@ class Meta(object):
             metadata.kids.append(other)
 
 
-class Toc(object):
+# Bookmark, TOC
+class Mark(object):
     def __init__(self, title, href=None):
         self.title = title
         self.href = href
