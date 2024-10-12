@@ -30,7 +30,7 @@ class Epub(object):
         self.meta = Meta()
         self.userfiles = {}
         self.toc_title = None
-        self.marks = []
+        self.mark = Mark()
         self.spine = []
 
 
@@ -53,7 +53,7 @@ class Epub(object):
         nav = body.ekid("nav", {"epub:type": "toc"})
         _h1 = nav.ekid("h1", kids=[title_text])
         ol = nav.ekid("ol")
-        for toc in self.marks:
+        for toc in self.mark.kids:
             toc.to_et(ol)
 
         name = "toc.xhtml"
@@ -180,17 +180,19 @@ class Meta(object):
 
 # Bookmark, TOC
 class Mark(object):
-    def __init__(self, title, href=None):
+    def __init__(self, title=None, href=None):
         self.title = title
         self.href = href
         self.kids = []
 
     def to_et(self, parent):
         li = parent.ekid("li")
-        try:
-            li.ekid("a", {"href": posixpath.normpath(posixpath.join(USER_DIR, self.href))}, [self.title])
-        except TypeError:
-            raise TypeError(self.title, self.href)
+        a = li.ekid("a")
+        if self.href:
+            a.attrs["href"] = posixpath.normpath(posixpath.join(USER_DIR, self.href))
+        if self.title:
+            a.kids.append(self.title)
+
         if self.kids:
             ol = li.ekid("ol")
             for kid in self.kids:
