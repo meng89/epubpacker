@@ -16,6 +16,9 @@ def _path2id(s):
             news += "_s_"
         else:
             news += c
+
+    if news[0].isdigit():
+        news = "id_" + news
     return news
 
 
@@ -53,8 +56,8 @@ class Epub(object):
         nav = body.ekid("nav", {"epub:type": "toc"})
         _h1 = nav.ekid("h1", kids=[title_text])
         ol = nav.ekid("ol")
-        for toc in self.mark.kids:
-            toc.to_et(ol)
+        for mark in self.mark.kids:
+            mark.to_et(ol)
 
         name = "toc.xhtml"
         i = 1
@@ -192,6 +195,8 @@ class Mark(object):
             a.attrs["href"] = posixpath.normpath(posixpath.join(USER_DIR, self.href))
         if self.title:
             a.kids.append(self.title)
+        else:
+            a.kids.append("-")
 
         if self.kids:
             ol = li.ekid("ol")
