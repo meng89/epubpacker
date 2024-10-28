@@ -24,7 +24,7 @@ def _path2id(s):
 
 ROOT_OF_OPF = 'OEBPS'
 
-USER_DIR = "user_dir"
+USER_DIR = "userfiles"
 
 
 class Epub(object):
