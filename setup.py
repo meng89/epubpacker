@@ -7,9 +7,10 @@ DESCRIPTION = 'A module to pack ePub3 format'
 
 URL = 'https://github.com/meng89/' + NAME
 
+license = "MIT"
+
 CLASSIFIERS = [
     'Intended Audience :: Developers',
-    'License :: OSI Approved :: MIT License',
     'Operating System :: OS Independent',
     'Programming Language :: Python :: 3',
     'Programming Language :: Python :: Implementation :: CPython',
