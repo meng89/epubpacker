@@ -7,7 +7,6 @@ DESCRIPTION = 'A module to pack ePub3 format'
 
 URL = 'https://github.com/meng89/' + NAME
 
-license = "MIT"
 
 CLASSIFIERS = [
     'Intended Audience :: Developers',
@@ -28,6 +27,7 @@ setup(name=NAME,
       author_email='ObserverChan@gmail.com',
       license='MIT',
       url=URL,
-      packages=[NAME],
+      #packages=[NAME],
+      py_modules=[NAME],
       install_requires=requirements,
       classifiers=CLASSIFIERS)
