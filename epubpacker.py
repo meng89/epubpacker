@@ -94,7 +94,7 @@ class Epub(object):
                 media_type = "application/xhtml+xml"
 
                 xml = xl.parse(self.userfiles[filename])
-                if xml.root.find_kids("script"):
+                if xml.root.find_descendants("script"):
                     attrib["properties"] = "scripted"
             elif ext.lower() == ".css":
                 media_type = "text/css"
