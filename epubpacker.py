@@ -181,29 +181,11 @@ class Meta(object):
         for lang in self.languages:
             _lang = metadata.ekid("dc:language", kids=[lang])
 
-        for index, creator in enumerate(self.creators, 1):
-            if isinstance(creator, tuple):
-                _creator, _relator = creator
-            else:
-                _creator = creator
-                _relator = None
-            _id = "creator{}".format(index)
-            _creator_e = metadata.ekid("dc:creator", {"id": _id}, kids=[_creator])
-            if _relator:
-                _meta_e = xl.Element("meta", {"refines": "#" + _id, "property": "role",  "scheme": "marc:relators"}, [_relator])
-                _metas.append(_meta_e)
+        es = create_people_meta_es(self.creators, "creator")
+        metadata.kids.extend(es)
 
-        for index, contributor in enumerate(self.contributors, 1):
-            if isinstance(contributor, tuple):
-                _contributor, _relator = contributor
-            else:
-                _contributor = contributor
-                _relator = None
-            _id = "contributor{}".format(index)
-            _contributor_e = metadata.ekid("dc:contributor", {"id": _id}, kids=[_contributor])
-            if _relator:
-                _meta_e = xl.Element("meta", {"refines": "#" + _id, "property": "role", "scheme": "marc:relators"}, [_relator])
-                _metas.append(_meta_e)
+        es = create_people_meta_es(self.creators, "contributor")
+        metadata.kids.extend(es)
 
         if self.date:
             _date = metadata.ekid("dc:date", kids=[self.date])
@@ -214,6 +196,31 @@ class Meta(object):
             metadata.kids.append(other)
 
         metadata.kids.extend(_metas)
+
+
+def create_people_meta_es(people, tag):
+    es = []
+    for index, x in enumerate(people, 1):
+        if isinstance(x, tuple):
+            person, y = x
+        else:
+            assert isinstance(x, str)
+            person = x
+            y = []
+
+        if isinstance(y, list):
+            relators = y
+        else:
+            assert isinstance(y, str)
+            relators = [y]
+
+        _id = tag + str(index)
+        person_e = xl.Element("dc:" + tag, {"id": _id}, kids=[person])
+        es.append(person_e)
+        for relator in relators:
+            _meta_e = xl.Element("meta", {"refines": "#" + _id, "property": "role", "scheme": "marc:relators"}, [relator])
+            es.append(_meta_e)
+    return es
 
 
 # Bookmark, TOC
