@@ -131,7 +131,13 @@ class Epub(object):
             package_opf_path = "real" + str(i) + name
             i += 1
 
-        z.writestr(package_opf_path, xl.Xml(root=_package).to_str(do_pretty=True))
+        z.writestr(package_opf_path, xl.Xml(root=_package).to_str(do_pretty=True, dont_do_tags=["meta",
+                                                                                                "dc:identifier",
+                                                                                                "dc:title",
+                                                                                                "dc:language",
+                                                                                                "dc:creator",
+                                                                                                "dc:contributor",
+                                                                                                "dc:date"]))
 
 
 ########################################################################################################################
@@ -155,6 +161,7 @@ class Meta(object):
         self.titles = []
         self.languages = []
         self.creators = []
+        self.contributors = []
         self.date = ""
         self.others = []
 
@@ -163,15 +170,37 @@ class Meta(object):
         _meta = metadata.ekid(
                        "meta",
                        {"property": "dcterms:modified"},
-                       [datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")])
+                       [datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")]
+        )
         if self.identifier:
             _dc_id = metadata.ekid("dc:identifier", {"id": dc_id_id}, [self.identifier])
         for title in self.titles:
             _title = metadata.ekid("dc:title", kids=[title])
         for lang in self.languages:
             _lang = metadata.ekid("dc:language", kids=[lang])
-        for creator in self.creators:
-            _creator = metadata.ekid("dc:creator", kids=[creator])
+
+        for index, creator in enumerate(self.creators, 1):
+            if isinstance(creator, tuple):
+                _creator, _relator = creator
+            else:
+                _creator = creator
+                _relator = None
+            _id = "creator{}".format(index)
+            _creator_e = metadata.ekid("dc:creator", {"id": _id}, kids=[_creator])
+            if _relator:
+                _meta_e = metadata.ekid("meta", {"refines": "#" + _id, "property": "role",  "scheme": "marc:relators"}, [_relator])
+
+        for index, contributor in enumerate(self.contributors, 1):
+            if isinstance(contributor, tuple):
+                _contributor, _relator = contributor
+            else:
+                _contributor = contributor
+                _relator = None
+            _id = "contributor{}".format(index)
+            _contributor_e = metadata.ekid("dc:contributor", {"id": _id}, kids=[_contributor])
+            if _relator:
+                _meta_e = metadata.ekid("meta", {"refines": "#" + _id, "property": "role", "scheme": "marc:relators"}, [_relator])
+
         if self.date:
             _date = metadata.ekid("dc:date", kids=[self.date])
 
