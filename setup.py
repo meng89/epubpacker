@@ -20,7 +20,7 @@ with open('requirements.txt') as f:
     requirements = f.read().splitlines()
 
 setup(name=NAME,
-      version='2.0.2',
+      version='2.0.3',
       description=DESCRIPTION,
       include_package_data=True,
       author='Chen Meng',
