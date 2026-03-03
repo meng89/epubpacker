@@ -167,11 +167,13 @@ class Meta(object):
 
     def to_et(self, parent: xl.Element, dc_id_id):
         metadata = parent.ekid("metadata", {"xmlns:dc": "http://purl.org/dc/elements/1.1/"})
-        _meta = metadata.ekid(
+        _metas = []
+        _meta = xl.Element(
                        "meta",
                        {"property": "dcterms:modified"},
                        [datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")]
         )
+        _metas.append(_meta)
         if self.identifier:
             _dc_id = metadata.ekid("dc:identifier", {"id": dc_id_id}, [self.identifier])
         for title in self.titles:
@@ -188,7 +190,8 @@ class Meta(object):
             _id = "creator{}".format(index)
             _creator_e = metadata.ekid("dc:creator", {"id": _id}, kids=[_creator])
             if _relator:
-                _meta_e = metadata.ekid("meta", {"refines": "#" + _id, "property": "role",  "scheme": "marc:relators"}, [_relator])
+                _meta_e = xl.Element("meta", {"refines": "#" + _id, "property": "role",  "scheme": "marc:relators"}, [_relator])
+                _metas.append(_meta_e)
 
         for index, contributor in enumerate(self.contributors, 1):
             if isinstance(contributor, tuple):
@@ -199,7 +202,8 @@ class Meta(object):
             _id = "contributor{}".format(index)
             _contributor_e = metadata.ekid("dc:contributor", {"id": _id}, kids=[_contributor])
             if _relator:
-                _meta_e = metadata.ekid("meta", {"refines": "#" + _id, "property": "role", "scheme": "marc:relators"}, [_relator])
+                _meta_e = xl.Element("meta", {"refines": "#" + _id, "property": "role", "scheme": "marc:relators"}, [_relator])
+                _metas.append(_meta_e)
 
         if self.date:
             _date = metadata.ekid("dc:date", kids=[self.date])
@@ -208,6 +212,8 @@ class Meta(object):
             if not isinstance(other, xl.Element):
                 raise TypeError(other)
             metadata.kids.append(other)
+
+        metadata.kids.extend(_metas)
 
 
 # Bookmark, TOC
