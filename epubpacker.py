@@ -184,7 +184,7 @@ class Meta(object):
         es = create_people_meta_es(self.creators, "creator")
         metadata.kids.extend(es)
 
-        es = create_people_meta_es(self.creators, "contributor")
+        es = create_people_meta_es(self.contributors, "contributor")
         metadata.kids.extend(es)
 
         if self.date:
@@ -198,28 +198,35 @@ class Meta(object):
         metadata.kids.extend(_metas)
 
 
-def create_people_meta_es(people, tag):
+def create_people_meta_es(obj, tag):
     es = []
-    for index, x in enumerate(people, 1):
+    for i1, x in enumerate(obj, 1):
         if isinstance(x, tuple):
-            person, y = x
+            y, z = x
         else:
             assert isinstance(x, str)
-            person = x
-            y = []
+            y = [x]
+            z = []
 
         if isinstance(y, list):
-            relators = y
+            people = y
         else:
             assert isinstance(y, str)
-            relators = [y]
+            people = [y]
 
-        _id = tag + str(index)
-        person_e = xl.Element("dc:" + tag, {"id": _id}, kids=[person])
-        es.append(person_e)
-        for relator in relators:
-            _meta_e = xl.Element("meta", {"refines": "#" + _id, "property": "role", "scheme": "marc:relators"}, [relator])
-            es.append(_meta_e)
+        if isinstance(z, list):
+            relators = z
+        else:
+            assert isinstance(z, str)
+            relators = [z]
+
+        for i2, person in enumerate(people):
+            _id = "{}_{}_{}".format(tag, i1, i2)
+            person_e = xl.Element("dc:" + tag, {"id": _id}, kids=[person])
+            es.append(person_e)
+            for relator in relators:
+                _meta_e = xl.Element("meta", {"refines": "#" + _id, "property": "role", "scheme": "marc:relators"}, [relator])
+                es.append(_meta_e)
     return es
 
 
